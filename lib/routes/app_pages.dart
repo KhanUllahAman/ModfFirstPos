@@ -1,6 +1,10 @@
 import 'package:get/get.dart';
 import 'package:modfirstpos/modules/auth/binding/auth_binding.dart';
+import 'package:modfirstpos/modules/catalogue/binding/catalogue_binding.dart';
+import 'package:modfirstpos/modules/catalogue/view/catalogue_view.dart';
 import 'package:modfirstpos/modules/errorScreen/error_screen.dart';
+import 'package:modfirstpos/modules/home/binding/home_binding.dart';
+import 'package:modfirstpos/modules/home/view/home_view.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
 import '../modules/splash/binding/splash_binding.dart';
 import '../modules/splash/view/splash_screen.dart';
@@ -19,6 +23,22 @@ class AppPages {
       name: Routes.auth,
       page: () => const AuthView(),
       binding: AuthBinding(),
+      transition: Transition.leftToRightWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+
+    GetPage(
+      name: Routes.home,
+      page: () => const HomeView(),
+      binding: HomeBinding(),
+      transition: Transition.leftToRightWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+
+    GetPage(
+      name: Routes.catalogue,
+      page: () => const CatalogueView(),
+      binding: CatalogueBinding(),
       transition: Transition.leftToRightWithFade,
       transitionDuration: const Duration(milliseconds: 300),
     ),

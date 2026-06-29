@@ -23,7 +23,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   final double? height;
 
   @override
-  Size get preferredSize => Size.fromHeight(height ?? 70.0);
+  Size get preferredSize => Size.fromHeight(height ?? 85.0);
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +35,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
           bottomEnd: Radius.circular(16.0),
           bottomStart: Radius.circular(16.0),
         ),
-        gradient: ColorResources.appGradient,
+        color: ColorResources.blackColor,
       ),
       child: SafeArea(
         child: Padding(
@@ -59,19 +59,12 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                       ),
                     SizedBox(width: context.responsiveWidth(0.035)),
                     SvgPicture.asset(
-                      ImagesConstant.writeLogo,
+                      color: ColorResources.appMainColor,
+                      ImagesConstant.mJafferjeesLogo,
                       height: context.responsiveHeight(0.028),
-                      colorFilter: const ColorFilter.mode(
-                        ColorResources.whiteColor,
-                        BlendMode.srcIn,
-                      ),
                     ),
                   ],
                 ),
-              ),
-              SvgPicture.asset(
-                ImagesConstant.powerdByOrio,
-                height: context.responsiveHeight(0.019),
               ),
             ],
           ),
