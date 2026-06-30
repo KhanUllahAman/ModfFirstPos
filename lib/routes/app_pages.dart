@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:modfirstpos/modules/menu/view/menu_view.dart';
 import 'package:modfirstpos/modules/auth/binding/auth_binding.dart';
 import 'package:modfirstpos/modules/catalogue/binding/catalogue_binding.dart';
 import 'package:modfirstpos/modules/catalogue/view/catalogue_view.dart';
@@ -39,6 +40,13 @@ class AppPages {
       name: Routes.catalogue,
       page: () => const CatalogueView(),
       binding: CatalogueBinding(),
+      transition: Transition.leftToRightWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+
+    GetPage(
+      name: Routes.menu,
+      page: () => const MenuView(),
       transition: Transition.leftToRightWithFade,
       transitionDuration: const Duration(milliseconds: 300),
     ),

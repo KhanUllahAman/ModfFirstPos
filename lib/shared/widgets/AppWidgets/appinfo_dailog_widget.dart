@@ -482,13 +482,14 @@ class _AppDialogState extends State<AppDialog> {
         SizedBox(
           width: context.responsiveWidth(0.10),
           child: AppButton(
+            backgroundColor: ColorResources.appMainColor,
             onPressed:
                 widget.onButtonPressed ?? () => Navigator.of(context).pop(),
             isLoading: false,
             child: Text(
               widget.buttonText ?? "OK",
               style: GoogleFonts.geistMono(
-                color: Colors.white,
+                color: ColorResources.blackColor,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -511,13 +512,13 @@ class _AppDialogState extends State<AppDialog> {
       children: [
         Expanded(
           child: AppButton(
-            backgroundColor: ColorResources.buttonColor,
+            backgroundColor: ColorResources.blackColor,
             onPressed: onCancel ?? () => Navigator.of(context).pop(),
             isLoading: false,
             child: Text(
               cancelText,
               style: GoogleFonts.geistMono(
-                color: ColorResources.appMainColor,
+                color: ColorResources.whiteColor,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
@@ -533,7 +534,7 @@ class _AppDialogState extends State<AppDialog> {
             child: Text(
               confirmText,
               style: GoogleFonts.geistMono(
-                color: Colors.white,
+                color: ColorResources.blackColor,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
@@ -544,8 +545,6 @@ class _AppDialogState extends State<AppDialog> {
     );
   }
 }
-
-
 
 //App Widgets ///
 
@@ -650,7 +649,6 @@ class AppSearchBar extends StatelessWidget {
     );
   }
 }
-
 
 class AppHeaderCell extends StatelessWidget {
   final String label;
