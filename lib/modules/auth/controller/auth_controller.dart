@@ -1,150 +1,98 @@
-// import 'dart:developer';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-// import 'package:mjafferjeesapp/core/NotificationService/notification_service.dart';
-// import 'package:mjafferjeesapp/core/storage/secure_storage_service.dart';
-// import 'package:mjafferjeesapp/core/utils/colors.dart';
-// import 'package:mjafferjeesapp/modules/auth/service/auth_service.dart';
-// import 'package:mjafferjeesapp/modules/auth/service/product_service.dart';
-// import 'package:mjafferjeesapp/routes/app_routes.dart';
-// import 'package:mjafferjeesapp/shared/widgets/CircularProgressIndicator/circular_progress_indicator.dart';
-// import 'package:mjafferjeesapp/shared/widgets/helperFunction/get_device_id_function.dart';
-// import '../../../shared/widgets/Snackbar/custom_snackbar.dart';
+import 'package:modfirstpos/core/exceptions/app_exceptions.dart';
+import 'package:modfirstpos/core/storage/secure_storage_service.dart';
+import 'package:modfirstpos/modules/auth/service/auth_service.dart';
+import 'package:modfirstpos/modules/auth/service/send_otp_service.dart';
+import 'package:modfirstpos/routes/app_routes.dart';
+import 'package:modfirstpos/shared/widgets/CircularProgressIndicator/circular_progress_indicator.dart';
+import '../../../shared/widgets/Snackbar/custom_snackbar.dart';
 
 class AuthController extends GetxController {
-  // final AuthService _authService = Get.find<AuthService>();
-  // final ProductService _productService = Get.find<ProductService>();
+  final AuthService _authService = Get.find<AuthService>();
+  final SendOtpService _sendOtpService = Get.find<SendOtpService>();
 
-  final TextEditingController storeNameController = TextEditingController();
+  final TextEditingController storeEmailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-
-  // final RxBool isLoading = false.obs;
   final RxBool isPasswordVisible = false.obs;
 
   void togglePasswordVisibility() =>
       isPasswordVisible.value = !isPasswordVisible.value;
 
-  String? validateStoreName(String? value) =>
-      (value == null || value.trim().isEmpty) ? 'Store name is required' : null;
+  String? validateStoreEmail(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Email is required';
+    final emailRegex = RegExp(r'^[\w\.\-]+@([\w\-]+\.)+[\w\-]{2,}$');
+    if (!emailRegex.hasMatch(value.trim())) return 'Enter a valid email';
+    return null;
+  }
 
   String? validatePassword(String? value) =>
       (value == null || value.isEmpty) ? 'Password is required' : null;
 
-  // Future<void> login(GlobalKey<FormState> formKey) async {
-  //   if (!formKey.currentState!.validate()) return;
+  Future<void> login(GlobalKey<FormState> formKey) async {
+    if (!formKey.currentState!.validate()) return;
 
-  //   final username = storeNameController.text.trim();
-  //   final password = passwordController.text.trim();
-  //   const acno = 'LHE-00838';
-  //   final deviceId = await GetDeviceIdFunction().getPersistentDeviceId();
-  //   final fcmToken = NotificationService().fcmToken;
+    final email = storeEmailController.text.trim();
+    final password = passwordController.text.trim();
+    CustomLoadingDialog.show();
+    try {
+      final loginResponse = await _authService.login(
+        email: email,
+        password: password,
+      );
 
-  //   bool deviceBlocked = false; // ← flag add kiya
+      if (!loginResponse.isSuccess) {
+        CustomLoadingDialog.hide();
+        customSnackBar(
+          'Error',
+          loginResponse.message,
+          snackBarType: SnackBarType.error,
+        );
+        return;
+      }
 
-  //   CustomLoadingDialog.show();
-  //   try {
-  //     final loginResponse = await _authService.login(
-  //       userName: username,
-  //       password: password,
-  //       acno: acno,
-  //       deviceId: deviceId,
-  //       fcmToken: fcmToken.toString(),
-  //       platform: 'mjafferjees',
-  //       type: 'login',
-  //     );
+      await SecureStorageService.saveLoginEmail(email);
+      final otpResponse = await _sendOtpService.sendOtp(email: email);
+      CustomLoadingDialog.hide();
 
-  //     if (!loginResponse.isSuccess) {
-  //       CustomLoadingDialog.hide();
-  //       customSnackBar(
-  //         'Error',
-  //         loginResponse.message,
-  //         snackBarType: SnackBarType.error,
-  //       );
-  //       return;
-  //     }
+      if (!otpResponse.isSuccess) {
+        customSnackBar(
+          'Error',
+          otpResponse.message,
+          snackBarType: SnackBarType.error,
+        );
+        return;
+      }
 
-  //     final outlet = loginResponse.payload?.outlet;
-  //     if (outlet != null && !outlet.isDeviceActive) {
-  //       deviceBlocked = true; // ← flag set karo
-  //       CustomLoadingDialog.hide();
-  //       Get.dialog(
-  //         AlertDialog(
-  //           backgroundColor: ColorResources.backgroundColor,
-  //           shape: RoundedRectangleBorder(
-  //             borderRadius: BorderRadius.circular(12),
-  //           ),
-  //           title: const Row(
-  //             children: [
-  //               Icon(Icons.error_outline, color: Colors.red),
-  //               SizedBox(width: 8),
-  //               Text('Device Not Registered'),
-  //             ],
-  //           ),
-  //           content: const Text(
-  //             'Your device ID is not registered.\nPlease contact Orio team.',
-  //           ),
-  //           actions: [
-  //             TextButton(
-  //               onPressed: () => Get.back(),
-  //               child: Text(
-  //                 'OK',
-  //                 style: TextStyle(color: ColorResources.appAccentColor),
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //         barrierDismissible: false,
-  //       );
-  //       return;
-  //     }
+      customSnackBar(
+        'Success',
+        otpResponse.message,
+        snackBarType: SnackBarType.success,
+      );
+      Get.toNamed(Routes.verifyOtp);
+    } catch (e) {
+      log("Login error: $e");
+      CustomLoadingDialog.hide();
+      final errorMessage = e is AppException
+          ? e.message
+          : 'Something went wrong. Please try again.';
 
-  //     await SecureStorageService.saveLoginData(
-  //       payload: loginResponse.payload,
-  //       username: username,
-  //       password: password,
-  //       acno: acno,
-  //     );
+      customSnackBar(
+        'Error',
+        errorMessage,
+        snackBarType: SnackBarType.error,
+      );
+    } finally {
+      CustomLoadingDialog.forceHide();
+    }
+  }
 
-  //     try {
-  //       final productResponse = await _productService.fetchProducts();
-  //       if (productResponse.isSuccess && productResponse.payload != null) {
-  //         await SecureStorageService.saveProductData(productResponse.payload!);
-  //         await SecureStorageService.saveUserName(username);
-  //         await SecureStorageService.savePassword(password);
-
-  //         log(
-  //           "Products saved: ${productResponse.payload!.detail.length} items",
-  //         );
-  //       }
-  //     } catch (e) {
-  //       log("Product fetch error (non-fatal): $e");
-  //     }
-
-  //     CustomLoadingDialog.hide();
-  //     customSnackBar(
-  //       'Success',
-  //       loginResponse.message,
-  //       snackBarType: SnackBarType.success,
-  //     );
-  //     Get.toNamed(Routes.home);
-  //   } catch (e) {
-  //     log("Login error: $e");
-  //     CustomLoadingDialog.hide();
-  //     customSnackBar(
-  //       'Error',
-  //       'Something went wrong. Please try again.',
-  //       snackBarType: SnackBarType.error,
-  //     );
-  //   } finally {
-  //     if (!deviceBlocked) CustomLoadingDialog.forceHide();
-  //   }
-  // }
-
-  // @override
-  // void onClose() {
-  //   storeNameController.dispose();
-  //   passwordController.dispose();
-  //   super.onClose();
-  // }
+  @override
+  void onClose() {
+    storeEmailController.dispose();
+    passwordController.dispose();
+    super.onClose();
+  }
 }

@@ -74,9 +74,7 @@ class ExceptionHandler {
       case 503:
         return InternalServerException(message);
       default:
-        return FetchDataException(
-          'Error occurred with status code: $statusCode',
-        );
+        return FetchDataException(message);
     }
   }
 

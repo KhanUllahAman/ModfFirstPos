@@ -92,7 +92,7 @@ class _LoadingDialogContent extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             LoadingAnimationWidget.halfTriangleDot(
-              color: ColorResources.appMainColor,
+              color: ColorResources.blackColor,
               size: 30,
             ),
             if (message != null) ...[

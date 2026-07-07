@@ -4,8 +4,12 @@ import 'package:modfirstpos/modules/auth/binding/auth_binding.dart';
 import 'package:modfirstpos/modules/catalogue/binding/catalogue_binding.dart';
 import 'package:modfirstpos/modules/catalogue/view/catalogue_view.dart';
 import 'package:modfirstpos/modules/errorScreen/error_screen.dart';
+import 'package:modfirstpos/modules/forgotPassword/binding/forgot_password_binding.dart';
+import 'package:modfirstpos/modules/forgotPassword/view/forgot_password_view.dart';
 import 'package:modfirstpos/modules/home/binding/home_binding.dart';
 import 'package:modfirstpos/modules/home/view/home_view.dart';
+import 'package:modfirstpos/modules/verifyOtp/binding/verify_otp_binding.dart';
+import 'package:modfirstpos/modules/verifyOtp/view/verify_otp_view.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
 import '../modules/splash/binding/splash_binding.dart';
 import '../modules/splash/view/splash_screen.dart';
@@ -27,7 +31,20 @@ class AppPages {
       transition: Transition.leftToRightWithFade,
       transitionDuration: const Duration(milliseconds: 300),
     ),
-
+    GetPage(
+      name: Routes.verifyOtp,
+      page: () => const VerifyOtpView(),
+      binding: VerifyOtpBinding(),
+      transition: Transition.rightToLeftWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage(
+      name: Routes.forgotPassword,
+      page: () => const ForgotPasswordView(),
+      binding: ForgotPasswordBinding(),
+      transition: Transition.rightToLeftWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
     GetPage(
       name: Routes.home,
       page: () => const HomeView(),
@@ -35,7 +52,6 @@ class AppPages {
       transition: Transition.leftToRightWithFade,
       transitionDuration: const Duration(milliseconds: 300),
     ),
-
     GetPage(
       name: Routes.catalogue,
       page: () => const CatalogueView(),
@@ -43,14 +59,12 @@ class AppPages {
       transition: Transition.leftToRightWithFade,
       transitionDuration: const Duration(milliseconds: 300),
     ),
-
     GetPage(
       name: Routes.menu,
       page: () => const MenuView(),
       transition: Transition.leftToRightWithFade,
       transitionDuration: const Duration(milliseconds: 300),
     ),
-
     GetPage(
       name: Routes.error404Route,
       page: () => const Error404View(),

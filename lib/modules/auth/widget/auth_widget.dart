@@ -262,6 +262,7 @@ class _BannerCarouselState extends State<_BannerCarousel> {
 
 class LoginFormCard extends StatelessWidget {
   final AuthController controller;
+
   const LoginFormCard({super.key, required this.controller});
 
   @override
@@ -324,10 +325,10 @@ class LoginFormCard extends StatelessWidget {
                     ),
                     SizedBox(height: context.spacingXL),
                     CustomTextFormField(
-                      controller: controller.storeNameController,
-                      labelText: 'Store Name',
-                      validator: controller.validateStoreName,
-                      keyboardType: TextInputType.text,
+                      controller: controller.storeEmailController,
+                      labelText: 'Store Email',
+                      validator: controller.validateStoreEmail,
+                      keyboardType: TextInputType.emailAddress,
                       borderRadius: 12,
                       customFocusedBorderColor: ColorResources.blackColor,
                       customEnabledBorderColor: ColorResources.blackColor,
@@ -351,7 +352,7 @@ class LoginFormCard extends StatelessWidget {
                     AppButton(
                       backgroundColor: ColorResources.mainbuttonColor,
                       onPressed: () {
-                        Get.toNamed(Routes.home);
+                        controller.login(controller.formKey);
                       },
                       isLoading: false,
                       borderRadius: 12,
@@ -362,6 +363,20 @@ class LoginFormCard extends StatelessWidget {
                           fontWeight: FontWeight.w500,
                           color: ColorResources.blackColor,
                           letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => Get.toNamed(Routes.forgotPassword),
+                        child: Text(
+                          'Forgot Password?',
+                          style: GoogleFonts.geistMono(
+                            fontSize: context.fontXS,
+                            fontWeight: FontWeight.w500,
+                            color: ColorResources.blackColor.withOpacity(0.75),
+                          ),
                         ),
                       ),
                     ),
