@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:modfirstpos/core/contants/storage_keys.dart';
 
@@ -32,4 +33,20 @@ class SecureStorageService {
     final token = await getAccessToken();
     return token != null && token.isNotEmpty;
   }
+
+
+  static Future<void> saveProfileData(Map<String, dynamic> profileJson) =>
+      _write(StorageKeys.keyProfileData, jsonEncode(profileJson));
+
+  static Future<Map<String, dynamic>?> getProfileData() async {
+    final data = await _read(StorageKeys.keyProfileData);
+    if (data == null || data.isEmpty) return null;
+    try {
+      return jsonDecode(data) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> deleteProfileData() => _delete(StorageKeys.keyProfileData);
 }

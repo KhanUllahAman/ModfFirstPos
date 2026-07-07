@@ -4,6 +4,7 @@ import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:modfirstpos/core/connectivity/connectivity_service.dart';
 import 'package:modfirstpos/core/network/api_endpoints.dart';
 import 'package:modfirstpos/core/network/api_interceptor.dart';
+import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import '../exceptions/app_exceptions.dart';
 import '../exceptions/exception_handler.dart';
 
@@ -27,7 +28,6 @@ class NetworkClient {
     _dio.interceptors.add(ApiInterceptor());
   }
 
-
   Future<Response> post({
     required String endpoint,
     Map<String, dynamic>? body,
@@ -37,7 +37,9 @@ class NetworkClient {
   }) async {
     try {
       if (!_connectivityService.isConnected) throw NoInternetException();
-      final options = Options(headers: await _buildHeaders(headers, isLoginRequest: isLoginRequest));
+      final options = Options(
+        headers: await _buildHeaders(headers, isLoginRequest: isLoginRequest),
+      );
       final response = await _dio.post(endpoint, data: body, options: options);
       log("POST Response [$endpoint]: $response");
       return response;
@@ -98,7 +100,11 @@ class NetworkClient {
     try {
       if (!_connectivityService.isConnected) throw NoInternetException();
       final options = Options(headers: await _buildHeaders(headers));
-      final response = await _dio.delete(endpoint, data: body, options: options);
+      final response = await _dio.delete(
+        endpoint,
+        data: body,
+        options: options,
+      );
       log("DELETE Response [$endpoint]: $response");
       return response;
     } catch (e) {
@@ -107,12 +113,19 @@ class NetworkClient {
     }
   }
 
-
   Future<Map<String, dynamic>> _buildHeaders(
     Map<String, dynamic>? customHeaders, {
     bool isLoginRequest = false,
   }) async {
     final headers = <String, dynamic>{};
+
+    if (!isLoginRequest) {
+      final token = await SecureStorageService.getAccessToken();
+      if (token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+    }
+
     if (customHeaders != null) {
       headers.addAll(customHeaders);
     }

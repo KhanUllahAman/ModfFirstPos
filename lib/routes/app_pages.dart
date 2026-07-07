@@ -8,6 +8,8 @@ import 'package:modfirstpos/modules/forgotPassword/binding/forgot_password_bindi
 import 'package:modfirstpos/modules/forgotPassword/view/forgot_password_view.dart';
 import 'package:modfirstpos/modules/home/binding/home_binding.dart';
 import 'package:modfirstpos/modules/home/view/home_view.dart';
+import 'package:modfirstpos/modules/profile/binding/get_profile_binding.dart';
+import 'package:modfirstpos/modules/profile/view/get_profile_view.dart';
 import 'package:modfirstpos/modules/verifyOtp/binding/verify_otp_binding.dart';
 import 'package:modfirstpos/modules/verifyOtp/view/verify_otp_view.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
@@ -49,6 +51,13 @@ class AppPages {
       name: Routes.home,
       page: () => const HomeView(),
       binding: HomeBinding(),
+      transition: Transition.leftToRightWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage(
+      name: Routes.profile,
+      page: () => const GetProfileView(),
+      binding: GetProfileViewBinding(),
       transition: Transition.leftToRightWithFade,
       transitionDuration: const Duration(milliseconds: 300),
     ),

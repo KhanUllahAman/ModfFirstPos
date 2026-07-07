@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/modules/auth/service/send_otp_service.dart';
+import 'package:modfirstpos/modules/profile/service/get_profile_service.dart';
 import 'package:modfirstpos/modules/verifyOtp/service/verify_otp_service.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
 import 'package:modfirstpos/shared/widgets/CircularProgressIndicator/circular_progress_indicator.dart';
@@ -93,9 +94,21 @@ class VerifyOtpController extends GetxController {
         return;
       }
 
-      final accessToken = response.payload?.accessToken?.toString();
+      final accessToken = response.payload?.accessToken.toString();
       if (accessToken != null && accessToken.isNotEmpty) {
         await SecureStorageService.saveAccessToken(accessToken);
+        try {
+          final profileResponse = await Get.find<GetProfileService>()
+              .getProfile();
+          if (profileResponse.isSuccess && profileResponse.payload != null) {
+            await SecureStorageService.saveProfileData(
+              profileResponse.payload!.toJson(),
+            );
+            log("Profile fetched and saved after OTP verification.");
+          }
+        } catch (e) {
+          log("Profile fetch after OTP verify failed: $e");
+        }
       }
 
       customSnackBar(

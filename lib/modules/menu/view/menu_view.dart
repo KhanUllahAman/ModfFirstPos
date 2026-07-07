@@ -206,6 +206,15 @@ class MenuView extends StatelessWidget {
                           },
                         ),
                         SizedBox(height: context.responsiveHeight(0.02)),
+                        MenuList(
+                          menuSvg: ImagesConstant.expenseSvg,
+                          menuTitle: 'Profile',
+                          menuColor: MenuTileColor.blue,
+                          menuTap: () {
+                            Get.toNamed(Routes.profile);
+                          },
+                        ),
+                        SizedBox(height: context.responsiveHeight(0.02)),
                         Text(
                           "Sub Menu",
                           style: GoogleFonts.geistMono(
