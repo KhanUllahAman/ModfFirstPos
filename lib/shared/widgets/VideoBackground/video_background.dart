@@ -57,7 +57,6 @@ class _VideoBackgroundState extends State<VideoBackground> {
                   child: VideoPlayer(_controller),
                 ),
               ),
-
             Container(
               color: widget.overlayColor.withOpacity(widget.overlayOpacity),
             ),
