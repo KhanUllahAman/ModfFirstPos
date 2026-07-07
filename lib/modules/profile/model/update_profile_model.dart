@@ -1,29 +1,29 @@
 import 'dart:developer';
 
-class GetProfileModel {
+class UpdateProfileModel {
   final bool success;
   final int status;
   final String message;
-  final GetProfilePayload? payload;
+  final UpdateProfilePayload? payload;
 
-  GetProfileModel({
+  UpdateProfileModel({
     required this.success,
     required this.status,
     required this.message,
     this.payload,
   });
 
-  factory GetProfileModel.fromJson(Map<String, dynamic> json) {
-    GetProfilePayload? payload;
+  factory UpdateProfileModel.fromJson(Map<String, dynamic> json) {
+    UpdateProfilePayload? payload;
     try {
       final payloadData = json['payload'];
       if (payloadData != null && payloadData is Map<String, dynamic>) {
-        payload = GetProfilePayload.fromJson(payloadData);
+        payload = UpdateProfilePayload.fromJson(payloadData);
       }
     } catch (e) {
-      log("Error parsing get profile payload: $e");
+      log("Error parsing update profile payload: $e");
     }
-    return GetProfileModel(
+    return UpdateProfileModel(
       success: json['success'] == true,
       status: json['status'] is num ? (json['status'] as num).toInt() : 0,
       message: json['message']?.toString() ?? '',
@@ -34,7 +34,7 @@ class GetProfileModel {
   bool get isSuccess => success;
 }
 
-class GetProfilePayload {
+class UpdateProfilePayload {
   final int? id;
   final String? fullName;
   final String? email;
@@ -49,7 +49,7 @@ class GetProfilePayload {
   final int? pinAttempts;
   final int? autoLockMinutes;
 
-  GetProfilePayload({
+  UpdateProfilePayload({
     this.id,
     this.fullName,
     this.email,
@@ -65,8 +65,8 @@ class GetProfilePayload {
     this.autoLockMinutes,
   });
 
-  factory GetProfilePayload.fromJson(Map<String, dynamic> json) {
-    return GetProfilePayload(
+  factory UpdateProfilePayload.fromJson(Map<String, dynamic> json) {
+    return UpdateProfilePayload(
       id: json['id'] is num ? (json['id'] as num).toInt() : null,
       fullName: json['full_name']?.toString(),
       email: json['email']?.toString(),

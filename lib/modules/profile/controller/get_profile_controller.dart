@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/modules/profile/model/get_profile_model.dart';
 import 'package:modfirstpos/modules/profile/service/get_profile_service.dart';
+import 'package:modfirstpos/routes/app_routes.dart';
 import 'package:modfirstpos/shared/widgets/CircularProgressIndicator/circular_progress_indicator.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
@@ -65,6 +66,8 @@ class GetProfileController extends GetxController {
   }
 
   void goToUpdateProfile() {
-    // Get.toNamed(Routes.updateProfile);
+    Get.toNamed(Routes.updateProfile);
   }
+
+  
 }

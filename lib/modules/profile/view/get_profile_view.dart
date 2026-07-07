@@ -27,7 +27,7 @@ class GetProfileView extends GetView<GetProfileController> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const BackBar(title: "Profile"),
-              SizedBox(height: context.spacingLG),
+              SizedBox(height: context.spacingMD),
               Expanded(
                 child: Obx(() {
                   final profile = controller.profile.value;
@@ -55,116 +55,92 @@ class GetProfileView extends GetView<GetProfileController> {
 
                   return SingleChildScrollView(
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 460),
+                      constraints: const BoxConstraints(maxWidth: 420),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Container(
                             width: double.infinity,
-                            padding: EdgeInsets.all(context.spacingLG),
+                            padding: EdgeInsets.all(context.spacingMD),
                             decoration: BoxDecoration(
                               color: ColorResources.whiteColor,
-                              borderRadius: BorderRadius.circular(24),
+                              borderRadius: BorderRadius.circular(18),
                               border: Border.all(
                                 color: const Color(0xFFE7E9F0),
                                 width: 1,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.08),
-                                  blurRadius: 24,
-                                  offset: const Offset(0, 8),
+                                  color: Colors.black.withOpacity(0.06),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 6),
                                 ),
                               ],
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Center(
-                                  child: CircleAvatar(
-                                    radius: context.responsiveWidth(0.09),
-                                    backgroundColor:
-                                        ColorResources.appMainColor.withOpacity(0.1),
-                                    backgroundImage: (profile.imageUrl != null &&
-                                            profile.imageUrl!.isNotEmpty)
-                                        ? NetworkImage(profile.imageUrl!)
-                                        : null,
-                                    child: (profile.imageUrl == null ||
-                                            profile.imageUrl!.isEmpty)
-                                        ? Icon(
-                                            Icons.person,
-                                            size: context.responsiveWidth(0.09),
-                                            color: ColorResources.appMainColor,
-                                          )
-                                        : null,
-                                  ),
-                                ),
-                                SizedBox(height: context.spacingSM),
-                                Center(
-                                  child: Text(
-                                    profile.fullName ?? '-',
-                                    style: GoogleFonts.geistMono(
-                                      fontSize: context.fontLG,
-                                      fontWeight: FontWeight.w600,
-                                      color: ColorResources.blackColor,
+                                // Avatar + Name row
+                                Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: context.responsiveWidth(0.07),
+                                      backgroundColor: ColorResources
+                                          .appMainColor
+                                          .withOpacity(0.1),
+                                      backgroundImage: (profile.imageUrl != null &&
+                                              profile.imageUrl!.isNotEmpty)
+                                          ? NetworkImage(profile.imageUrl!)
+                                          : null,
+                                      child: (profile.imageUrl == null ||
+                                              profile.imageUrl!.isEmpty)
+                                          ? Icon(
+                                              Icons.person,
+                                              size: context.responsiveWidth(0.07),
+                                              color: ColorResources.appMainColor,
+                                            )
+                                          : null,
                                     ),
-                                  ),
-                                ),
-                                if (profile.role != null) ...[
-                                  SizedBox(height: context.spacingXS / 2),
-                                  Center(
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: context.spacingSM,
-                                        vertical: context.spacingXS / 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: ColorResources.appMainColor
-                                            .withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
+                                    SizedBox(width: context.spacingSM),
+                                    Expanded(
                                       child: Text(
-                                        profile.role!,
+                                        profile.fullName ?? '-',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                         style: GoogleFonts.geistMono(
-                                          fontSize: context.fontXS,
-                                          fontWeight: FontWeight.w500,
-                                          color: ColorResources.appMainColor,
+                                          fontSize: context.fontMD,
+                                          fontWeight: FontWeight.w600,
+                                          color: ColorResources.blackColor,
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                                SizedBox(height: context.spacingXL),
+                                  ],
+                                ),
+                                SizedBox(height: context.spacingSM),
+                                Divider(
+                                  height: 1,
+                                  color: const Color(0xFFE7E9F0),
+                                ),
+                                SizedBox(height: context.spacingXS),
+                                _ProfileInfoRow(
+                                  icon: Icons.person_outline,
+                                  label: 'Full Name',
+                                  value: profile.fullName ?? '-',
+                                ),
+                                _ProfileInfoRow(
+                                  icon: Icons.email_outlined,
+                                  label: 'Email',
+                                  value: profile.email ?? '-',
+                                ),
                                 _ProfileInfoRow(
                                   icon: Icons.phone_outlined,
                                   label: 'Phone',
                                   value: profile.phone ?? '-',
                                 ),
-                                _ProfileInfoRow(
-                                  icon: Icons.badge_outlined,
-                                  label: 'Admin',
-                                  value: profile.isAdmin == true ? 'Yes' : 'No',
-                                ),
-                                _ProfileInfoRow(
-                                  icon: Icons.toggle_on_outlined,
-                                  label: 'Active',
-                                  value: profile.isActive == true ? 'Yes' : 'No',
-                                ),
-                                _ProfileInfoRow(
-                                  icon: Icons.lock_outline,
-                                  label: 'PIN Enabled',
-                                  value: profile.pinEnabled == true ? 'Yes' : 'No',
-                                ),
-                                if (profile.autoLockMinutes != null)
-                                  _ProfileInfoRow(
-                                    icon: Icons.timer_outlined,
-                                    label: 'Auto Lock',
-                                    value: '${profile.autoLockMinutes} min',
-                                  ),
                               ],
                             ),
                           ),
-                          SizedBox(height: context.spacingLG),
+                          SizedBox(height: context.spacingMD),
                           AppButton(
                             backgroundColor: ColorResources.mainbuttonColor,
                             onPressed: controller.goToUpdateProfile,
@@ -173,7 +149,7 @@ class GetProfileView extends GetView<GetProfileController> {
                             child: Text(
                               'Update Your Profile',
                               style: GoogleFonts.geistMono(
-                                fontSize: context.fontMD,
+                                fontSize: context.fontSM,
                                 fontWeight: FontWeight.w500,
                                 color: ColorResources.blackColor,
                                 letterSpacing: 0.5,
@@ -208,10 +184,10 @@ class _ProfileInfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: context.spacingXS),
+      padding: EdgeInsets.symmetric(vertical: context.spacingXS / 1.5),
       child: Row(
         children: [
-          Icon(icon, size: context.fontMD, color: ColorResources.appMainColor),
+          Icon(icon, size: context.fontSM, color: ColorResources.appMainColor),
           SizedBox(width: context.spacingSM),
           Text(
             label,
@@ -222,12 +198,17 @@ class _ProfileInfoRow extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          Text(
-            value,
-            style: GoogleFonts.geistMono(
-              fontSize: context.fontXS,
-              fontWeight: FontWeight.w600,
-              color: ColorResources.blackColor,
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.geistMono(
+                fontSize: context.fontXS,
+                fontWeight: FontWeight.w600,
+                color: ColorResources.blackColor,
+              ),
             ),
           ),
         ],

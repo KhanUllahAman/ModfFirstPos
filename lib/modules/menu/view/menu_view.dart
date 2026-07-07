@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/core/utils/images_constant.dart';
 import 'package:modfirstpos/modules/menu/widget/menu_widget.dart';
@@ -300,7 +301,8 @@ class MenuView extends StatelessWidget {
                                 height: context.responsiveHeight(0.20),
                                 width: context.responsiveWidth(0.20),
                               ),
-                              onYes: () {
+                              onYes: () async{
+                                await SecureStorageService.clearAll();
                                 Get.offAllNamed(Routes.auth);
                               },
                             );

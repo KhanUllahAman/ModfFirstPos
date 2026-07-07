@@ -6,6 +6,7 @@ abstract class Routes {
   static const home = '/home';
   static const menu = '/menu';
   static const profile = '/profile';
+  static const updateProfile = '/updateProfile';
   static const catalogue = '/catalogue';
   static const updateModule = '/updateModule';
   static const setting = '/setting';

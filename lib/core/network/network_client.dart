@@ -49,6 +49,32 @@ class NetworkClient {
     }
   }
 
+  Future<Response> patch({
+    required String endpoint,
+    Map<String, dynamic>? body,
+    Map<String, dynamic>? queryParameters,
+    Map<String, dynamic>? headers,
+    bool showErrorSnackbar = true,
+  }) async {
+    try {
+      if (!_connectivityService.isConnected) throw NoInternetException();
+      final options = Options(headers: await _buildHeaders(headers));
+      final response = await _dio.patch(
+        endpoint,
+        data: body,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      log("PATCH Response [$endpoint]: $response");
+      return response;
+    } catch (e) {
+      log("PATCH Error [$endpoint]: $e");
+      throw ExceptionHandler.handleError(e, showSnackbar: showErrorSnackbar);
+    }
+  }
+
+
+
   Future<Response> get({
     required String endpoint,
     Map<String, dynamic>? body,

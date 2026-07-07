@@ -7,4 +7,5 @@ class ApiConstants {
   static final String verifyOtpEndpoint = '${baseUrl}auth/verify-otp';
   static final String forgotPasswordEndpoint = '${baseUrl}auth/forgot-password';
   static final String getProfileEndpoint = '${baseUrl}auth/profile';
+  static final String uploadImageEndpoint = '${baseUrl}upload/image';
 }
