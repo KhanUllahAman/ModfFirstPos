@@ -34,7 +34,6 @@ class SecureStorageService {
     return token != null && token.isNotEmpty;
   }
 
-
   static Future<void> saveProfileData(Map<String, dynamic> profileJson) =>
       _write(StorageKeys.keyProfileData, jsonEncode(profileJson));
 
@@ -48,5 +47,23 @@ class SecureStorageService {
     }
   }
 
-  static Future<void> deleteProfileData() => _delete(StorageKeys.keyProfileData);
+  static Future<void> saveLastActiveAt(DateTime time) =>
+      _write(StorageKeys.keyLastActiveAt, time.toIso8601String());
+
+  static Future<DateTime?> getLastActiveAt() async {
+    final data = await _read(StorageKeys.keyLastActiveAt);
+    if (data == null) return null;
+    return DateTime.tryParse(data);
+  }
+
+  static Future<void> saveWasLocked(bool locked) =>
+      _write(StorageKeys.keyWasLocked, locked.toString());
+
+  static Future<bool> getWasLocked() async {
+    final data = await _read(StorageKeys.keyWasLocked);
+    return data == 'true';
+  }
+
+  static Future<void> deleteProfileData() =>
+      _delete(StorageKeys.keyProfileData);
 }
