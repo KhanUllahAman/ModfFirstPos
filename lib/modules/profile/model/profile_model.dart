@@ -1,29 +1,29 @@
 import 'dart:developer';
 
-class GetProfileModel {
+class ProfileModel {
   final bool success;
   final int status;
   final String message;
-  final GetProfilePayload? payload;
+  final ProfilePayload? payload;
 
-  GetProfileModel({
+  ProfileModel({
     required this.success,
     required this.status,
     required this.message,
     this.payload,
   });
 
-  factory GetProfileModel.fromJson(Map<String, dynamic> json) {
-    GetProfilePayload? payload;
+  factory ProfileModel.fromJson(Map<String, dynamic> json) {
+    ProfilePayload? payload;
     try {
       final payloadData = json['payload'];
       if (payloadData != null && payloadData is Map<String, dynamic>) {
-        payload = GetProfilePayload.fromJson(payloadData);
+        payload = ProfilePayload.fromJson(payloadData);
       }
     } catch (e) {
-      log("Error parsing get profile payload: $e");
+      log("Error parsing profile payload: $e");
     }
-    return GetProfileModel(
+    return ProfileModel(
       success: json['success'] == true,
       status: json['status'] is num ? (json['status'] as num).toInt() : 0,
       message: json['message']?.toString() ?? '',
@@ -34,7 +34,7 @@ class GetProfileModel {
   bool get isSuccess => success;
 }
 
-class GetProfilePayload {
+class ProfilePayload {
   final int? id;
   final String? fullName;
   final String? email;
@@ -49,7 +49,7 @@ class GetProfilePayload {
   final int? pinAttempts;
   final int? autoLockMinutes;
 
-  GetProfilePayload({
+  ProfilePayload({
     this.id,
     this.fullName,
     this.email,
@@ -65,8 +65,8 @@ class GetProfilePayload {
     this.autoLockMinutes,
   });
 
-  factory GetProfilePayload.fromJson(Map<String, dynamic> json) {
-    return GetProfilePayload(
+  factory ProfilePayload.fromJson(Map<String, dynamic> json) {
+    return ProfilePayload(
       id: json['id'] is num ? (json['id'] as num).toInt() : null,
       fullName: json['full_name']?.toString(),
       email: json['email']?.toString(),
@@ -102,4 +102,69 @@ class GetProfilePayload {
     'pin_attempts': pinAttempts,
     'auto_lock_minutes': autoLockMinutes,
   };
+
+  ProfilePayload copyWithJson(Map<String, dynamic> updates) {
+    final merged = <String, dynamic>{...toJson(), ...updates};
+    return ProfilePayload.fromJson(merged);
+  }
+
+  String? get fullImageUrl {
+    if (imageUrl == null || imageUrl!.isEmpty) return null;
+    if (imageUrl!.startsWith('http://') || imageUrl!.startsWith('https://')) {
+      return imageUrl;
+    }
+    return 'http://13.62.114.94:3000$imageUrl';
+  }
+}
+
+class ImageUploadModel {
+  final bool success;
+  final int status;
+  final String message;
+  final ImageUploadPayload? payload;
+
+  ImageUploadModel({
+    required this.success,
+    required this.status,
+    required this.message,
+    this.payload,
+  });
+
+  factory ImageUploadModel.fromJson(Map<String, dynamic> json) {
+    ImageUploadPayload? payload;
+    try {
+      final payloadData = json['payload'];
+      if (payloadData != null && payloadData is Map<String, dynamic>) {
+        payload = ImageUploadPayload.fromJson(payloadData);
+      }
+    } catch (e) {
+      log("Error parsing image upload payload: $e");
+    }
+    return ImageUploadModel(
+      success: json['success'] == true,
+      status: json['status'] is num ? (json['status'] as num).toInt() : 0,
+      message: json['message']?.toString() ?? '',
+      payload: payload,
+    );
+  }
+
+  bool get isSuccess => success;
+}
+
+class ImageUploadPayload {
+  final String? url;
+  final String? filename;
+  final int? size;
+  final String? originalName;
+
+  ImageUploadPayload({this.url, this.filename, this.size, this.originalName});
+
+  factory ImageUploadPayload.fromJson(Map<String, dynamic> json) {
+    return ImageUploadPayload(
+      url: json['url']?.toString(),
+      filename: json['filename']?.toString(),
+      size: json['size'] is num ? (json['size'] as num).toInt() : null,
+      originalName: json['originalName']?.toString(),
+    );
+  }
 }

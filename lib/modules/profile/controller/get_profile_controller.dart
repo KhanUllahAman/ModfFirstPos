@@ -1,7 +1,7 @@
 import 'dart:developer';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
-import 'package:modfirstpos/modules/profile/model/get_profile_model.dart';
+import 'package:modfirstpos/modules/profile/model/profile_model.dart';
 import 'package:modfirstpos/modules/profile/service/get_profile_service.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
 import 'package:modfirstpos/shared/widgets/CircularProgressIndicator/circular_progress_indicator.dart';
@@ -10,7 +10,7 @@ import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 class GetProfileController extends GetxController {
   final GetProfileService _getProfileService = Get.find<GetProfileService>();
 
-  final Rxn<GetProfilePayload> profile = Rxn<GetProfilePayload>();
+  final Rxn<ProfilePayload> profile = Rxn<ProfilePayload>();
   final RxBool isLoading = false.obs;
 
   @override
@@ -24,7 +24,7 @@ class GetProfileController extends GetxController {
     try {
       final storedData = await SecureStorageService.getProfileData();
       if (storedData != null) {
-        profile.value = GetProfilePayload.fromJson(storedData);
+        profile.value = ProfilePayload.fromJson(storedData);
       } else {
         log("No profile data found in secure storage.");
       }
@@ -65,9 +65,16 @@ class GetProfileController extends GetxController {
     }
   }
 
+  Future<void> updateProfileLocally(Map<String, dynamic> mergedData) async {
+    try {
+      profile.value = ProfilePayload.fromJson(mergedData);
+      await SecureStorageService.saveProfileData(mergedData);
+    } catch (e) {
+      log("GetProfileController updateProfileLocally error: $e");
+    }
+  }
+
   void goToUpdateProfile() {
     Get.toNamed(Routes.updateProfile);
   }
-
-  
 }

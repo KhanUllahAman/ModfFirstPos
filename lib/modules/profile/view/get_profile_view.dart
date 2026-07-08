@@ -90,7 +90,7 @@ class GetProfileView extends GetView<GetProfileController> {
                                           .withOpacity(0.1),
                                       backgroundImage: (profile.imageUrl != null &&
                                               profile.imageUrl!.isNotEmpty)
-                                          ? NetworkImage(profile.imageUrl!)
+                                          ? NetworkImage(profile.fullImageUrl!)
                                           : null,
                                       child: (profile.imageUrl == null ||
                                               profile.imageUrl!.isEmpty)

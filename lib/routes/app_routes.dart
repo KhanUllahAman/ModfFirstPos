@@ -4,6 +4,7 @@ abstract class Routes {
   static const verifyOtp = '/verifyOtp';
   static const forgotPassword = '/forgotPassword';
   static const home = '/home';
+  static const changePassword = '/changePassword';
   static const menu = '/menu';
   static const profile = '/profile';
   static const updateProfile = '/updateProfile';
@@ -15,4 +16,6 @@ abstract class Routes {
   static const order = '/order';
   static const notification = '/notification';
   static const error404Route = '/error404';
+  static const setPin = '/set-pin';
+  static const pinSettings = '/pin-settings';
 }

@@ -216,6 +216,24 @@ class MenuView extends StatelessWidget {
                           },
                         ),
                         SizedBox(height: context.responsiveHeight(0.02)),
+                        MenuList(
+                          menuSvg: ImagesConstant.expenseSvg,
+                          menuTitle: 'Change Password',
+                          menuColor: MenuTileColor.blue,
+                          menuTap: () {
+                            Get.toNamed(Routes.changePassword);
+                          },
+                        ),
+                        SizedBox(height: context.responsiveHeight(0.02)),
+                        MenuList(
+                          menuSvg: ImagesConstant.expenseSvg,
+                          menuTitle: 'Pin Settings',
+                          menuColor: MenuTileColor.blue,
+                          menuTap: () {
+                            Get.toNamed(Routes.pinSettings);
+                          },
+                        ),
+                        SizedBox(height: context.responsiveHeight(0.02)),
                         Text(
                           "Sub Menu",
                           style: GoogleFonts.geistMono(

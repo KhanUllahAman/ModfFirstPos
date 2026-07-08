@@ -36,6 +36,8 @@ class UpdateProfileView extends GetView<UpdateProfileController> {
                   Center(child: _AvatarPicker(context: context)),
                   SizedBox(height: context.spacingLG),
                   CustomTextFormField(
+                    customFocusedBorderColor: ColorResources.blackColor,
+                    customEnabledBorderColor: ColorResources.blackColor,
                     controller: controller.fullNameController,
                     labelText: "Full Name",
                     hintText: "Enter your full name",
@@ -52,6 +54,8 @@ class UpdateProfileView extends GetView<UpdateProfileController> {
                   ),
                   SizedBox(height: context.spacingMD),
                   CustomTextFormField(
+                    customFocusedBorderColor: ColorResources.blackColor,
+                    customEnabledBorderColor: ColorResources.blackColor,
                     controller: controller.phoneController,
                     labelText: "Phone Number",
                     hintText: "Enter your phone number",
@@ -67,19 +71,33 @@ class UpdateProfileView extends GetView<UpdateProfileController> {
                     },
                   ),
                   SizedBox(height: context.spacingXL),
-                  // Obx(
-                  //   () => AppButton(
-                  //     text: controller.isUploadingImage.value
-                  //         ? "Uploading image..."
-                  //         : controller.isLoading.value
-                  //             ? "Updating..."
-                  //             : "Update Profile",
-                  //     onPressed: (controller.isLoading.value ||
-                  //             controller.isUploadingImage.value)
-                  //         ? null
-                  //         : controller.updateProfile,
-                  //   ),
-                  // ),
+                  Obx(
+                    () => AppButton(
+                      backgroundColor: ColorResources.mainbuttonColor,
+                      onPressed:
+                          controller.isLoading.value ||
+                              controller.isUploadingImage.value
+                          ? () {}
+                          : controller.updateProfile,
+                      isLoading:
+                          controller.isLoading.value ||
+                          controller.isUploadingImage.value,
+                      borderRadius: 12,
+                      child: Text(
+                        controller.isUploadingImage.value
+                            ? "Uploading image..."
+                            : controller.isLoading.value
+                            ? "Updating..."
+                            : "Update Profile",
+                        style: GoogleFonts.geistMono(
+                          fontSize: context.fontSM,
+                          fontWeight: FontWeight.w500,
+                          color: ColorResources.blackColor,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
                   SizedBox(height: context.spacingMD),
                 ],
               ),
@@ -106,7 +124,7 @@ class _AvatarPicker extends StatelessWidget {
       onTap: () => _showImageSourceSheet(context),
       child: Obx(() {
         final file = controller.selectedImage.value;
-        final url = controller.existingImageUrl.value;
+        final url = controller.displayImageUrl;
 
         ImageProvider? imageProvider;
         if (file != null) {
@@ -131,19 +149,22 @@ class _AvatarPicker extends StatelessWidget {
                   : null,
             ),
             Positioned(
-              bottom: 0,
-              right: 0,
+              bottom: 10,
+              right: 50,
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: ColorResources.appMainColor,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
+                  border: Border.all(
+                    color: ColorResources.blackColor,
+                    width: 2,
+                  ),
                 ),
                 child: const Icon(
                   Iconsax.camera,
                   size: 16,
-                  color: Colors.white,
+                  color: ColorResources.blackColor,
                 ),
               ),
             ),

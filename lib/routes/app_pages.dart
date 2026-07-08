@@ -1,4 +1,6 @@
 import 'package:get/get.dart';
+import 'package:modfirstpos/modules/changePassword/bindings/change_password_binding.dart';
+import 'package:modfirstpos/modules/changePassword/view/change_password_view.dart';
 import 'package:modfirstpos/modules/menu/view/menu_view.dart';
 import 'package:modfirstpos/modules/auth/binding/auth_binding.dart';
 import 'package:modfirstpos/modules/catalogue/binding/catalogue_binding.dart';
@@ -8,8 +10,14 @@ import 'package:modfirstpos/modules/forgotPassword/binding/forgot_password_bindi
 import 'package:modfirstpos/modules/forgotPassword/view/forgot_password_view.dart';
 import 'package:modfirstpos/modules/home/binding/home_binding.dart';
 import 'package:modfirstpos/modules/home/view/home_view.dart';
+import 'package:modfirstpos/modules/pin/binding/pin_settings_binding.dart';
+import 'package:modfirstpos/modules/pin/binding/set_pin_binding.dart';
+import 'package:modfirstpos/modules/pin/view/pin_settings_view.dart';
+import 'package:modfirstpos/modules/pin/view/set_pin_view.dart';
 import 'package:modfirstpos/modules/profile/binding/get_profile_binding.dart';
+import 'package:modfirstpos/modules/profile/binding/update_profile_binding.dart';
 import 'package:modfirstpos/modules/profile/view/get_profile_view.dart';
+import 'package:modfirstpos/modules/profile/view/update_profile_view.dart';
 import 'package:modfirstpos/modules/verifyOtp/binding/verify_otp_binding.dart';
 import 'package:modfirstpos/modules/verifyOtp/view/verify_otp_view.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
@@ -62,6 +70,21 @@ class AppPages {
       transitionDuration: const Duration(milliseconds: 300),
     ),
     GetPage(
+      name: Routes.updateProfile,
+      page: () => const UpdateProfileView(),
+      binding: UpdateProfileBinding(),
+      transition: Transition.leftToRightWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+
+    GetPage(
+      name: Routes.changePassword,
+      page: () => const ChangePasswordView(),
+      binding: ChangePasswordBinding(),
+      transition: Transition.leftToRightWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage(
       name: Routes.catalogue,
       page: () => const CatalogueView(),
       binding: CatalogueBinding(),
@@ -74,6 +97,23 @@ class AppPages {
       transition: Transition.leftToRightWithFade,
       transitionDuration: const Duration(milliseconds: 300),
     ),
+
+    GetPage(
+      name: Routes.setPin,
+      page: () => const SetPinView(),
+      binding: SetPinBinding(),
+      transition: Transition.leftToRightWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+
+    GetPage(
+      name: Routes.pinSettings,
+      page: () => const PinSettingsView(),
+      binding: PinSettingsBinding(),
+      transition: Transition.leftToRightWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+
     GetPage(
       name: Routes.error404Route,
       page: () => const Error404View(),

@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/core/utils/images_constant.dart';
+import 'package:modfirstpos/modules/pin/controller/pin_controller.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 
 class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
@@ -66,6 +67,20 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                   ],
                 ),
               ),
+              Obx(() {
+                final pinController = Get.find<PinController>();
+                if (!pinController.pinEnabled.value) {
+                  return const SizedBox.shrink();
+                }
+                return GestureDetector(
+                  onTap: pinController.lockNow,
+                  child: Icon(
+                    Icons.lock_outline,
+                    color: ColorResources.whiteColor,
+                    size: 18,
+                  ),
+                );
+              }),
             ],
           ),
         ),

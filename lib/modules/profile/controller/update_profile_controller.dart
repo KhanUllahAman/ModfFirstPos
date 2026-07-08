@@ -1,12 +1,11 @@
 import 'dart:developer';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/modules/profile/controller/get_profile_controller.dart';
-import 'package:modfirstpos/modules/profile/model/update_profile_model.dart';
+import 'package:modfirstpos/modules/profile/model/profile_model.dart';
 import 'package:modfirstpos/modules/profile/service/get_profile_service.dart';
 import 'package:modfirstpos/shared/widgets/CircularProgressIndicator/circular_progress_indicator.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
@@ -28,6 +27,13 @@ class UpdateProfileController extends GetxController {
     _prefillFromExistingProfile();
   }
 
+  String get displayImageUrl {
+    final raw = existingImageUrl.value;
+    if (raw.isEmpty) return raw;
+    if (raw.startsWith('http')) return raw;
+    return 'http://13.62.114.94:3000$raw';
+  }
+
   void _prefillFromExistingProfile() {
     final getProfileController = Get.isRegistered<GetProfileController>()
         ? Get.find<GetProfileController>()
@@ -39,7 +45,6 @@ class UpdateProfileController extends GetxController {
     phoneController = TextEditingController(text: profile?.phone ?? '');
     existingImageUrl.value = profile?.imageUrl ?? '';
   }
-
 
   Future<void> pickImageFromCamera() => _pickImage(ImageSource.camera);
 
@@ -75,22 +80,32 @@ class UpdateProfileController extends GetxController {
     }
     try {
       isUploadingImage.value = true;
-      log(
-        "Image upload API not integrated yet. Skipping upload, "
-        "keeping old image url for now.",
-      );
-      return existingImageUrl.value.isNotEmpty ? existingImageUrl.value : null;
+      final response = await _profileService.uploadImage(selectedImage.value!);
+
+      if (!response.isSuccess || response.payload?.url == null) {
+        _pendingErrorMessage = response.message.isNotEmpty
+            ? response.message
+            : 'Image upload failed';
+        return existingImageUrl.value.isNotEmpty
+            ? existingImageUrl.value
+            : null;
+      }
+
+      return response.payload!.url;
     } catch (e) {
       log("UpdateProfileController image upload error: $e");
+      _pendingErrorMessage = 'Something went wrong while uploading image';
       return existingImageUrl.value.isNotEmpty ? existingImageUrl.value : null;
     } finally {
       isUploadingImage.value = false;
     }
   }
 
+  String? _pendingErrorMessage;
 
   Future<void> updateProfile() async {
     if (!(formKey.currentState?.validate() ?? false)) return;
+    _pendingErrorMessage = null;
     try {
       CustomLoadingDialog.show();
       isLoading.value = true;
@@ -101,50 +116,45 @@ class UpdateProfileController extends GetxController {
         image: imageUrl,
       );
       if (!response.isSuccess || response.payload == null) {
-        customSnackBar(
-          'Error',
-          response.message.isNotEmpty
-              ? response.message
-              : 'Failed to update profile',
-          snackBarType: SnackBarType.error,
-        );
+        _pendingErrorMessage = response.message.isNotEmpty
+            ? response.message
+            : 'Failed to update profile';
         return;
       }
       await _syncUpdatedProfile(response.payload!);
-      customSnackBar(
-        'Success',
-        'Profile updated successfully',
-        snackBarType: SnackBarType.success,
-      );
-      Get.back();
     } catch (e) {
       log("UpdateProfileController updateProfile error: $e");
-      customSnackBar(
-        'Error',
-        'Something went wrong while updating profile',
-        snackBarType: SnackBarType.error,
-      );
+      _pendingErrorMessage = 'Something went wrong while updating profile';
     } finally {
       CustomLoadingDialog.hide();
       isLoading.value = false;
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (_pendingErrorMessage != null) {
+        customSnackBar(
+          'Error',
+          _pendingErrorMessage!,
+          snackBarType: SnackBarType.error,
+        );
+      } else {
+        customSnackBar(
+          'Success',
+          'Profile updated successfully',
+          snackBarType: SnackBarType.success,
+        );
+        Get.back();
+      }
     }
   }
 
- 
-  Future<void> _syncUpdatedProfile(UpdateProfilePayload payload) async {
+  Future<void> _syncUpdatedProfile(ProfilePayload payload) async {
     try {
       final storedData = await SecureStorageService.getProfileData();
-      final mergedData = <String, dynamic>{
-        ...?storedData,
-        ...payload.toJson(),
-      };
-
-      await SecureStorageService.saveProfileData(mergedData);
+      final mergedData = <String, dynamic>{...?storedData, ...payload.toJson()};
 
       if (Get.isRegistered<GetProfileController>()) {
-        Get.find<GetProfileController>().refreshProfileFromServer(
-          showDialog: false,
-        );
+        await Get.find<GetProfileController>().updateProfileLocally(mergedData);
+      } else {
+        await SecureStorageService.saveProfileData(mergedData);
       }
     } catch (e) {
       log("UpdateProfileController _syncUpdatedProfile error: $e");

@@ -28,6 +28,31 @@ class NetworkClient {
     _dio.interceptors.add(ApiInterceptor());
   }
 
+  Future<Response> postFormData({
+  required String endpoint,
+  required FormData formData,
+  Map<String, dynamic>? headers,
+  bool showErrorSnackbar = true,
+}) async {
+  try {
+    if (!_connectivityService.isConnected) throw NoInternetException();
+    final builtHeaders = await _buildHeaders(headers);
+    builtHeaders['Content-Type'] =
+        'multipart/form-data; boundary=${formData.boundary}';
+    final options = Options(headers: builtHeaders);
+    final response = await _dio.post(
+      endpoint,
+      data: formData,
+      options: options,
+    );
+    log("POST FormData Response [$endpoint]: $response");
+    return response;
+  } catch (e) {
+    log("POST FormData Error [$endpoint]: $e");
+    throw ExceptionHandler.handleError(e, showSnackbar: showErrorSnackbar);
+  }
+}
+
   Future<Response> post({
     required String endpoint,
     Map<String, dynamic>? body,
@@ -72,8 +97,6 @@ class NetworkClient {
       throw ExceptionHandler.handleError(e, showSnackbar: showErrorSnackbar);
     }
   }
-
-
 
   Future<Response> get({
     required String endpoint,
