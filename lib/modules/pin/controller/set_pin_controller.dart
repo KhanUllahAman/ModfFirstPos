@@ -19,9 +19,11 @@ class SetPinController extends GetxController {
 
   void onDigit(String digit) {
     errorMessage.value = '';
+
     if (stage.value == SetPinStage.enterNew) {
       if (firstPin.value.length >= 6) return;
       firstPin.value += digit;
+
       if (firstPin.value.length == 4) {
         Future.delayed(const Duration(milliseconds: 150), () {
           stage.value = SetPinStage.confirmNew;
@@ -30,6 +32,7 @@ class SetPinController extends GetxController {
     } else {
       if (confirmPin.value.length >= 6) return;
       confirmPin.value += digit;
+
       if (confirmPin.value.length == firstPin.value.length) {
         _submit();
       }
@@ -37,6 +40,7 @@ class SetPinController extends GetxController {
   }
 
   void onBackspace() {
+    errorMessage.value = '';
     if (stage.value == SetPinStage.enterNew) {
       if (firstPin.value.isEmpty) return;
       firstPin.value = firstPin.value.substring(0, firstPin.value.length - 1);
@@ -56,6 +60,22 @@ class SetPinController extends GetxController {
   }
 
   Future<void> _submit() async {
+    if (firstPin.value != confirmPin.value) {
+      errorMessage.value = 'PINs do not match. Please try again.';
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        _resetToStart();
+      });
+      return;
+    }
+
+    if (firstPin.value.length < 4) {
+      errorMessage.value = 'PIN must be at least 4 digits';
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        _resetToStart();
+      });
+      return;
+    }
+
     try {
       isLoading.value = true;
       CustomLoadingDialog.show();
@@ -68,7 +88,9 @@ class SetPinController extends GetxController {
 
       if (!response.isSuccess) {
         errorMessage.value = response.displayMessage;
-        _resetToStart();
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          _resetToStart();
+        });
         return;
       }
 
@@ -85,7 +107,10 @@ class SetPinController extends GetxController {
       errorMessage.value = e is AppException
           ? e.message
           : 'Something went wrong. Please try again.';
-      _resetToStart();
+
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        _resetToStart();
+      });
     } finally {
       isLoading.value = false;
     }

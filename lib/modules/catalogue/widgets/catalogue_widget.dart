@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/core/utils/images_constant.dart';
@@ -21,13 +21,13 @@ class SearchBarCatalogue extends StatelessWidget {
       child: TextField(
         controller: controller.searchController,
         onChanged: controller.onSearch,
-        style: GoogleFonts.geistMono(
+        style: AppFonts.geistMono(
           fontSize: context.fontSM,
           color: ColorResources.labelColor,
         ),
         decoration: InputDecoration(
           hintText: 'Search Product',
-          hintStyle: GoogleFonts.geistMono(
+          hintStyle: AppFonts.geistMono(
             fontWeight: FontWeight.w600,
             fontSize: context.fontSM,
             color: ColorResources.labelColor,
@@ -79,7 +79,7 @@ class ProductGrid extends StatelessWidget {
         return Center(
           child: Text(
             'No products found',
-            style: GoogleFonts.geistMono(
+            style: AppFonts.geistMono(
               fontSize: context.fontSM,
               color: ColorResources.blackColor.withOpacity(0.5),
             ),
@@ -215,7 +215,7 @@ class _ProductCard extends StatelessWidget {
                       product.displayName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.geistMono(
+                      style: AppFonts.geistMono(
                         fontSize: context.fontXS,
                         fontWeight: FontWeight.w600,
                         color: ColorResources.labelColor,
@@ -223,21 +223,21 @@ class _ProductCard extends StatelessWidget {
                     ),
                     Text(
                       'SKU ${product.skuCode ?? '--'}',
-                      style: GoogleFonts.geistMono(
+                      style: AppFonts.geistMono(
                         fontSize: context.fontXS - 1,
                         color: ColorResources.labelColor.withOpacity(0.5),
                       ),
                     ),
                     Text(
                       'Old SKU ${product.oldSkuCode ?? '--'}',
-                      style: GoogleFonts.geistMono(
+                      style: AppFonts.geistMono(
                         fontSize: context.fontXS - 1,
                         color: ColorResources.labelColor.withOpacity(0.4),
                       ),
                     ),
                     Text(
                       'Rs. ${_fmt(product.productPrice ?? 0)}',
-                      style: GoogleFonts.geistMono(
+                      style: AppFonts.geistMono(
                         fontSize: context.fontXS,
                         fontWeight: FontWeight.w700,
                         color: ColorResources.labelColor,

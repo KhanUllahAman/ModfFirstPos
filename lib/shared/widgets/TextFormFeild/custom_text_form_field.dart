@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../core/utils/colors.dart';
 
@@ -67,7 +67,7 @@ class CustomTextFormField extends StatelessWidget {
         expands: expands,
         readOnly: readOnly,
         onTap: onTap,
-        style: GoogleFonts.geistMono(
+        style: AppFonts.geistMono(
           color: textColor,
           fontSize: 14,
           fontWeight: FontWeight.normal,
@@ -77,8 +77,8 @@ class CustomTextFormField extends StatelessWidget {
           labelText: labelText,
           hintText: hintText,
           suffixIcon: _buildSuffixIcon(context),
-          labelStyle: GoogleFonts.geistMono(fontSize: 13, color: labelColor),
-          floatingLabelStyle: GoogleFonts.geistMono(
+          labelStyle: AppFonts.geistMono(fontSize: 13, color: labelColor),
+          floatingLabelStyle: AppFonts.geistMono(
             fontSize: 13,
             color: focusColor,
             fontWeight: FontWeight.w500,
@@ -108,7 +108,7 @@ class CustomTextFormField extends StatelessWidget {
           ),
           fillColor: fillColor,
           filled: true,
-          errorStyle: GoogleFonts.geistMono(
+          errorStyle: AppFonts.geistMono(
             color: ColorResources.gradientRed,
             fontSize: 12,
           ),

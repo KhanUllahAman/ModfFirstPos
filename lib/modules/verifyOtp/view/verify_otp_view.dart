@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
@@ -74,7 +74,7 @@ class VerifyOtpView extends GetView<VerifyOtpController> {
                               SizedBox(height: context.spacingXS),
                               Text(
                                 'Verify OTP',
-                                style: GoogleFonts.geistMono(
+                                style: AppFonts.geistMono(
                                   fontSize: context.fontLG,
                                   fontWeight: FontWeight.w600,
                                   color: ColorResources.blackColor,
@@ -86,7 +86,7 @@ class VerifyOtpView extends GetView<VerifyOtpController> {
                                   controller.email.value.isEmpty
                                       ? 'Enter the 6-digit code sent to your email.'
                                       : 'Enter the 6-digit code sent to ${controller.email.value}',
-                                  style: GoogleFonts.geistMono(
+                                  style: AppFonts.geistMono(
                                     fontSize: context.fontXS,
                                     fontWeight: FontWeight.w400,
                                     color: ColorResources.blackColor
@@ -123,7 +123,7 @@ class VerifyOtpView extends GetView<VerifyOtpController> {
                                 borderRadius: 12,
                                 child: Text(
                                   'Verify',
-                                  style: GoogleFonts.geistMono(
+                                  style: AppFonts.geistMono(
                                     fontSize: context.fontMD,
                                     fontWeight: FontWeight.w500,
                                     color: ColorResources.blackColor,
@@ -143,7 +143,7 @@ class VerifyOtpView extends GetView<VerifyOtpController> {
                                       controller.resendSecondsLeft.value == 0
                                           ? "Didn't receive the code? Resend"
                                           : 'Resend code in ${controller.resendSecondsLeft.value}s',
-                                      style: GoogleFonts.geistMono(
+                                      style: AppFonts.geistMono(
                                         fontSize: context.fontXS,
                                         fontWeight: FontWeight.w500,
                                         color:
@@ -248,7 +248,7 @@ class _OtpBoxState extends State<_OtpBox> {
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             showCursor: true,
             cursorColor: ColorResources.appMainColor,
-            style: GoogleFonts.geistMono(
+            style: AppFonts.geistMono(
               fontSize: context.fontLG,
               fontWeight: FontWeight.w600,
               color: ColorResources.blackColor,

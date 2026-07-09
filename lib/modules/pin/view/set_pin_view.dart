@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/pin/controller/set_pin_controller.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
@@ -70,7 +70,7 @@ class SetPinView extends GetView<SetPinController> {
                                   controller.stage.value == SetPinStage.enterNew
                                       ? "Enter a new PIN"
                                       : "Confirm your PIN",
-                                  style: GoogleFonts.geistMono(
+                                  style: AppFonts.geistMono(
                                     fontSize: context.fontMD,
                                     fontWeight: FontWeight.w600,
                                     color: ColorResources.blackColor,
@@ -81,7 +81,7 @@ class SetPinView extends GetView<SetPinController> {
                               Text(
                                 "This PIN will be used to unlock the POS screen",
                                 textAlign: TextAlign.center,
-                                style: GoogleFonts.geistMono(
+                                style: AppFonts.geistMono(
                                   fontSize: context.fontXS,
                                   color: ColorResources.blackColor.withOpacity(
                                     0.5,
@@ -112,7 +112,7 @@ class SetPinView extends GetView<SetPinController> {
                                           child: Text(
                                             controller.errorMessage.value,
                                             textAlign: TextAlign.center,
-                                            style: GoogleFonts.geistMono(
+                                            style: AppFonts.geistMono(
                                               fontSize: context.fontXS,
                                               color: Colors.red,
                                             ),

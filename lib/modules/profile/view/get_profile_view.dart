@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/profile/controller/get_profile_controller.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
@@ -44,7 +44,7 @@ class GetProfileView extends GetView<GetProfileController> {
                     return Center(
                       child: Text(
                         'Profile Load Error',
-                        style: GoogleFonts.geistMono(
+                        style: AppFonts.geistMono(
                           fontSize: context.fontSM,
                           fontWeight: FontWeight.w500,
                           color: ColorResources.blackColor,
@@ -88,16 +88,21 @@ class GetProfileView extends GetView<GetProfileController> {
                                       backgroundColor: ColorResources
                                           .appMainColor
                                           .withOpacity(0.1),
-                                      backgroundImage: (profile.imageUrl != null &&
+                                      backgroundImage:
+                                          (profile.imageUrl != null &&
                                               profile.imageUrl!.isNotEmpty)
                                           ? NetworkImage(profile.fullImageUrl!)
                                           : null,
-                                      child: (profile.imageUrl == null ||
+                                      child:
+                                          (profile.imageUrl == null ||
                                               profile.imageUrl!.isEmpty)
                                           ? Icon(
                                               Icons.person,
-                                              size: context.responsiveWidth(0.07),
-                                              color: ColorResources.appMainColor,
+                                              size: context.responsiveWidth(
+                                                0.07,
+                                              ),
+                                              color:
+                                                  ColorResources.appMainColor,
                                             )
                                           : null,
                                     ),
@@ -107,7 +112,7 @@ class GetProfileView extends GetView<GetProfileController> {
                                         profile.fullName ?? '-',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.geistMono(
+                                        style: AppFonts.geistMono(
                                           fontSize: context.fontMD,
                                           fontWeight: FontWeight.w600,
                                           color: ColorResources.blackColor,
@@ -148,7 +153,7 @@ class GetProfileView extends GetView<GetProfileController> {
                             borderRadius: 12,
                             child: Text(
                               'Update Your Profile',
-                              style: GoogleFonts.geistMono(
+                              style: AppFonts.geistMono(
                                 fontSize: context.fontSM,
                                 fontWeight: FontWeight.w500,
                                 color: ColorResources.blackColor,
@@ -191,7 +196,7 @@ class _ProfileInfoRow extends StatelessWidget {
           SizedBox(width: context.spacingSM),
           Text(
             label,
-            style: GoogleFonts.geistMono(
+            style: AppFonts.geistMono(
               fontSize: context.fontXS,
               fontWeight: FontWeight.w400,
               color: ColorResources.blackColor.withOpacity(0.55),
@@ -204,7 +209,7 @@ class _ProfileInfoRow extends StatelessWidget {
               textAlign: TextAlign.right,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.geistMono(
+              style: AppFonts.geistMono(
                 fontSize: context.fontXS,
                 fontWeight: FontWeight.w600,
                 color: ColorResources.blackColor,

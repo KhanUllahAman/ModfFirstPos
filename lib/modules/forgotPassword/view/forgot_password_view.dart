@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
@@ -29,9 +29,7 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
           backgroundColor: ColorResources.backgroundColor,
           body: Stack(
             children: [
-              const VideoBackground(
-                assetPath: 'assets/videos/posvideo.mp4',
-              ),
+              const VideoBackground(assetPath: 'assets/videos/posvideo.mp4'),
               SafeArea(
                 child: Center(
                   child: SingleChildScrollView(
@@ -77,7 +75,7 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
                               SizedBox(height: context.spacingXS),
                               Text(
                                 'Forgot Password',
-                                style: GoogleFonts.geistMono(
+                                style: AppFonts.geistMono(
                                   fontSize: context.fontLG,
                                   fontWeight: FontWeight.w600,
                                   color: ColorResources.blackColor,
@@ -86,11 +84,12 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
                               SizedBox(height: context.spacingXS),
                               Text(
                                 'Enter your store email and we will send you reset instructions.',
-                                style: GoogleFonts.geistMono(
+                                style: AppFonts.geistMono(
                                   fontSize: context.fontXS,
                                   fontWeight: FontWeight.w400,
-                                  color: ColorResources.blackColor
-                                      .withOpacity(0.55),
+                                  color: ColorResources.blackColor.withOpacity(
+                                    0.55,
+                                  ),
                                 ),
                               ),
                               SizedBox(height: context.spacingXL),
@@ -117,7 +116,7 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
                                     controller.isEmailSent.value
                                         ? 'Resend Instructions'
                                         : 'Send Reset Link',
-                                    style: GoogleFonts.geistMono(
+                                    style: AppFonts.geistMono(
                                       fontSize: context.fontMD,
                                       fontWeight: FontWeight.w500,
                                       color: ColorResources.blackColor,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/core/utils/images_constant.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
@@ -26,7 +26,7 @@ class BackBar extends StatelessWidget {
               SizedBox(width: 10),
               Text(
                 'Back',
-                style: GoogleFonts.geistMono(
+                style: AppFonts.geistMono(
                   fontSize: context.fontSM,
                   color: ColorResources.labelColor,
                   fontWeight: FontWeight.w500,
@@ -37,14 +37,14 @@ class BackBar extends StatelessWidget {
         ),
         Text(
           '  /  ',
-          style: GoogleFonts.geistMono(
+          style: AppFonts.geistMono(
             fontSize: context.fontSM,
             color: ColorResources.labelColor,
           ),
         ),
         Text(
           title,
-          style: GoogleFonts.geistMono(
+          style: AppFonts.geistMono(
             fontSize: context.fontSM,
             color: ColorResources.labelColor,
           ),

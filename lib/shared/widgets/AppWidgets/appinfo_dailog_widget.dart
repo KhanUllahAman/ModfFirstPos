@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:flutter/services.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
@@ -265,7 +265,7 @@ class _AppDialogState extends State<AppDialog> {
       children: [
         Text(
           widget.title,
-          style: GoogleFonts.geistMono(
+          style: AppFonts.geistMono(
             fontSize: 16,
             fontWeight: FontWeight.w700,
             color: ColorResources.labelColor,
@@ -308,7 +308,7 @@ class _AppDialogState extends State<AppDialog> {
             onChanged: (val) => setState(() => _selectedValue = val),
             title: Text(
               opt.label,
-              style: GoogleFonts.geistMono(
+              style: AppFonts.geistMono(
                 fontSize: 13,
                 color: ColorResources.labelColor,
               ),
@@ -389,7 +389,7 @@ class _AppDialogState extends State<AppDialog> {
                     children: [
                       Text(
                         item.id,
-                        style: GoogleFonts.geistMono(
+                        style: AppFonts.geistMono(
                           fontSize: 13,
                           color: ColorResources.labelColor,
                         ),
@@ -398,7 +398,7 @@ class _AppDialogState extends State<AppDialog> {
                       Expanded(
                         child: Text(
                           item.name,
-                          style: GoogleFonts.geistMono(
+                          style: AppFonts.geistMono(
                             fontSize: 13,
                             color: ColorResources.labelColor,
                           ),
@@ -406,7 +406,7 @@ class _AppDialogState extends State<AppDialog> {
                       ),
                       Text(
                         item.trailing,
-                        style: GoogleFonts.geistMono(
+                        style: AppFonts.geistMono(
                           fontSize: 13,
                           color: ColorResources.labelColor,
                         ),
@@ -432,7 +432,7 @@ class _AppDialogState extends State<AppDialog> {
         ],
         Text(
           widget.confirmMessage ?? "",
-          style: GoogleFonts.geistMono(
+          style: AppFonts.geistMono(
             fontSize: 15,
             fontWeight: FontWeight.w700,
             color: ColorResources.labelColor,
@@ -443,7 +443,7 @@ class _AppDialogState extends State<AppDialog> {
           SizedBox(height: context.responsiveHeight(0.006)),
           Text(
             widget.confirmSubMessage!,
-            style: GoogleFonts.geistMono(
+            style: AppFonts.geistMono(
               fontSize: 13,
               color: ColorResources.labelColor,
             ),
@@ -472,7 +472,7 @@ class _AppDialogState extends State<AppDialog> {
       children: [
         Text(
           widget.content ?? "",
-          style: GoogleFonts.geistMono(
+          style: AppFonts.geistMono(
             fontSize: 14,
             color: ColorResources.labelColor,
           ),
@@ -488,7 +488,7 @@ class _AppDialogState extends State<AppDialog> {
             isLoading: false,
             child: Text(
               widget.buttonText ?? "OK",
-              style: GoogleFonts.geistMono(
+              style: AppFonts.geistMono(
                 color: ColorResources.blackColor,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -517,7 +517,7 @@ class _AppDialogState extends State<AppDialog> {
             isLoading: false,
             child: Text(
               cancelText,
-              style: GoogleFonts.geistMono(
+              style: AppFonts.geistMono(
                 color: ColorResources.whiteColor,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -533,7 +533,7 @@ class _AppDialogState extends State<AppDialog> {
             isLoading: false,
             child: Text(
               confirmText,
-              style: GoogleFonts.geistMono(
+              style: AppFonts.geistMono(
                 color: ColorResources.blackColor,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -571,7 +571,7 @@ class AppSyncButton extends StatelessWidget {
       ),
       label: Text(
         label,
-        style: GoogleFonts.geistMono(
+        style: AppFonts.geistMono(
           fontSize: 12,
           color: ColorResources.appMainColor,
           fontWeight: FontWeight.w500,
@@ -609,13 +609,13 @@ class AppSearchBar extends StatelessWidget {
       child: TextField(
         controller: textController,
         onChanged: onChanged,
-        style: GoogleFonts.geistMono(
+        style: AppFonts.geistMono(
           fontSize: 13,
           color: ColorResources.labelColor,
         ),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: GoogleFonts.geistMono(
+          hintStyle: AppFonts.geistMono(
             fontSize: 13,
             fontWeight: FontWeight.w600,
             color: ColorResources.labelColor.withOpacity(0.5),
@@ -668,7 +668,7 @@ class AppHeaderCell extends StatelessWidget {
       flex: flex,
       child: Text(
         label,
-        style: GoogleFonts.geistMono(
+        style: AppFonts.geistMono(
           fontSize: 12,
           fontWeight: FontWeight.w700,
           color: ColorResources.labelColor,
@@ -697,7 +697,7 @@ class AppDataCell extends StatelessWidget {
       flex: flex,
       child: Text(
         text,
-        style: GoogleFonts.geistMono(
+        style: AppFonts.geistMono(
           fontSize: 11,
           color: ColorResources.labelColor,
         ),
@@ -741,7 +741,7 @@ class AppActionChip extends StatelessWidget {
             SizedBox(width: context.responsiveWidth(0.004)),
             Text(
               label,
-              style: GoogleFonts.geistMono(
+              style: AppFonts.geistMono(
                 fontSize: 10,
                 color: ColorResources.labelColor,
                 fontWeight: FontWeight.w500,

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:get/get.dart';
-import 'package:modfirstpos/core/utils/images_constant.dart';
+import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/modules/splash/controller/splash_controller.dart';
-import '../../../core/utils/colors.dart';
+import 'package:modfirstpos/shared/widgets/DynamicImage/dynamic_network_image.dart';
 import '../../../shared/widgets/ScreenSize/screen_size_utils.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -20,6 +20,8 @@ class _SplashScreenState extends State<SplashScreen>
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
 
+  bool _logoReady = false;
+
   @override
   void initState() {
     super.initState();
@@ -29,16 +31,36 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.3,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
 
-    Future.delayed(const Duration(milliseconds: 200), () {
-      _controller.forward();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _prepareLogo());
+  }
+
+  Future<void> _prepareLogo() async {
+    final theme = Get.find<AppThemeService>();
+    final url = theme.logoUrl.value;
+
+    if (url.isNotEmpty) {
+      try {
+        await precacheImage(CachedNetworkImageProvider(url), context);
+      } catch (_) {
+      }
+    }
+
+    if (!mounted) return;
+
+    setState(() => _logoReady = true);
+
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) _controller.forward();
     });
   }
 
@@ -50,16 +72,17 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: GetBuilder<SplashController>(
         init: SplashController(),
         builder: (_) => Scaffold(
-          body: Container(
+          body: Obx(() => Container(
             width: double.infinity,
             height: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: ColorResources.appGradient,
+            decoration: BoxDecoration(
+              gradient: theme.splashGradient,
             ),
             child: SafeArea(
               child: Column(
@@ -67,30 +90,33 @@ class _SplashScreenState extends State<SplashScreen>
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Spacer(flex: 3),
-                  
-                  // Animated Logo
-                  AnimatedBuilder(
-                    animation: _controller,
-                    builder: (context, child) {
-                      return Transform.scale(
-                        scale: _scaleAnimation.value,
-                        child: Opacity(
-                          opacity: _fadeAnimation.value,
-                          child: SvgPicture.asset(
-                            ImagesConstant.mJafferjeesLogo,
-                            height: context.responsiveHeight(0.20),
+
+                  // Jab tak logo ready na ho, khali space rakho —
+                  // local SVG bilkul bhi flash nahi hoga
+                  if (_logoReady)
+                    AnimatedBuilder(
+                      animation: _controller,
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: _scaleAnimation.value,
+                          child: Opacity(
+                            opacity: _fadeAnimation.value,
+                            child: DynamicAppLogo(
+                              height: context.responsiveHeight(0.18),
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    )
+                  else
+                    SizedBox(height: context.responsiveHeight(0.18)),
 
                   SizedBox(height: context.spacingLG),
                   const Spacer(flex: 3),
                 ],
               ),
             ),
-          ),
+          )),
         ),
       ),
     );

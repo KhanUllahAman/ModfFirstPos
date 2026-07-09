@@ -9,10 +9,11 @@ class ApiConstants {
   static final String getProfileEndpoint = '${baseUrl}auth/profile';
   static final String uploadImageEndpoint = '${baseUrl}upload/image?folder=user';
   static final String changePasswordEndpoint = '${baseUrl}auth/change-password';
-  static const String pinStatusEndpoint = '/users/pin/status';
-  static const String pinSetEndpoint = '/users/pin/set';
-  static const String pinVerifyEndpoint = '/users/pin/verify';
-  static const String pinChangeEndpoint = '/users/pin/change';
-  static const String pinDisableEndpoint = '/users/pin';
-  static const String pinAutoLockEndpoint = '/users/pin/auto-lock';
+  static final String pinStatusEndpoint = '${baseUrl}users/pin/status';
+  static final String pinSetEndpoint = '${baseUrl}users/pin/set';
+  static final String pinVerifyEndpoint = '${baseUrl}users/pin/verify';
+  static final String pinChangeEndpoint = '${baseUrl}users/pin/change';
+  static final String pinDisableEndpoint = '${baseUrl}users/pin';
+  static final String pinAutoLockEndpoint = '${baseUrl}users/pin/auto-lock';
+  static final String websiteSettingsEndpoint = '${baseUrl}website-settings/list';
 }

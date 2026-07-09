@@ -2,8 +2,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/core/utils/images_constant.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
@@ -28,10 +29,10 @@ class ScanField extends StatelessWidget {
       child: TextField(
         controller: controller.scanController,
         // onSubmitted: ,
-        style: GoogleFonts.geistMono(fontSize: context.fontSM),
+        style: AppFonts.geistMono(fontSize: context.fontSM),
         decoration: InputDecoration(
           hintText: 'Scan Product',
-          hintStyle: GoogleFonts.geistMono(
+          hintStyle: AppFonts.geistMono(
             color: ColorResources.blackColor,
             fontSize: context.fontSM,
           ),
@@ -86,19 +87,20 @@ class _EmptyCart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SvgPicture.asset(
-            color: ColorResources.appMainColor,
+            color: theme.secondaryColor.value,
             ImagesConstant.emptyCartSvg,
             height: context.responsiveHeight(0.18),
           ),
           SizedBox(height: context.spacingMD),
           Text(
             'Empty Cart',
-            style: GoogleFonts.geistMono(
+            style: AppFonts.geistMono(
               fontSize: context.fontMD,
               fontWeight: FontWeight.w800,
               color: ColorResources.blackColor,
@@ -108,7 +110,7 @@ class _EmptyCart extends StatelessWidget {
           Text(
             'Scan a product to add it to your cart or browse\nfrom the listings below.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.geistMono(
+            style: AppFonts.geistMono(
               fontSize: context.fontSM,
               color: ColorResources.blackColor,
             ),
@@ -173,7 +175,7 @@ class _CartItemTile extends StatelessWidget {
                   item.product.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.geistMono(
+                  style: AppFonts.geistMono(
                     fontSize: context.fontSM,
                     fontWeight: FontWeight.w600,
                     color: ColorResources.blackColor,
@@ -184,7 +186,7 @@ class _CartItemTile extends StatelessWidget {
 
                 Text(
                   'SKU: ${item.product.skuCode}',
-                  style: GoogleFonts.geistMono(
+                  style: AppFonts.geistMono(
                     fontSize: context.fontXS,
                     color: ColorResources.labelColor,
                   ),
@@ -192,7 +194,7 @@ class _CartItemTile extends StatelessWidget {
 
                 Text(
                   'Amount: Rs. ${item.product.amount.toStringAsFixed(0)}',
-                  style: GoogleFonts.geistMono(
+                  style: AppFonts.geistMono(
                     fontSize: context.fontXS,
                     color: ColorResources.labelColor,
                   ),
@@ -200,7 +202,7 @@ class _CartItemTile extends StatelessWidget {
 
                 Text(
                   'Unit Price: Rs. ${item.product.unitPrice.toStringAsFixed(0)}',
-                  style: GoogleFonts.geistMono(
+                  style: AppFonts.geistMono(
                     fontSize: context.fontXS,
                     color: ColorResources.labelColor,
                   ),
@@ -220,7 +222,7 @@ class _CartItemTile extends StatelessWidget {
                       ),
                       child: Text(
                         '${item.quantity}',
-                        style: GoogleFonts.geistMono(
+                        style: AppFonts.geistMono(
                           fontSize: context.fontSM,
                           fontWeight: FontWeight.w600,
                           color: ColorResources.blackColor,
@@ -276,16 +278,19 @@ class _QtyBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 20,
-        height: 20,
-        decoration: BoxDecoration(
-          color: ColorResources.appMainColor,
-          shape: BoxShape.circle,
+    final theme = Get.find<AppThemeService>();
+    return Obx(
+      () => GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 20,
+          height: 20,
+          decoration: BoxDecoration(
+            color: theme.secondaryColor.value,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: theme.onSecondaryColor, size: 14),
         ),
-        child: Icon(icon, color: ColorResources.blackColor, size: 14),
       ),
     );
   }
@@ -358,7 +363,7 @@ class _SummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = GoogleFonts.geistMono(
+    final style = AppFonts.geistMono(
       fontSize: context.fontXS,
       fontWeight: isBold ? FontWeight.w600 : FontWeight.w400,
       color: ColorResources.blackColor,
@@ -382,42 +387,46 @@ class BottomButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: AppButton(
-            onPressed: () => controller.getOptions(),
-            isLoading: false,
-            backgroundColor: ColorResources.blackColor,
-            borderRadius: 10,
-            child: Text(
-              'Options',
-              style: GoogleFonts.geistMono(
-                fontSize: context.fontSM,
-                fontWeight: FontWeight.w600,
-                color: ColorResources.whiteColor,
+    final theme = Get.find<AppThemeService>();
+
+    return Obx(
+      () => Row(
+        children: [
+          Expanded(
+            child: AppButton(
+              onPressed: () => controller.getOptions(),
+              isLoading: false,
+              backgroundColor: theme.primaryColor.value,
+              borderRadius: 10,
+              child: Text(
+                'Options',
+                style: AppFonts.geistMono(
+                  fontSize: context.fontSM,
+                  fontWeight: FontWeight.w600,
+                  color: theme.onPrimaryColor, // auto contrast
+                ),
               ),
             ),
           ),
-        ),
-        SizedBox(width: context.responsiveWidth(0.015)),
-        Expanded(
-          child: AppButton(
-            backgroundColor: ColorResources.appMainColor,
-            onPressed: () {},
-            isLoading: false,
-            borderRadius: 10,
-            child: Text(
-              'Payment',
-              style: GoogleFonts.geistMono(
-                fontSize: context.fontSM,
-                fontWeight: FontWeight.w500,
-                color: ColorResources.blackColor,
+          SizedBox(width: context.responsiveWidth(0.015)),
+          Expanded(
+            child: AppButton(
+              backgroundColor: theme.secondaryColor.value,
+              onPressed: () {},
+              isLoading: false,
+              borderRadius: 10,
+              child: Text(
+                'Payment',
+                style: AppFonts.geistMono(
+                  fontSize: context.fontSM,
+                  fontWeight: FontWeight.w500,
+                  color: theme.onSecondaryColor, // auto contrast
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -428,6 +437,7 @@ class ProductListPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return Column(
       children: [
         _ProductSearchField(controller: controller),
@@ -435,9 +445,9 @@ class ProductListPanel extends StatelessWidget {
         Expanded(
           child: Obx(() {
             if (controller.isLoading.value) {
-              return const Center(
+              return Center(
                 child: CircularProgressIndicator(
-                  color: ColorResources.appMainColor,
+                  color: theme.secondaryColor.value,
                   strokeWidth: 3.0,
                 ),
               );
@@ -458,7 +468,7 @@ class ProductListPanel extends StatelessWidget {
                     SizedBox(height: context.spacingSM),
                     Text(
                       'Add Products From Catalogue to \n save them here for quick access',
-                      style: GoogleFonts.geistMono(
+                      style: AppFonts.geistMono(
                         fontSize: context.fontXS,
                         color: ColorResources.blackColor.withOpacity(0.4),
                       ),
@@ -468,15 +478,15 @@ class ProductListPanel extends StatelessWidget {
                       width: context.responsiveWidth(0.2),
                       child: AppButton(
                         onPressed: () => Get.toNamed(Routes.catalogue),
-                        backgroundColor: ColorResources.appMainColor,
+                        backgroundColor: theme.secondaryColor.value,
                         borderRadius: 8,
                         isLoading: false,
                         child: Text(
                           'Go to Catalogue',
-                          style: GoogleFonts.geistMono(
+                          style: AppFonts.geistMono(
                             fontSize: context.fontSM,
                             fontWeight: FontWeight.w600,
-                            color: ColorResources.blackColor,
+                            color: theme.onSecondaryColor,
                           ),
                         ),
                       ),
@@ -521,6 +531,7 @@ class _PinnedProductRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     final imgSize = context.responsiveWidth(0.042);
 
     return GestureDetector(
@@ -571,7 +582,7 @@ class _PinnedProductRow extends StatelessWidget {
                     product.displayName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.geistMono(
+                    style: AppFonts.geistMono(
                       fontSize: context.fontXS,
                       fontWeight: FontWeight.w600,
                       color: ColorResources.blackColor,
@@ -599,7 +610,7 @@ class _PinnedProductRow extends StatelessWidget {
             // ── Price
             Text(
               'Rs.${(product.productPrice ?? 0).toStringAsFixed(0)}',
-              style: GoogleFonts.geistMono(
+              style: AppFonts.geistMono(
                 fontSize: context.fontXS,
                 fontWeight: FontWeight.w500,
                 color: ColorResources.blackColor,
@@ -609,35 +620,37 @@ class _PinnedProductRow extends StatelessWidget {
             SizedBox(width: context.responsiveWidth(0.010)),
 
             // ── Add to cart button
-            GestureDetector(
-              onTap: onTap,
-              child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: context.responsiveWidth(0.008),
-                  vertical: context.responsiveHeight(0.006),
-                ),
-                decoration: BoxDecoration(
-                  color: ColorResources.appMainColor,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Iconsax.shopping_cart,
-                      size: 11,
-                      color: ColorResources.blackColor,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Add',
-                      style: GoogleFonts.geistMono(
-                        fontSize: context.fontXS - 1,
-                        fontWeight: FontWeight.w500,
-                        color: ColorResources.blackColor,
+            Obx(
+              () => GestureDetector(
+                onTap: onTap,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.responsiveWidth(0.008),
+                    vertical: context.responsiveHeight(0.006),
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.secondaryColor.value,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Iconsax.shopping_cart,
+                        size: 11,
+                        color: theme.onSecondaryColor,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 4),
+                      Text(
+                        'Add',
+                        style: AppFonts.geistMono(
+                          fontSize: context.fontXS - 1,
+                          fontWeight: FontWeight.w500,
+                          color: theme.onSecondaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -677,7 +690,7 @@ class _MetaChip extends StatelessWidget {
       children: [
         Text(
           label,
-          style: GoogleFonts.geistMono(
+          style: AppFonts.geistMono(
             fontSize: context.fontXS - 2,
             color: ColorResources.labelColor.withOpacity(0.45),
             height: 1.2,
@@ -685,7 +698,7 @@ class _MetaChip extends StatelessWidget {
         ),
         Text(
           value,
-          style: GoogleFonts.geistMono(
+          style: AppFonts.geistMono(
             fontSize: context.fontXS - 1,
             color: ColorResources.greyColor,
             height: 1.3,
@@ -722,12 +735,12 @@ class _ProductSearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       controller: controller.searchController,
-      style: GoogleFonts.geistMono(fontSize: context.fontSM),
+      style: AppFonts.geistMono(fontSize: context.fontSM),
       decoration: InputDecoration(
         filled: true,
         fillColor: ColorResources.whiteColor,
         hintText: 'Search Product',
-        hintStyle: GoogleFonts.geistMono(
+        hintStyle: AppFonts.geistMono(
           color: ColorResources.blackColor,
           fontSize: context.fontSM,
         ),
@@ -744,46 +757,6 @@ class _ProductSearchField extends StatelessWidget {
           borderSide: BorderSide(color: ColorResources.cardBorderColor),
         ),
         suffixIcon: const Icon(Icons.search, color: ColorResources.blackColor),
-      ),
-    );
-  }
-}
-
-class _TableHeader extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    const headerStyle = TextStyle(
-      fontSize: 11,
-      fontWeight: FontWeight.w600,
-      color: ColorResources.labelColor,
-    );
-    return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xffE6E8EC),
-        borderRadius: BorderRadius.all(Radius.circular(5.0)),
-      ),
-      padding: EdgeInsets.symmetric(
-        horizontal: context.responsiveWidth(0.015),
-        vertical: context.responsiveHeight(0.01),
-      ),
-      child: Row(
-        children: [
-          // Image space
-          SizedBox(width: context.responsiveWidth(0.035)),
-          const SizedBox(width: 8),
-          // Product Name
-          Expanded(flex: 5, child: Text('Product Name', style: headerStyle)),
-          // SKU
-          Expanded(flex: 3, child: Text('SKU Code', style: headerStyle)),
-          // Old SKU
-          Expanded(flex: 3, child: Text('Old SKU', style: headerStyle)),
-          // Amount
-          Expanded(
-            flex: 2,
-            child: Text('Amount', style: headerStyle, textAlign: TextAlign.end),
-          ),
-          SizedBox(width: context.responsiveWidth(0.065)),
-        ],
       ),
     );
   }

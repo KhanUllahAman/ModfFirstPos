@@ -2,7 +2,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import '../../../core/utils/colors.dart';
 
 enum SnackBarType { success, error, info, warning }
@@ -214,7 +214,7 @@ class _SnackBarContent extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: GoogleFonts.geistMono(
+              style: AppFonts.geistMono(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
                 color: ColorResources.whiteColor,

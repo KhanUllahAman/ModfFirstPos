@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/changePassword/controller/change_password_controller.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
@@ -36,7 +36,7 @@ class ChangePasswordView extends GetView<ChangePasswordController> {
                     SizedBox(height: context.spacingLG),
                     Text(
                       "Choose a strong password to keep your account secure.",
-                      style: GoogleFonts.geistMono(
+                      style: AppFonts.geistMono(
                         fontSize: context.fontXS,
                         fontWeight: FontWeight.w400,
                         color: ColorResources.blackColor.withOpacity(0.55),
@@ -53,7 +53,7 @@ class ChangePasswordView extends GetView<ChangePasswordController> {
                         isPasswordField: true,
                         onSuffixIconPressed:
                             controller.toggleCurrentPasswordVisibility,
-                         borderRadius: 12,
+                        borderRadius: 12,
                         customFocusedBorderColor: ColorResources.blackColor,
                         customEnabledBorderColor: ColorResources.blackColor,
                         validator: controller.validateCurrentPassword,
@@ -68,8 +68,9 @@ class ChangePasswordView extends GetView<ChangePasswordController> {
                         obscureText: controller.obscureNewPassword.value,
                         keyboardType: TextInputType.visiblePassword,
                         isPasswordField: true,
-                        onSuffixIconPressed: controller.toggleNewPasswordVisibility,
-                         borderRadius: 12,
+                        onSuffixIconPressed:
+                            controller.toggleNewPasswordVisibility,
+                        borderRadius: 12,
                         customFocusedBorderColor: ColorResources.blackColor,
                         customEnabledBorderColor: ColorResources.blackColor,
                         validator: controller.validateNewPassword,
@@ -84,8 +85,9 @@ class ChangePasswordView extends GetView<ChangePasswordController> {
                         obscureText: controller.obscureConfirmPassword.value,
                         keyboardType: TextInputType.visiblePassword,
                         isPasswordField: true,
-                        onSuffixIconPressed: controller.toggleConfirmPasswordVisibility,
-                         borderRadius: 12,
+                        onSuffixIconPressed:
+                            controller.toggleConfirmPasswordVisibility,
+                        borderRadius: 12,
                         customFocusedBorderColor: ColorResources.blackColor,
                         customEnabledBorderColor: ColorResources.blackColor,
                         validator: controller.validateConfirmPassword,
@@ -104,7 +106,7 @@ class ChangePasswordView extends GetView<ChangePasswordController> {
                           controller.isLoading.value
                               ? "Updating..."
                               : "Change Password",
-                          style: GoogleFonts.geistMono(
+                          style: AppFonts.geistMono(
                             fontSize: context.fontSM,
                             fontWeight: FontWeight.w500,
                             color: ColorResources.blackColor,

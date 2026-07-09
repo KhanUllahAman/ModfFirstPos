@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import '../utils/colors.dart';
 
 class AppTheme {
@@ -8,14 +8,11 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      textTheme: GoogleFonts.geistMonoTextTheme(
-        ThemeData.dark().textTheme,
-      ),
       appBarTheme: AppBarTheme(
         backgroundColor: ColorResources.darkBackground,
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.light,
-        titleTextStyle: GoogleFonts.geistMono(
+        titleTextStyle: AppFonts.geistMono(
           color: ColorResources.whiteColor,
           fontSize: 18,
           fontWeight: FontWeight.w600,
@@ -49,11 +46,11 @@ class AppTheme {
             width: 2,
           ),
         ),
-        labelStyle: GoogleFonts.geistMono(
+        labelStyle: AppFonts.geistMono(
           color: Colors.white.withAlpha(150),
           fontSize: 13,
         ),
-        floatingLabelStyle: GoogleFonts.geistMono(
+        floatingLabelStyle: AppFonts.geistMono(
           color: ColorResources.appAccentColor,
           fontSize: 13,
           fontWeight: FontWeight.w500,

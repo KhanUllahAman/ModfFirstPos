@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import '../ScreenSize/screen_size_utils.dart';
 import '../../../core/utils/colors.dart';
 
 class AppButton extends StatelessWidget {
   const AppButton({
     super.key,
-    this.backgroundColor, 
+    this.backgroundColor,
     required this.onPressed,
     required this.child,
     required this.isLoading,
@@ -83,7 +83,7 @@ class AppButtonLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: GoogleFonts.geistMono(
+      style: AppFonts.geistMono(
         fontSize: fontSize ?? context.fontMD,
         fontWeight: fontWeight,
         color: Colors.white,

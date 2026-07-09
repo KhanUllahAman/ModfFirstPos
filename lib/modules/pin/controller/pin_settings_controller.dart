@@ -56,9 +56,28 @@ class PinSettingsController extends GetxController {
     required String newPin,
     required String confirmNewPin,
   }) async {
+    if (newPin != confirmNewPin) {
+      customSnackBar(
+        'Error',
+        'New PIN and Confirm PIN do not match',
+        snackBarType: SnackBarType.error,
+      );
+      return;
+    }
+
+    if (newPin.length < 4) {
+      customSnackBar(
+        'Error',
+        'PIN must be at least 4 digits',
+        snackBarType: SnackBarType.error,
+      );
+      return;
+    }
+
     try {
       isLoading.value = true;
       CustomLoadingDialog.show();
+
       final response = await _pinService.changePin(
         currentPin: currentPin,
         newPin: newPin,
@@ -74,6 +93,7 @@ class PinSettingsController extends GetxController {
         );
         return;
       }
+
       Get.back();
       customSnackBar(
         'Success',

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import '../ScreenSize/screen_size_utils.dart';
 import '../../../core/utils/colors.dart';
 
@@ -32,7 +32,7 @@ class AppText extends StatelessWidget {
       textAlign: textAlign,
       maxLines: maxLines,
       overflow: overflow,
-      style: GoogleFonts.geistMono(
+      style: AppFonts.geistMono(
         fontSize: fontSize,
         fontWeight: fontWeight,
         color: color ?? Theme.of(context).textTheme.bodyLarge?.color,
@@ -53,7 +53,7 @@ class AppTextStyle {
     return Text(
       text,
       textAlign: textAlign,
-      style: GoogleFonts.geistMono(
+      style: AppFonts.geistMono(
         fontSize: context.fontXXL,
         fontWeight: FontWeight.w700,
         color: color,
@@ -72,7 +72,7 @@ class AppTextStyle {
     return Text(
       text,
       textAlign: textAlign,
-      style: GoogleFonts.geistMono(
+      style: AppFonts.geistMono(
         fontSize: context.fontMD,
         fontWeight: FontWeight.w400,
         color: color,
@@ -93,7 +93,7 @@ class AppTextStyle {
       text,
       textAlign: textAlign,
       maxLines: maxLines,
-      style: GoogleFonts.geistMono(
+      style: AppFonts.geistMono(
         fontSize: context.fontSM,
         fontWeight: FontWeight.normal,
         color: color ?? Theme.of(context).textTheme.bodyLarge?.color,
@@ -112,7 +112,7 @@ class AppTextStyle {
     return Text(
       text,
       textAlign: textAlign,
-      style: GoogleFonts.geistMono(
+      style: AppFonts.geistMono(
         fontSize: context.fontXS,
         fontWeight: FontWeight.normal,
         color: color ?? Theme.of(context).textTheme.bodySmall?.color,
@@ -138,7 +138,7 @@ class AppTextStyle {
       textAlign: textAlign,
       maxLines: maxLines,
       overflow: overflow,
-      style: GoogleFonts.geistMono(
+      style: AppFonts.geistMono(
         fontSize: fontSize,
         fontWeight: fontWeight,
         color: color ?? Theme.of(context).textTheme.bodyLarge?.color,
@@ -154,7 +154,7 @@ class AppTextStyle {
       children: [
         Text(
           'Powered by ',
-          style: GoogleFonts.geistMono(
+          style: AppFonts.geistMono(
             fontSize: context.fontSM,
             fontWeight: FontWeight.w400,
             color: Colors.white.withAlpha(150),
@@ -162,7 +162,7 @@ class AppTextStyle {
         ),
         Text(
           'ORIO',
-          style: GoogleFonts.geistMono(
+          style: AppFonts.geistMono(
             fontSize: context.fontMD,
             fontWeight: FontWeight.w800,
             color: ColorResources.whiteColor,

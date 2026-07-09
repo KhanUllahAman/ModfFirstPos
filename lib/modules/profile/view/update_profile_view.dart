@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/profile/controller/update_profile_controller.dart';
@@ -89,7 +89,7 @@ class UpdateProfileView extends GetView<UpdateProfileController> {
                             : controller.isLoading.value
                             ? "Updating..."
                             : "Update Profile",
-                        style: GoogleFonts.geistMono(
+                        style: AppFonts.geistMono(
                           fontSize: context.fontSM,
                           fontWeight: FontWeight.w500,
                           color: ColorResources.blackColor,
@@ -187,7 +187,7 @@ class _AvatarPicker extends StatelessWidget {
           children: [
             Text(
               "Select Image Source",
-              style: GoogleFonts.geistMono(
+              style: AppFonts.geistMono(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 color: ColorResources.labelColor,

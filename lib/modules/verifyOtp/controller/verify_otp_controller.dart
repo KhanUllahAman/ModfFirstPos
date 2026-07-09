@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/app_theme_service.dart';
+import 'package:modfirstpos/core/services/website_settings_service.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/modules/auth/service/send_otp_service.dart';
 import 'package:modfirstpos/modules/profile/service/get_profile_service.dart';
@@ -106,6 +108,9 @@ class VerifyOtpController extends GetxController {
             );
             log("Profile fetched and saved after OTP verification.");
           }
+          await Get.find<WebsiteSettingsService>()
+              .fetchAndSaveWebsiteSettings();
+          await Get.find<AppThemeService>().refreshFromStorage();
         } catch (e) {
           log("Profile fetch after OTP verify failed: $e");
         }

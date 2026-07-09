@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/pin/controller/pin_controller.dart';
@@ -30,7 +30,9 @@ class _LockScreenViewState extends State<LockScreenView> {
 
   void _onBackspace() {
     if (_enteredPin.isEmpty) return;
-    setState(() => _enteredPin = _enteredPin.substring(0, _enteredPin.length - 1));
+    setState(
+      () => _enteredPin = _enteredPin.substring(0, _enteredPin.length - 1),
+    );
   }
 
   Future<void> _tryVerify() async {
@@ -80,7 +82,9 @@ class _LockScreenViewState extends State<LockScreenView> {
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: ColorResources.appMainColor.withOpacity(0.15),
+                            color: ColorResources.appMainColor.withOpacity(
+                              0.15,
+                            ),
                           ),
                           child: Icon(
                             Icons.lock_outline_rounded,
@@ -91,7 +95,7 @@ class _LockScreenViewState extends State<LockScreenView> {
                         SizedBox(height: context.spacingMD),
                         Text(
                           "Screen Locked",
-                          style: GoogleFonts.geistMono(
+                          style: AppFonts.geistMono(
                             fontSize: context.fontMD,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
@@ -99,8 +103,9 @@ class _LockScreenViewState extends State<LockScreenView> {
                         ),
                         SizedBox(height: context.spacingXS),
                         FutureBuilder<String?>(
-                          future: SecureStorageService.getProfileData()
-                              .then((d) => d?['full_name']?.toString()),
+                          future: SecureStorageService.getProfileData().then(
+                            (d) => d?['full_name']?.toString(),
+                          ),
                           builder: (context, snapshot) {
                             final name = snapshot.data;
                             if (name == null || name.isEmpty) {
@@ -109,7 +114,7 @@ class _LockScreenViewState extends State<LockScreenView> {
                             return Text(
                               "Enter PIN to continue as $name",
                               textAlign: TextAlign.center,
-                              style: GoogleFonts.geistMono(
+                              style: AppFonts.geistMono(
                                 fontSize: context.fontXS,
                                 color: Colors.white.withOpacity(0.6),
                               ),
@@ -117,17 +122,22 @@ class _LockScreenViewState extends State<LockScreenView> {
                           },
                         ),
                         SizedBox(height: context.spacingXL),
-                        PinDotsIndicator(enteredLength: _enteredPin.length, maxLength: 4),
+                        PinDotsIndicator(
+                          enteredLength: _enteredPin.length,
+                          maxLength: 4,
+                        ),
                         SizedBox(
                           height: 28,
                           child: Obx(
                             () => controller.verifyError.value.isNotEmpty
                                 ? Padding(
-                                    padding: EdgeInsets.only(top: context.spacingSM),
+                                    padding: EdgeInsets.only(
+                                      top: context.spacingSM,
+                                    ),
                                     child: Text(
                                       controller.verifyError.value,
                                       textAlign: TextAlign.center,
-                                      style: GoogleFonts.geistMono(
+                                      style: AppFonts.geistMono(
                                         fontSize: context.fontXS,
                                         color: Colors.redAccent.shade100,
                                       ),
@@ -141,7 +151,9 @@ class _LockScreenViewState extends State<LockScreenView> {
                           () => controller.isLoading.value
                               ? const Padding(
                                   padding: EdgeInsets.symmetric(vertical: 24),
-                                  child: CircularProgressIndicator(color: Colors.white),
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                  ),
                                 )
                               : PinNumpad(
                                   onDigitPressed: _onDigit,

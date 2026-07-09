@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/pin/controller/pin_settings_controller.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
@@ -42,7 +42,7 @@ class PinSettingsView extends GetView<PinSettingsController> {
                         Expanded(
                           child: Text(
                             "Enable PIN Lock",
-                            style: GoogleFonts.geistMono(
+                            style: AppFonts.geistMono(
                               fontSize: context.fontSM,
                               fontWeight: FontWeight.w500,
                             ),
@@ -88,7 +88,7 @@ class PinSettingsView extends GetView<PinSettingsController> {
                                 children: [
                                   Text(
                                     "Auto-lock after ${controller.autoLockMinutes.value} minutes",
-                                    style: GoogleFonts.geistMono(
+                                    style: AppFonts.geistMono(
                                       fontSize: context.fontSM,
                                     ),
                                   ),
@@ -189,7 +189,7 @@ class _SettingsTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: GoogleFonts.geistMono(
+                  style: AppFonts.geistMono(
                     fontSize: context.fontSM,
                     fontWeight: FontWeight.w500,
                   ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 
@@ -113,7 +113,7 @@ class PinNumpad extends StatelessWidget {
                   onTap: () => onDigitPressed(key),
                   child: Text(
                     key,
-                    style: GoogleFonts.geistMono(
+                    style: AppFonts.geistMono(
                       fontSize: buttonSize * 0.32,
                       fontWeight: FontWeight.w600,
                       color: digitColor ?? Colors.white,
