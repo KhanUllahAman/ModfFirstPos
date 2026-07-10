@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
@@ -14,6 +15,7 @@ class VerifyOtpView extends GetView<VerifyOtpController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return Theme(
       data: Theme.of(context).copyWith(
         textSelectionTheme: TextSelectionThemeData(
@@ -116,18 +118,20 @@ class VerifyOtpView extends GetView<VerifyOtpController> {
                                 ),
                               ),
                               SizedBox(height: context.spacingXL),
-                              AppButton(
-                                backgroundColor: ColorResources.mainbuttonColor,
-                                onPressed: controller.verifyOtp,
-                                isLoading: false,
-                                borderRadius: 12,
-                                child: Text(
-                                  'Verify',
-                                  style: AppFonts.geistMono(
-                                    fontSize: context.fontMD,
-                                    fontWeight: FontWeight.w500,
-                                    color: ColorResources.blackColor,
-                                    letterSpacing: 0.5,
+                              Obx(
+                                () => AppButton(
+                                  backgroundColor: theme.secondaryColor.value,
+                                  onPressed: controller.verifyOtp,
+                                  isLoading: false,
+                                  borderRadius: 12,
+                                  child: Text(
+                                    'Verify',
+                                    style: AppFonts.geistMono(
+                                      fontSize: context.fontMD,
+                                      fontWeight: FontWeight.w500,
+                                      color: theme.onSecondaryColor,
+                                      letterSpacing: 0.5,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -211,6 +215,7 @@ class _OtpBoxState extends State<_OtpBox> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return AspectRatio(
       aspectRatio: 0.85,
       child: AnimatedContainer(
@@ -222,14 +227,14 @@ class _OtpBoxState extends State<_OtpBox> {
               : ColorResources.backgroundColor,
           border: Border.all(
             color: _isFocused
-                ? ColorResources.appMainColor
+                ? theme.secondaryColor.value
                 : const Color(0xFFE7E9F0),
             width: _isFocused ? 1.5 : 1,
           ),
           boxShadow: _isFocused
               ? [
                   BoxShadow(
-                    color: ColorResources.appMainColor.withOpacity(0.15),
+                    color: theme.secondaryColor.value.withOpacity(0.15),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -247,7 +252,7 @@ class _OtpBoxState extends State<_OtpBox> {
             maxLength: 1,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             showCursor: true,
-            cursorColor: ColorResources.appMainColor,
+            cursorColor: theme.secondaryColor.value,
             style: AppFonts.geistMono(
               fontSize: context.fontLG,
               fontWeight: FontWeight.w600,

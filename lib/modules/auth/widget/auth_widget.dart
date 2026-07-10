@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
-import 'package:modfirstpos/core/utils/images_constant.dart';
 import 'package:modfirstpos/modules/auth/controller/auth_controller.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
+import 'package:modfirstpos/shared/widgets/DynamicImage/dynamic_network_image.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 import 'package:modfirstpos/shared/widgets/TextFormFeild/custom_text_form_field.dart';
 
@@ -17,6 +17,7 @@ class LoginFormCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return Container(
       width: double.infinity,
       height: context.responsiveHeight(0.75),
@@ -54,11 +55,7 @@ class LoginFormCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      SvgPicture.asset(
-                        ImagesConstant.mJafferjeesLogo,
-                        height: context.responsiveHeight(0.09),
-                      ),
-                      SizedBox(height: context.spacingSM),
+                      DynamicAppLogo(height: context.responsiveHeight(0.10)),
                       Text(
                         'Sign in to your store',
                         textAlign: TextAlign.center,
@@ -104,20 +101,22 @@ class LoginFormCard extends StatelessWidget {
                         ),
                       ),
                       SizedBox(height: context.spacingMD),
-                      AppButton(
-                        backgroundColor: ColorResources.mainbuttonColor,
-                        onPressed: () {
-                          controller.login(controller.formKey);
-                        },
-                        isLoading: false,
-                        borderRadius: 12,
-                        child: Text(
-                          'Login',
-                          style: AppFonts.geistMono(
-                            fontSize: context.fontMD,
-                            fontWeight: FontWeight.w500,
-                            color: ColorResources.blackColor,
-                            letterSpacing: 0.5,
+                      Obx(
+                        () => AppButton(
+                          backgroundColor: theme.secondaryColor.value,
+                          onPressed: () {
+                            controller.login(controller.formKey);
+                          },
+                          isLoading: false,
+                          borderRadius: 12,
+                          child: Text(
+                            'Login',
+                            style: AppFonts.geistMono(
+                              fontSize: context.fontMD,
+                              fontWeight: FontWeight.w500,
+                              color: theme.onSecondaryColor,
+                              letterSpacing: 0.5,
+                            ),
                           ),
                         ),
                       ),

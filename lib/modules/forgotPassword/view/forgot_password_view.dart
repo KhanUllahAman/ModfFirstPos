@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
@@ -15,12 +16,13 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return Theme(
       data: Theme.of(context).copyWith(
         textSelectionTheme: TextSelectionThemeData(
-          cursorColor: ColorResources.appMainColor,
-          selectionHandleColor: ColorResources.appMainColor,
-          selectionColor: ColorResources.appMainColor.withOpacity(0.25),
+          cursorColor: theme.secondaryColor.value,
+          selectionHandleColor: theme.secondaryColor.value,
+          selectionColor: theme.secondaryColor.value.withOpacity(0.25),
         ),
       ),
       child: AnnotatedRegion<SystemUiOverlayStyle>(
@@ -107,8 +109,7 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
                               SizedBox(height: context.spacingMD),
                               Obx(
                                 () => AppButton(
-                                  backgroundColor:
-                                      ColorResources.mainbuttonColor,
+                                  backgroundColor: theme.secondaryColor.value,
                                   onPressed: controller.submit,
                                   isLoading: false,
                                   borderRadius: 12,
@@ -119,7 +120,7 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
                                     style: AppFonts.geistMono(
                                       fontSize: context.fontMD,
                                       fontWeight: FontWeight.w500,
-                                      color: ColorResources.blackColor,
+                                      color: theme.onSecondaryColor,
                                       letterSpacing: 0.5,
                                     ),
                                   ),

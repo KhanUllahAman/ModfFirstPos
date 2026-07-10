@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
 
@@ -11,14 +12,23 @@ class SplashController extends GetxController {
   }
 
   void _navigateToNext() async {
-    await Future.delayed(const Duration(seconds: 5));
+    await Future.delayed(const Duration(milliseconds: 2000));
+
     try {
-      final isLoggedIn = await SecureStorageService.isLoggedIn();
-      if (isLoggedIn) {
-        Get.offAllNamed(Routes.home);
-      } else {
-        Get.offAllNamed(Routes.auth);
+      final theme = Get.find<AppThemeService>();
+      final storeSelectionDone = await SecureStorageService.isStoreSelectionDone();
+
+      if (!storeSelectionDone) {
+        Get.offAllNamed(Routes.storeSelection);
+        return;
       }
+
+      
+      if (theme.hasThemeData.value && theme.logoUrl.value.isNotEmpty) {
+      }
+
+      final isLoggedIn = await SecureStorageService.isLoggedIn();
+      Get.offAllNamed(isLoggedIn ? Routes.home : Routes.auth);
     } catch (e) {
       log('Navigation error: $e');
       Get.offAllNamed(Routes.auth);

@@ -47,6 +47,20 @@ class SecureStorageService {
     }
   }
 
+  static Future<void> saveSelectedStore(String storeSlug) =>
+      _write(StorageKeys.keySelectedStoreSlug, storeSlug);
+
+  static Future<String?> getSelectedStore() =>
+      _read(StorageKeys.keySelectedStoreSlug);
+
+  static Future<void> saveStoreSelectionDone() =>
+      _write(StorageKeys.keyStoreSelectionDone, 'true');
+
+  static Future<bool> isStoreSelectionDone() async {
+    final data = await _read(StorageKeys.keyStoreSelectionDone);
+    return data == 'true';
+  }
+
   static Future<void> saveLastActiveAt(DateTime time) =>
       _write(StorageKeys.keyLastActiveAt, time.toIso8601String());
 

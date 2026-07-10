@@ -9,15 +9,12 @@ import 'package:modfirstpos/core/services/website_settings_storage_service.dart'
 class WebsiteSettingsService {
   final NetworkClient _client = NetworkClient();
 
-  Future<WebsiteSettingsResponse> fetchAndSaveWebsiteSettings() async {
+  Future<WebsiteSettingsResponse> fetchAndSaveWebsiteSettings(
+    String storeSlug,
+  ) async {
     try {
-      final response = await _client.post(
-        endpoint: ApiConstants.websiteSettingsEndpoint,
-        body: {
-          "filters": {
-            "site_name": ["ModFirst"],
-          },
-        },
+      final response = await _client.get(
+        endpoint: ApiConstants.websiteSettingsEndpoint(storeSlug),
         showErrorSnackbar: false,
       );
 
@@ -25,9 +22,11 @@ class WebsiteSettingsService {
           ? response.data as Map<String, dynamic>
           : jsonDecode(response.data?.toString() ?? '{}')
                 as Map<String, dynamic>;
+
       final parsed = WebsiteSettingsResponse.fromJson(data);
-      if (parsed.isSuccess && parsed.payload.isNotEmpty) {
-        await WebsiteSettingsStorageService.saveFromModel(parsed.payload.first);
+
+      if (parsed.isSuccess && parsed.payload != null) {
+        await WebsiteSettingsStorageService.saveFromModel(parsed.payload!);
       }
 
       return parsed;

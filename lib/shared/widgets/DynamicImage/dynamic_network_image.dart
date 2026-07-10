@@ -1,4 +1,4 @@
-// lib/shared/widgets/DynamicLogo/dynamic_app_logo.dart
+// lib/shared/widgets/DynamicImage/dynamic_network_image.dart
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -23,20 +23,24 @@ class DynamicAppLogo extends StatelessWidget {
           imageUrl: logoUrl,
           height: height,
           fit: BoxFit.contain,
+          fadeInDuration: Duration.zero,        
+          fadeOutDuration: Duration.zero,     
+          placeholderFadeInDuration: Duration.zero,
           placeholder: (_, __) => SvgPicture.asset(
-            color: theme.primaryColor.value,
+            color: theme.secondaryColor.value,
             ImagesConstant.mJafferjeesLogo,
             height: height,
           ),
           errorWidget: (_, __, ___) => SvgPicture.asset(
-            color: theme.primaryColor.value,
+            color: theme.secondaryColor.value,
             ImagesConstant.mJafferjeesLogo,
             height: height,
           ),
         );
       }
+
       return SvgPicture.asset(
-        color: theme.primaryColor.value,
+        color: theme.secondaryColor.value,
         ImagesConstant.mJafferjeesLogo,
         height: height,
       );

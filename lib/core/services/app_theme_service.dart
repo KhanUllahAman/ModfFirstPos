@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/services/website_settings_storage_service.dart';
-import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/core/utils/hex_color_extension.dart';
+import 'package:modfirstpos/core/utils/colors.dart';
 
 class AppThemeService extends GetxService {
   final Rx<Color> primaryColor = ColorResources.blackColor.obs;
@@ -14,20 +14,24 @@ class AppThemeService extends GetxService {
   final RxString fontFamily = 'GeistMono'.obs;
   final RxString logoUrl = ''.obs;
 
+  final RxBool hasThemeData = false.obs;
+
   LinearGradient get splashGradient {
     final endColor = secondaryColor.value;
     final midColor = Color.lerp(const Color(0xFFFDFEFA), endColor, 0.35)!;
-
     return LinearGradient(
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
-      colors: [
-        const Color(0xFFFDFEFA),
-        midColor,                 
-        endColor,                 
-      ],
+      colors: [const Color(0xFFFDFEFA), midColor, endColor],
       stops: const [0.0, 0.55, 1.0],
     );
+  }
+
+  Decoration get splashDecoration {
+    if (!hasThemeData.value) {
+      return const BoxDecoration(color: Colors.black);
+    }
+    return BoxDecoration(gradient: splashGradient);
   }
 
   Future<AppThemeService> init() async {
@@ -36,8 +40,11 @@ class AppThemeService extends GetxService {
   }
 
   Future<void> _loadFromStorage() async {
+    hasThemeData.value = await WebsiteSettingsStorageService.hasSettings();
+
     final primaryHex = await WebsiteSettingsStorageService.getPrimaryColor();
-    final secondaryHex = await WebsiteSettingsStorageService.getSecondaryColor();
+    final secondaryHex =
+        await WebsiteSettingsStorageService.getSecondaryColor();
     final font = await WebsiteSettingsStorageService.getFontPrimary();
     final logo = await WebsiteSettingsStorageService.getLogoUrl();
 

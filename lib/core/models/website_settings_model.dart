@@ -230,7 +230,7 @@ class WebsiteSettingsResponse {
   final bool isSuccess;
   final int status;
   final String message;
-  final List<WebsiteSettingsModel> payload;
+  final WebsiteSettingsModel? payload;
 
   WebsiteSettingsResponse({
     required this.isSuccess,
@@ -240,13 +240,22 @@ class WebsiteSettingsResponse {
   });
 
   factory WebsiteSettingsResponse.fromJson(Map<String, dynamic> json) {
+    final rawPayload = json['payload'];
+
+    WebsiteSettingsModel? model;
+    if (rawPayload is Map<String, dynamic>) {
+      model = WebsiteSettingsModel.fromJson(rawPayload);
+    } else if (rawPayload is List && rawPayload.isNotEmpty) {
+      model = WebsiteSettingsModel.fromJson(
+        rawPayload.first as Map<String, dynamic>,
+      );
+    }
+
     return WebsiteSettingsResponse(
       isSuccess: json['success'] as bool? ?? false,
       status: json['status'] as int? ?? 0,
       message: json['message'] as String? ?? '',
-      payload: (json['payload'] as List<dynamic>? ?? [])
-          .map((e) => WebsiteSettingsModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      payload: model,
     );
   }
 

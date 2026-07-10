@@ -2,6 +2,8 @@ import 'package:modfirstpos/core/network/app_config_apikey.dart';
 
 class ApiConstants {
   static final String baseUrl = AppConfig.apiKey;  
+  static final String xApiKey = AppConfig.xApiKey;  
+  static final String xApiPassword = AppConfig.xApiPassword;  
   static final String loginEndpoint = '${baseUrl}auth/login';
   static final String sendOtpEndpoint = '${baseUrl}auth/send-otp';
   static final String verifyOtpEndpoint = '${baseUrl}auth/verify-otp';
@@ -15,5 +17,5 @@ class ApiConstants {
   static final String pinChangeEndpoint = '${baseUrl}users/pin/change';
   static final String pinDisableEndpoint = '${baseUrl}users/pin';
   static final String pinAutoLockEndpoint = '${baseUrl}users/pin/auto-lock';
-  static final String websiteSettingsEndpoint = '${baseUrl}website-settings/list';
+  static String websiteSettingsEndpoint(String storeName) => '${baseUrl}website-settings/frontend/$storeName';
 }

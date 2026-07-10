@@ -4,6 +4,7 @@ import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:modfirstpos/core/connectivity/connectivity_service.dart';
 import 'package:modfirstpos/core/network/api_endpoints.dart';
 import 'package:modfirstpos/core/network/api_interceptor.dart';
+import 'package:modfirstpos/core/network/app_config_apikey.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import '../exceptions/app_exceptions.dart';
 import '../exceptions/exception_handler.dart';
@@ -29,29 +30,29 @@ class NetworkClient {
   }
 
   Future<Response> postFormData({
-  required String endpoint,
-  required FormData formData,
-  Map<String, dynamic>? headers,
-  bool showErrorSnackbar = true,
-}) async {
-  try {
-    if (!_connectivityService.isConnected) throw NoInternetException();
-    final builtHeaders = await _buildHeaders(headers);
-    builtHeaders['Content-Type'] =
-        'multipart/form-data; boundary=${formData.boundary}';
-    final options = Options(headers: builtHeaders);
-    final response = await _dio.post(
-      endpoint,
-      data: formData,
-      options: options,
-    );
-    log("POST FormData Response [$endpoint]: $response");
-    return response;
-  } catch (e) {
-    log("POST FormData Error [$endpoint]: $e");
-    throw ExceptionHandler.handleError(e, showSnackbar: showErrorSnackbar);
+    required String endpoint,
+    required FormData formData,
+    Map<String, dynamic>? headers,
+    bool showErrorSnackbar = true,
+  }) async {
+    try {
+      if (!_connectivityService.isConnected) throw NoInternetException();
+      final builtHeaders = await _buildHeaders(headers);
+      builtHeaders['Content-Type'] =
+          'multipart/form-data; boundary=${formData.boundary}';
+      final options = Options(headers: builtHeaders);
+      final response = await _dio.post(
+        endpoint,
+        data: formData,
+        options: options,
+      );
+      log("POST FormData Response [$endpoint]: $response");
+      return response;
+    } catch (e) {
+      log("POST FormData Error [$endpoint]: $e");
+      throw ExceptionHandler.handleError(e, showSnackbar: showErrorSnackbar);
+    }
   }
-}
 
   Future<Response> post({
     required String endpoint,
@@ -166,7 +167,10 @@ class NetworkClient {
     Map<String, dynamic>? customHeaders, {
     bool isLoginRequest = false,
   }) async {
-    final headers = <String, dynamic>{};
+    final headers = <String, dynamic>{
+      'x-api-key': AppConfig.xApiKey,
+      'x-api-password': AppConfig.xApiPassword,
+    };
 
     if (!isLoginRequest) {
       final token = await SecureStorageService.getAccessToken();
@@ -178,7 +182,8 @@ class NetworkClient {
     if (customHeaders != null) {
       headers.addAll(customHeaders);
     }
-    log("Built headers (isLogin=$isLoginRequest): $headers");
+
+    log("Built headers: $headers");
     return headers;
   }
 }

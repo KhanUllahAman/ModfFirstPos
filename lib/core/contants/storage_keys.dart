@@ -55,4 +55,7 @@ class StorageKeys {
   static const String keySiteIsActive = 'site_is_active';
   static const String keySiteCreatedAt = 'site_created_at';
   static const String keySiteUpdatedAt = 'site_updated_at';
+
+  static const String keySelectedStoreSlug = 'selected_store_slug';
+  static const String keyStoreSelectionDone = 'store_selection_done';
 }

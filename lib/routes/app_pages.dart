@@ -18,6 +18,8 @@ import 'package:modfirstpos/modules/profile/binding/get_profile_binding.dart';
 import 'package:modfirstpos/modules/profile/binding/update_profile_binding.dart';
 import 'package:modfirstpos/modules/profile/view/get_profile_view.dart';
 import 'package:modfirstpos/modules/profile/view/update_profile_view.dart';
+import 'package:modfirstpos/modules/storeSelection/binding/store_selection_binding.dart';
+import 'package:modfirstpos/modules/storeSelection/view/store_selection_view.dart';
 import 'package:modfirstpos/modules/verifyOtp/binding/verify_otp_binding.dart';
 import 'package:modfirstpos/modules/verifyOtp/view/verify_otp_view.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
@@ -111,6 +113,14 @@ class AppPages {
       page: () => const PinSettingsView(),
       binding: PinSettingsBinding(),
       transition: Transition.leftToRightWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+
+    GetPage(
+      name: Routes.storeSelection,
+      page: () => const StoreSelectionView(),
+      binding: StoreSelectionBinding(),
+       transition: Transition.leftToRightWithFade,
       transitionDuration: const Duration(milliseconds: 300),
     ),
 

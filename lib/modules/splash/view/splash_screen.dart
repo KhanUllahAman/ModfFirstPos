@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/services/app_theme_service.dart';
+import 'package:modfirstpos/core/utils/images_constant.dart';
 import 'package:modfirstpos/modules/splash/controller/splash_controller.dart';
 import 'package:modfirstpos/shared/widgets/DynamicImage/dynamic_network_image.dart';
 import '../../../shared/widgets/ScreenSize/screen_size_utils.dart';
@@ -19,8 +21,6 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
-
-  bool _logoReady = false;
 
   @override
   void initState() {
@@ -48,20 +48,14 @@ class _SplashScreenState extends State<SplashScreen>
     final theme = Get.find<AppThemeService>();
     final url = theme.logoUrl.value;
 
-    if (url.isNotEmpty) {
+    if (theme.hasThemeData.value && url.isNotEmpty) {
       try {
         await precacheImage(CachedNetworkImageProvider(url), context);
-      } catch (_) {
-      }
+      } catch (_) {}
     }
 
     if (!mounted) return;
-
-    setState(() => _logoReady = true);
-
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted) _controller.forward();
-    });
+    _controller.forward();
   }
 
   @override
@@ -73,27 +67,24 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Get.find<AppThemeService>();
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark,
+      value: SystemUiOverlayStyle.light,
       child: GetBuilder<SplashController>(
         init: SplashController(),
         builder: (_) => Scaffold(
-          body: Obx(() => Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: BoxDecoration(
-              gradient: theme.splashGradient,
-            ),
-            child: SafeArea(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Spacer(flex: 3),
+          body: Obx(
+            () => Container(
+              width: double.infinity,
+              height: double.infinity,
+              decoration: theme.splashDecoration,
+              child: SafeArea(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Spacer(flex: 3),
 
-                  // Jab tak logo ready na ho, khali space rakho —
-                  // local SVG bilkul bhi flash nahi hoga
-                  if (_logoReady)
                     AnimatedBuilder(
                       animation: _controller,
                       builder: (context, child) {
@@ -101,22 +92,35 @@ class _SplashScreenState extends State<SplashScreen>
                           scale: _scaleAnimation.value,
                           child: Opacity(
                             opacity: _fadeAnimation.value,
-                            child: DynamicAppLogo(
-                              height: context.responsiveHeight(0.18),
-                            ),
+                            child: theme.hasThemeData.value
+                                ? DynamicAppLogo(
+                                    height: context.responsiveHeight(0.18),
+                                  )
+                                : SvgPicture.asset(
+                                    ImagesConstant.mJafferjeesLogo,
+                                    color: Colors.white,
+                                    height: context.responsiveHeight(0.18),
+                                  ),
                           ),
                         );
                       },
-                    )
-                  else
-                    SizedBox(height: context.responsiveHeight(0.18)),
+                    ),
 
-                  SizedBox(height: context.spacingLG),
-                  const Spacer(flex: 3),
-                ],
+                    SizedBox(height: context.spacingLG),
+
+                    CircularProgressIndicator(
+                      color: theme.hasThemeData.value
+                          ? theme.primaryColor.value
+                          : Colors.white,
+                      strokeWidth: 2.5,
+                    ),
+
+                    const Spacer(flex: 3),
+                  ],
+                ),
               ),
             ),
-          )),
+          ),
         ),
       ),
     );
