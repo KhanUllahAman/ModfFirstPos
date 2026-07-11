@@ -1,4 +1,6 @@
 import 'package:get/get.dart';
+import 'package:modfirstpos/modules/about/binding/about_binding.dart';
+import 'package:modfirstpos/modules/about/view/about_view.dart';
 import 'package:modfirstpos/modules/changePassword/bindings/change_password_binding.dart';
 import 'package:modfirstpos/modules/changePassword/view/change_password_view.dart';
 import 'package:modfirstpos/modules/menu/view/menu_view.dart';
@@ -120,6 +122,14 @@ class AppPages {
       name: Routes.storeSelection,
       page: () => const StoreSelectionView(),
       binding: StoreSelectionBinding(),
+       transition: Transition.leftToRightWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+
+    GetPage(
+      name: Routes.about,
+      page: () => const AboutView(),
+      binding: AboutBinding(),
        transition: Transition.leftToRightWithFade,
       transitionDuration: const Duration(milliseconds: 300),
     ),

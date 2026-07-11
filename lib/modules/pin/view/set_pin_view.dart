@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/pin/controller/set_pin_controller.dart';
@@ -14,6 +15,7 @@ class SetPinView extends GetView<SetPinController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return Scaffold(
       backgroundColor: ColorResources.backgroundColor,
       appBar: AppTopBar(showMenuIcon: true, onMenuPressed: () => Get.back()),
@@ -51,19 +53,20 @@ class SetPinView extends GetView<SetPinController> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                              Obx(() => 
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: ColorResources.appMainColor
+                                  color: theme.secondaryColor.value
                                       .withOpacity(0.1),
                                 ),
                                 child: Icon(
                                   Icons.lock_outline_rounded,
-                                  color: ColorResources.appMainColor,
+                                  color: theme.secondaryColor.value,
                                   size: 26,
                                 ),
-                              ),
+                              ),),
                               SizedBox(height: context.spacingSM),
                               Obx(
                                 () => Text(
@@ -97,7 +100,7 @@ class SetPinView extends GetView<SetPinController> {
                                       ? controller.firstPin.value.length
                                       : controller.confirmPin.value.length,
                                   maxLength: 4,
-                                  activeColor: ColorResources.appMainColor,
+                                  activeColor: theme.secondaryColor.value,
                                   inactiveColor: const Color(0xFFD8DCE5),
                                 ),
                               ),

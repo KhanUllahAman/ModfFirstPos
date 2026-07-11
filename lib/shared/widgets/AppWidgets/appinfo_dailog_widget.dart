@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:flutter/services.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
@@ -296,8 +298,9 @@ class _AppDialogState extends State<AppDialog> {
   }
 
   Widget _buildRadioList(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     final options = widget.options ?? [];
-    return Column(
+    return Obx(() => Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -313,7 +316,7 @@ class _AppDialogState extends State<AppDialog> {
                 color: ColorResources.labelColor,
               ),
             ),
-            activeColor: ColorResources.appMainColor,
+            activeColor: theme.secondaryColor.value,
             contentPadding: EdgeInsets.zero,
             dense: true,
             visualDensity: VisualDensity.compact,
@@ -330,7 +333,7 @@ class _AppDialogState extends State<AppDialog> {
           },
         ),
       ],
-    );
+    ));
   }
 
   Widget _buildInput(BuildContext context) {
@@ -423,51 +426,58 @@ class _AppDialogState extends State<AppDialog> {
   }
 
   Widget _buildConfirm(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (widget.confirmImage != null) ...[
-          widget.confirmImage!,
-          SizedBox(height: context.responsiveHeight(0.02)),
-        ],
-        Text(
-          widget.confirmMessage ?? "",
-          style: AppFonts.geistMono(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: ColorResources.labelColor,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        if (widget.confirmSubMessage != null) ...[
-          SizedBox(height: context.responsiveHeight(0.006)),
+    final theme = Get.find<AppThemeService>();
+    return Obx(() {
+      // yesButtonColor caller ne diya ho to wahi rahega (jaise delete = red),
+      // warna default secondaryColor use hoga
+      final confirmColor = widget.yesButtonColor ?? theme.secondaryColor.value;
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (widget.confirmImage != null) ...[
+            widget.confirmImage!,
+            SizedBox(height: context.responsiveHeight(0.02)),
+          ],
           Text(
-            widget.confirmSubMessage!,
+            widget.confirmMessage ?? "",
             style: AppFonts.geistMono(
-              fontSize: 13,
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
               color: ColorResources.labelColor,
             ),
             textAlign: TextAlign.center,
           ),
+          if (widget.confirmSubMessage != null) ...[
+            SizedBox(height: context.responsiveHeight(0.006)),
+            Text(
+              widget.confirmSubMessage!,
+              style: AppFonts.geistMono(
+                fontSize: 13,
+                color: ColorResources.labelColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+          SizedBox(height: context.responsiveHeight(0.025)),
+          _buildTwoButtons(
+            context,
+            cancelText: widget.noText ?? "No",
+            confirmText: widget.yesText ?? "Yes",
+            confirmColor: confirmColor,
+            onCancel: widget.onNo,
+            onConfirm: () {
+              Navigator.of(context).pop();
+              widget.onYes?.call();
+            },
+          ),
         ],
-        SizedBox(height: context.responsiveHeight(0.025)),
-        _buildTwoButtons(
-          context,
-          cancelText: widget.noText ?? "No",
-          confirmText: widget.yesText ?? "Yes",
-          confirmColor: widget.yesButtonColor ?? ColorResources.gradientRed,
-          onCancel: widget.onNo,
-          onConfirm: () {
-            Navigator.of(context).pop();
-            widget.onYes?.call();
-          },
-        ),
-      ],
-    );
+      );
+    });
   }
 
   Widget _buildInfo(BuildContext context) {
-    return Column(
+    final theme = Get.find<AppThemeService>();
+    return Obx(() => Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
@@ -482,14 +492,14 @@ class _AppDialogState extends State<AppDialog> {
         SizedBox(
           width: context.responsiveWidth(0.10),
           child: AppButton(
-            backgroundColor: ColorResources.appMainColor,
+            backgroundColor: theme.secondaryColor.value,
             onPressed:
                 widget.onButtonPressed ?? () => Navigator.of(context).pop(),
             isLoading: false,
             child: Text(
               widget.buttonText ?? "OK",
               style: AppFonts.geistMono(
-                color: ColorResources.blackColor,
+                color: theme.onSecondaryColor,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -497,7 +507,7 @@ class _AppDialogState extends State<AppDialog> {
           ),
         ),
       ],
-    );
+    ));
   }
 
   Widget _buildTwoButtons(
@@ -508,41 +518,45 @@ class _AppDialogState extends State<AppDialog> {
     VoidCallback? onCancel,
     VoidCallback? onConfirm,
   }) {
-    return Row(
-      children: [
-        Expanded(
-          child: AppButton(
-            backgroundColor: ColorResources.blackColor,
-            onPressed: onCancel ?? () => Navigator.of(context).pop(),
-            isLoading: false,
-            child: Text(
-              cancelText,
-              style: AppFonts.geistMono(
-                color: ColorResources.whiteColor,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+    final theme = Get.find<AppThemeService>();
+    return Obx(() {
+
+      return Row(
+        children: [
+          Expanded(
+            child: AppButton(
+              backgroundColor:  theme.primaryColor.value,
+              onPressed: onCancel ?? () => Navigator.of(context).pop(),
+              isLoading: false,
+              child: Text(
+                cancelText,
+                style: AppFonts.geistMono(
+                  color: theme.onPrimaryColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
-        ),
-        SizedBox(width: context.responsiveWidth(0.02)),
-        Expanded(
-          child: AppButton(
-            backgroundColor: confirmColor,
-            onPressed: onConfirm ?? () => Navigator.of(context).pop(),
-            isLoading: false,
-            child: Text(
-              confirmText,
-              style: AppFonts.geistMono(
-                color: ColorResources.blackColor,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+          SizedBox(width: context.responsiveWidth(0.02)),
+          Expanded(
+            child: AppButton(
+              backgroundColor: confirmColor ?? theme.secondaryColor.value,
+              onPressed: onConfirm ?? () => Navigator.of(context).pop(),
+              isLoading: false,
+              child: Text(
+                confirmText,
+                style: AppFonts.geistMono(
+                  color: theme.onSecondaryColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    });
   }
 }
 
@@ -562,18 +576,19 @@ class AppSyncButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
+    final theme = Get.find<AppThemeService>();
+    return Obx(() => OutlinedButton.icon(
       onPressed: onPressed ?? () {},
       icon: Icon(
         Icons.sync,
         size: iconSize,
-        color: ColorResources.appMainColor,
+        color: theme.secondaryColor.value,
       ),
       label: Text(
         label,
         style: AppFonts.geistMono(
           fontSize: 12,
-          color: ColorResources.appMainColor,
+          color: theme.secondaryColor.value,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -586,7 +601,7 @@ class AppSyncButton extends StatelessWidget {
           vertical: context.responsiveHeight(0.008),
         ),
       ),
-    );
+    ));
   }
 }
 
@@ -722,7 +737,8 @@ class AppActionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final theme = Get.find<AppThemeService>();
+    return Obx(() => GestureDetector(
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.symmetric(
@@ -737,7 +753,7 @@ class AppActionChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 11, color: ColorResources.appMainColor),
+            Icon(icon, size: 11, color: theme.secondaryColor.value),
             SizedBox(width: context.responsiveWidth(0.004)),
             Text(
               label,
@@ -750,6 +766,6 @@ class AppActionChip extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ));
   }
 }

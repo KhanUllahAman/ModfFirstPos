@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/profile/controller/get_profile_controller.dart';
@@ -15,6 +16,7 @@ class GetProfileView extends GetView<GetProfileController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: ColorResources.backgroundColor,
@@ -35,7 +37,7 @@ class GetProfileView extends GetView<GetProfileController> {
                   if (controller.isLoading.value && profile == null) {
                     return Center(
                       child: CircularProgressIndicator(
-                        color: ColorResources.appMainColor,
+                        color: theme.primaryColor.value,
                       ),
                     );
                   }
@@ -47,7 +49,7 @@ class GetProfileView extends GetView<GetProfileController> {
                         style: AppFonts.geistMono(
                           fontSize: context.fontSM,
                           fontWeight: FontWeight.w500,
-                          color: ColorResources.blackColor,
+                          color: theme.onPrimaryColor.withOpacity(0.85),
                         ),
                       ),
                     );
@@ -85,9 +87,7 @@ class GetProfileView extends GetView<GetProfileController> {
                                   children: [
                                     CircleAvatar(
                                       radius: context.responsiveWidth(0.07),
-                                      backgroundColor: ColorResources
-                                          .appMainColor
-                                          .withOpacity(0.1),
+                                      backgroundColor: theme.primaryColor.value.withOpacity(0.1),
                                       backgroundImage:
                                           (profile.imageUrl != null &&
                                               profile.imageUrl!.isNotEmpty)
@@ -102,7 +102,7 @@ class GetProfileView extends GetView<GetProfileController> {
                                                 0.07,
                                               ),
                                               color:
-                                                  ColorResources.appMainColor,
+                                                  theme.primaryColor.value,
                                             )
                                           : null,
                                     ),
@@ -147,7 +147,7 @@ class GetProfileView extends GetView<GetProfileController> {
                           ),
                           SizedBox(height: context.spacingMD),
                           AppButton(
-                            backgroundColor: ColorResources.mainbuttonColor,
+                            backgroundColor: theme.secondaryColor.value,
                             onPressed: controller.goToUpdateProfile,
                             isLoading: false,
                             borderRadius: 12,
@@ -156,7 +156,7 @@ class GetProfileView extends GetView<GetProfileController> {
                               style: AppFonts.geistMono(
                                 fontSize: context.fontSM,
                                 fontWeight: FontWeight.w500,
-                                color: ColorResources.blackColor,
+                                color: theme.onSecondaryColor,
                                 letterSpacing: 0.5,
                               ),
                             ),
@@ -188,11 +188,12 @@ class _ProfileInfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return Padding(
       padding: EdgeInsets.symmetric(vertical: context.spacingXS / 1.5),
       child: Row(
         children: [
-          Icon(icon, size: context.fontSM, color: ColorResources.appMainColor),
+          Icon(icon, size: context.fontSM, color: theme.secondaryColor.value),
           SizedBox(width: context.spacingSM),
           Text(
             label,

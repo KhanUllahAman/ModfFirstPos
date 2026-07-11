@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/changePassword/controller/change_password_controller.dart';
@@ -16,6 +17,7 @@ class ChangePasswordView extends GetView<ChangePasswordController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: ColorResources.backgroundColor,
@@ -96,7 +98,7 @@ class ChangePasswordView extends GetView<ChangePasswordController> {
                     SizedBox(height: context.spacingXL),
                     Obx(
                       () => AppButton(
-                        backgroundColor: ColorResources.mainbuttonColor,
+                        backgroundColor: theme.secondaryColor.value,
                         onPressed: controller.isLoading.value
                             ? () {}
                             : controller.changePassword,
@@ -109,7 +111,7 @@ class ChangePasswordView extends GetView<ChangePasswordController> {
                           style: AppFonts.geistMono(
                             fontSize: context.fontSM,
                             fontWeight: FontWeight.w500,
-                            color: ColorResources.blackColor,
+                            color: theme.onSecondaryColor,
                             letterSpacing: 0.5,
                           ),
                         ),

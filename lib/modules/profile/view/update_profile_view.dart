@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
@@ -17,6 +18,7 @@ class UpdateProfileView extends GetView<UpdateProfileController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: ColorResources.backgroundColor,
@@ -73,7 +75,7 @@ class UpdateProfileView extends GetView<UpdateProfileController> {
                   SizedBox(height: context.spacingXL),
                   Obx(
                     () => AppButton(
-                      backgroundColor: ColorResources.mainbuttonColor,
+                      backgroundColor: theme.secondaryColor.value,
                       onPressed:
                           controller.isLoading.value ||
                               controller.isUploadingImage.value
@@ -92,7 +94,7 @@ class UpdateProfileView extends GetView<UpdateProfileController> {
                         style: AppFonts.geistMono(
                           fontSize: context.fontSM,
                           fontWeight: FontWeight.w500,
-                          color: ColorResources.blackColor,
+                          color: theme.onSecondaryColor,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -118,6 +120,7 @@ class _AvatarPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext _) {
+    final theme = Get.find<AppThemeService>();
     final avatarRadius = context.responsiveWidth(0.14);
 
     return GestureDetector(
@@ -144,7 +147,7 @@ class _AvatarPicker extends StatelessWidget {
                   ? Icon(
                       Iconsax.user,
                       size: avatarRadius,
-                      color: ColorResources.labelColor,
+                      color: theme.onSecondaryColor.withOpacity(0.5),
                     )
                   : null,
             ),
@@ -154,17 +157,17 @@ class _AvatarPicker extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: ColorResources.appMainColor,
+                  color: theme.secondaryColor.value,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: ColorResources.blackColor,
+                    color: theme.onSecondaryColor,
                     width: 2,
                   ),
                 ),
-                child: const Icon(
+                child:  Icon(
                   Iconsax.camera,
                   size: 16,
-                  color: ColorResources.blackColor,
+                  color: theme.onSecondaryColor,
                 ),
               ),
             ),

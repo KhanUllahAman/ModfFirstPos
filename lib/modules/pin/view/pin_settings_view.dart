@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/pin/controller/pin_settings_controller.dart';
@@ -15,6 +16,7 @@ class PinSettingsView extends GetView<PinSettingsController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: ColorResources.backgroundColor,
@@ -50,7 +52,7 @@ class PinSettingsView extends GetView<PinSettingsController> {
                         ),
                         Switch(
                           value: controller.pinController.pinEnabled.value,
-                          activeColor: ColorResources.appMainColor,
+                          activeColor: theme.secondaryColor.value,
                           onChanged: (val) {
                             if (val) {
                               Get.toNamed(Routes.setPin);
@@ -98,7 +100,7 @@ class PinSettingsView extends GetView<PinSettingsController> {
                                     min: 1,
                                     max: 120,
                                     divisions: 119,
-                                    activeColor: ColorResources.appMainColor,
+                                    activeColor: theme.secondaryColor.value,
                                     label:
                                         "${controller.autoLockMinutes.value} min",
                                     onChanged: (val) {

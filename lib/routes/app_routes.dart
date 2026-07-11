@@ -18,5 +18,6 @@ abstract class Routes {
   static const error404Route = '/error404';
   static const setPin = '/set-pin';
   static const pinSettings = '/pin-settings';
-  static const String storeSelection = '/store-selection';
+  static const storeSelection = '/store-selection';
+  static const about = '/about';
 }

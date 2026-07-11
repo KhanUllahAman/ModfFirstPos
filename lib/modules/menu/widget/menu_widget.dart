@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
@@ -232,10 +234,13 @@ class MenuHeroAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(20),
-      child: InkWell(
+      child: 
+      Obx(() => 
+      InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: Container(
@@ -244,7 +249,7 @@ class MenuHeroAction extends StatelessWidget {
             vertical: context.spacingMD,
           ),
           decoration: BoxDecoration(
-            color: ColorResources.blackColor,
+            color: theme.primaryColor.value,
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
@@ -253,10 +258,10 @@ class MenuHeroAction extends StatelessWidget {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: ColorResources.appMainColor,
+                  color: theme.secondaryColor.value,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(icon, color: ColorResources.blackColor, size: 23),
+                child: Icon(icon, color: theme.onSecondaryColor, size: 23),
               ),
               SizedBox(width: context.spacingSM),
               Expanded(
@@ -268,7 +273,7 @@ class MenuHeroAction extends StatelessWidget {
                       style: AppFonts.geistMono(
                         fontSize: context.fontMD,
                         fontWeight: FontWeight.w700,
-                        color: ColorResources.whiteColor,
+                        color: theme.onPrimaryColor,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -277,7 +282,7 @@ class MenuHeroAction extends StatelessWidget {
                       style: AppFonts.geistMono(
                         fontSize: context.fontXS,
                         fontWeight: FontWeight.w500,
-                        color: ColorResources.whiteColor.withOpacity(0.85),
+                        color: theme.onPrimaryColor.withOpacity(0.85),
                       ),
                     ),
                   ],
@@ -287,19 +292,19 @@ class MenuHeroAction extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: ColorResources.whiteColor.withOpacity(0.18),
+                  color: theme.onPrimaryColor.withOpacity(0.18),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child:  Icon(
                   Icons.arrow_forward_rounded,
-                  color: ColorResources.whiteColor,
+                  color: theme.onPrimaryColor,
                   size: 17,
                 ),
               ),
             ],
           ),
         ),
-      ),
+      ),)
     );
   }
 }

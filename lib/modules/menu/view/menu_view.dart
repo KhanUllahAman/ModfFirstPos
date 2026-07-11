@@ -230,6 +230,11 @@ class _SystemTab extends StatelessWidget {
               },
             ),
             MenuList(
+              menuIcon: Icons.info_outline_rounded,
+              menuTitle: 'About',
+              menuTap: () => Get.toNamed(Routes.about),
+            ),
+            MenuList(
               menuIcon: Icons.access_time_filled_rounded,
               menuTitle: 'Shift Close',
               menuTap: () {},
@@ -249,7 +254,6 @@ class _SystemTab extends StatelessWidget {
                   title: "Log Out",
                   message: "Are you sure",
                   subMessage: "You want to log out.",
-                  yesButtonColor: ColorResources.appMainColor,
                   image: Image.asset(
                     ImagesConstant.logout,
                     height: context.responsiveHeight(0.20),
@@ -257,7 +261,7 @@ class _SystemTab extends StatelessWidget {
                   ),
                   onYes: () async {
                     await SecureStorageService.clearAll();
-                    Get.offAllNamed(Routes.auth);
+                    Get.offAllNamed(Routes.storeSelection);
                   },
                 );
               },
