@@ -17,5 +17,7 @@ class ApiConstants {
   static final String pinChangeEndpoint = '${baseUrl}users/pin/change';
   static final String pinDisableEndpoint = '${baseUrl}users/pin';
   static final String pinAutoLockEndpoint = '${baseUrl}users/pin/auto-lock';
+  static final String categoryListEndpoint = '${baseUrl}product-categories/list'; 
+  static final String productListEndpoint = '${baseUrl}products/list';   
   static String websiteSettingsEndpoint(String storeName) => '${baseUrl}website-settings/frontend/$storeName';
 }

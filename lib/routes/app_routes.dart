@@ -20,4 +20,6 @@ abstract class Routes {
   static const pinSettings = '/pin-settings';
   static const storeSelection = '/store-selection';
   static const about = '/about';
+  static const categoryProducts = '/category-products';
+  static const productVariant = '/product-variant';
 }

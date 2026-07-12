@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
@@ -45,6 +46,7 @@ class _LockScreenViewState extends State<LockScreenView> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return Material(
       type: MaterialType.transparency,
       child: Stack(
@@ -82,13 +84,13 @@ class _LockScreenViewState extends State<LockScreenView> {
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: ColorResources.appMainColor.withOpacity(
+                            color: theme.primaryColor.value.withOpacity(
                               0.15,
                             ),
                           ),
                           child: Icon(
                             Icons.lock_outline_rounded,
-                            color: ColorResources.appMainColor,
+                            color: theme.primaryColor.value,
                             size: 32,
                           ),
                         ),
@@ -125,6 +127,8 @@ class _LockScreenViewState extends State<LockScreenView> {
                         PinDotsIndicator(
                           enteredLength: _enteredPin.length,
                           maxLength: 4,
+                          activeColor: theme.primaryColor.value,
+                          inactiveColor: Colors.white.withOpacity(0.3),
                         ),
                         SizedBox(
                           height: 28,

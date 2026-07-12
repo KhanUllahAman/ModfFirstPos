@@ -1,12 +1,16 @@
+import 'dart:developer';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/modules/category/model/category_model.dart';
+import 'package:modfirstpos/modules/category/service/category_service.dart';
 import 'package:modfirstpos/modules/home/model/cart_item_model.dart';
 import 'package:modfirstpos/modules/home/model/product_item.dart';
-import 'package:modfirstpos/modules/home/service/home_service.dart';
+import 'package:modfirstpos/routes/app_routes.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
 class HomeController extends GetxController {
-  final HomeService _service = HomeService();
+  final CategoryService _categoryService = CategoryService();
+
   final TextEditingController scanController = TextEditingController();
   final TextEditingController searchController = TextEditingController();
   final ScrollController cartScrollController = ScrollController();
@@ -16,10 +20,14 @@ class HomeController extends GetxController {
   final RxString discountInput = ''.obs;
   final RxList<ProductItem> _pinnedProducts = <ProductItem>[].obs;
 
+  final RxList<CategoryModel> categories = <CategoryModel>[].obs;
+  final RxBool isCategoriesLoading = false.obs;
+  final RxString categorySearchQuery = ''.obs;
+
   @override
   void onInit() {
     super.onInit();
-    // _loadStaticData();
+    loadCategories();
   }
 
   @override
@@ -31,6 +39,38 @@ class HomeController extends GetxController {
     super.onClose();
   }
 
+  Future<void> loadCategories() async {
+    try {
+      isCategoriesLoading.value = true;
+      final response = await _categoryService.fetchCategories(
+        page: 1,
+        limit: 20,
+        isActive: true,
+      );
+      if (response.isSuccess) {
+        categories.assignAll(response.payload);
+      }
+    } catch (e) {
+      log("HomeController loadCategories error: $e");
+    } finally {
+      isCategoriesLoading.value = false;
+    }
+  }
+
+  List<CategoryModel> get filteredCategories {
+    final query = categorySearchQuery.value.trim().toLowerCase();
+    if (query.isEmpty) return categories;
+    return categories
+        .where((c) => c.displayName.toLowerCase().contains(query))
+        .toList();
+  }
+
+  void onCategorySearchChanged(String val) => categorySearchQuery.value = val;
+
+  void onCategoryTap(CategoryModel category) {
+    Get.toNamed(Routes.categoryProducts, arguments: category);
+  }
+
   List<ProductItem> get filteredPinnedProducts {
     final query = searchController.text.trim().toLowerCase();
     if (query.isEmpty) return _pinnedProducts;
@@ -39,13 +79,13 @@ class HomeController extends GetxController {
         .toList();
   }
 
-  void addToCartFromItem(ProductItem product) {
+  void addToCartFromItem(ProductItem product, {int quantity = 1}) {
     final existingIndex = cartItems.indexWhere(
       (c) => c.product.skuCode == product.skuCode,
     );
 
     if (existingIndex != -1) {
-      cartItems[existingIndex].quantity++;
+      cartItems[existingIndex].quantity += quantity;
       cartItems.refresh();
       customSnackBar(
         'Already in Cart',
@@ -64,6 +104,7 @@ class HomeController extends GetxController {
           amount: product.productPrice ?? 0,
           unitPrice: product.productPrice ?? 0,
         ),
+        quantity: quantity,
       ),
     );
 

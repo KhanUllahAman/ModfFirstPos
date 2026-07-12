@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 import 'package:modfirstpos/modules/about/binding/about_binding.dart';
 import 'package:modfirstpos/modules/about/view/about_view.dart';
+import 'package:modfirstpos/modules/categoryProducts/binding/category_products_binding.dart';
+import 'package:modfirstpos/modules/categoryProducts/view/category_products_view.dart';
 import 'package:modfirstpos/modules/changePassword/bindings/change_password_binding.dart';
 import 'package:modfirstpos/modules/changePassword/view/change_password_view.dart';
 import 'package:modfirstpos/modules/menu/view/menu_view.dart';
@@ -16,6 +18,8 @@ import 'package:modfirstpos/modules/pin/binding/pin_settings_binding.dart';
 import 'package:modfirstpos/modules/pin/binding/set_pin_binding.dart';
 import 'package:modfirstpos/modules/pin/view/pin_settings_view.dart';
 import 'package:modfirstpos/modules/pin/view/set_pin_view.dart';
+import 'package:modfirstpos/modules/productVariant/binding/product_variant_binding.dart';
+import 'package:modfirstpos/modules/productVariant/view/product_variant_view.dart';
 import 'package:modfirstpos/modules/profile/binding/get_profile_binding.dart';
 import 'package:modfirstpos/modules/profile/binding/update_profile_binding.dart';
 import 'package:modfirstpos/modules/profile/view/get_profile_view.dart';
@@ -122,7 +126,7 @@ class AppPages {
       name: Routes.storeSelection,
       page: () => const StoreSelectionView(),
       binding: StoreSelectionBinding(),
-       transition: Transition.leftToRightWithFade,
+      transition: Transition.leftToRightWithFade,
       transitionDuration: const Duration(milliseconds: 300),
     ),
 
@@ -130,7 +134,22 @@ class AppPages {
       name: Routes.about,
       page: () => const AboutView(),
       binding: AboutBinding(),
-       transition: Transition.leftToRightWithFade,
+      transition: Transition.leftToRightWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+
+    GetPage(
+      name: Routes.categoryProducts,
+      page: () => const CategoryProductsView(),
+      binding: CategoryProductsBinding(),
+      transition: Transition.rightToLeftWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage(
+      name: Routes.productVariant,
+      page: () => const ProductVariantView(),
+      binding: ProductVariantBinding(),
+      transition: Transition.rightToLeftWithFade,
       transitionDuration: const Duration(milliseconds: 300),
     ),
 

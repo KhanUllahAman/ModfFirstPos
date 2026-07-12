@@ -7,10 +7,10 @@ import 'package:iconsax/iconsax.dart';
 import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/core/utils/images_constant.dart';
+import 'package:modfirstpos/modules/category/model/category_model.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
 import 'package:modfirstpos/modules/home/model/cart_item_model.dart';
 import 'package:modfirstpos/modules/home/model/product_item.dart';
-import 'package:modfirstpos/routes/app_routes.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 
@@ -212,7 +212,7 @@ class _CartItemTile extends StatelessWidget {
 
                 Row(
                   children: [
-                    _QtyBtn(
+                    QtyBtn(
                       icon: Icons.remove,
                       onTap: () => controller.decrementQty(item),
                     ),
@@ -229,7 +229,7 @@ class _CartItemTile extends StatelessWidget {
                         ),
                       ),
                     ),
-                    _QtyBtn(
+                    QtyBtn(
                       icon: Icons.add,
                       onTap: () => controller.incrementQty(item),
                     ),
@@ -271,10 +271,10 @@ class _CartImagePlaceholder extends StatelessWidget {
   }
 }
 
-class _QtyBtn extends StatelessWidget {
+class QtyBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
-  const _QtyBtn({required this.icon, required this.onTap});
+  const QtyBtn({super.key, required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -440,11 +440,28 @@ class ProductListPanel extends StatelessWidget {
     final theme = Get.find<AppThemeService>();
     return Column(
       children: [
-        _ProductSearchField(controller: controller),
+        _CategorySearchField(controller: controller),
         SizedBox(height: context.responsiveHeight(0.015)),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: context.responsiveWidth(0.008)),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'CATEGORIES',
+              style: AppFonts.geistMono(
+                fontSize: context.fontXS,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.6,
+                color: const Color(0xFF9AA1B0),
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: context.responsiveHeight(0.008)),
         Expanded(
           child: Obx(() {
-            if (controller.isLoading.value) {
+            final _ = controller.categorySearchQuery.value; // rebuild trigger
+            if (controller.isCategoriesLoading.value) {
               return Center(
                 child: CircularProgressIndicator(
                   color: theme.secondaryColor.value,
@@ -453,42 +470,24 @@ class ProductListPanel extends StatelessWidget {
               );
             }
 
-            final products = controller.filteredPinnedProducts;
+            final categories = controller.filteredCategories;
 
-            if (products.isEmpty) {
+            if (categories.isEmpty) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.inventory_2_outlined,
+                      Icons.category_outlined,
                       size: 40,
                       color: ColorResources.blackColor.withOpacity(0.3),
                     ),
                     SizedBox(height: context.spacingSM),
                     Text(
-                      'Add Products From Catalogue to \n save them here for quick access',
+                      'No categories found',
                       style: AppFonts.geistMono(
                         fontSize: context.fontXS,
                         color: ColorResources.blackColor.withOpacity(0.4),
-                      ),
-                    ),
-                    SizedBox(height: context.spacingSM),
-                    SizedBox(
-                      width: context.responsiveWidth(0.2),
-                      child: AppButton(
-                        onPressed: () => Get.toNamed(Routes.catalogue),
-                        backgroundColor: theme.secondaryColor.value,
-                        borderRadius: 8,
-                        isLoading: false,
-                        child: Text(
-                          'Go to Catalogue',
-                          style: AppFonts.geistMono(
-                            fontSize: context.fontSM,
-                            fontWeight: FontWeight.w600,
-                            color: theme.onSecondaryColor,
-                          ),
-                        ),
                       ),
                     ),
                   ],
@@ -501,19 +500,116 @@ class ProductListPanel extends StatelessWidget {
               thumbVisibility: true,
               child: ListView.separated(
                 controller: controller.productScrollController,
-                itemCount: products.length,
-                separatorBuilder: (_, __) => const SizedBox.shrink(),
-                itemBuilder: (_, index) => _PinnedProductRow(
-                  product: products[index],
-                  onTap: () => controller.addToCartFromItem(products[index]),
-                  onRemove: () =>
-                      controller.removePinnedProduct(products[index]),
+                itemCount: categories.length,
+                separatorBuilder: (_, __) =>
+                    SizedBox(height: context.responsiveHeight(0.008)),
+                itemBuilder: (_, index) => _CategoryRow(
+                  category: categories[index],
+                  onTap: () => controller.onCategoryTap(categories[index]),
                 ),
               ),
             );
           }),
         ),
       ],
+    );
+  }
+}
+
+class _CategoryRow extends StatelessWidget {
+  final CategoryModel category;
+  final VoidCallback onTap;
+  const _CategoryRow({required this.category, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
+    return GestureDetector(
+      onTap: onTap,
+      child: Obx(() => Container(
+        margin: EdgeInsets.symmetric(horizontal: context.responsiveWidth(0.006)),
+        padding: EdgeInsets.symmetric(
+          horizontal: context.responsiveWidth(0.014),
+          vertical: context.responsiveHeight(0.012),
+        ),
+        decoration: BoxDecoration(
+          color: ColorResources.whiteColor,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: ColorResources.cardBorderColor),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: theme.secondaryColor.value.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                category.displayName.isNotEmpty
+                    ? category.displayName[0].toUpperCase()
+                    : '?',
+                style: AppFonts.geistMono(
+                  fontSize: context.fontSM,
+                  fontWeight: FontWeight.w700,
+                  color: theme.secondaryColor.value,
+                ),
+              ),
+            ),
+            SizedBox(width: context.responsiveWidth(0.012)),
+            Expanded(
+              child: Text(
+                category.displayName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppFonts.geistMono(
+                  fontSize: context.fontSM,
+                  fontWeight: FontWeight.w600,
+                  color: ColorResources.blackColor,
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: Colors.grey, size: 20),
+          ],
+        ),
+      )),
+    );
+  }
+}
+
+class _CategorySearchField extends StatelessWidget {
+  final HomeController controller;
+  const _CategorySearchField({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      onChanged: controller.onCategorySearchChanged,
+      style: AppFonts.geistMono(fontSize: context.fontSM),
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: ColorResources.whiteColor,
+        hintText: 'Search Category',
+        hintStyle: AppFonts.geistMono(
+          color: ColorResources.blackColor,
+          fontSize: context.fontSM,
+        ),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: context.responsiveWidth(0.015),
+          vertical: context.responsiveHeight(0.012),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.transparent),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: ColorResources.cardBorderColor),
+        ),
+        suffixIcon: const Icon(Icons.search, color: ColorResources.blackColor),
+      ),
     );
   }
 }
