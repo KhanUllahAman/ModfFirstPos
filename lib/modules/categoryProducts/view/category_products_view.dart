@@ -19,7 +19,7 @@ class CategoryProductsView extends GetView<CategoryProductsController> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: ColorResources.whiteColor,
+      backgroundColor: ColorResources.backgroundColor, // Changed from white to grey background for premium card contrast
       appBar: AppTopBar(showMenuIcon: false, showBackIcon: true),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
@@ -29,9 +29,9 @@ class CategoryProductsView extends GetView<CategoryProductsController> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               BackBar(title: controller.category.displayName),
-              SizedBox(height: context.spacingSM),
+              SizedBox(height: context.spacingMD),
               _SearchField(controller: controller),
-              SizedBox(height: context.spacingSM),
+              SizedBox(height: context.spacingMD),
               Expanded(child: _ProductGrid(controller: controller)),
             ],
           ),
@@ -47,33 +47,53 @@ class _SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: context.responsiveHeight(0.060),
+    return Container(
+      height: context.responsiveHeight(0.065),
+      decoration: BoxDecoration(
+        color: ColorResources.whiteColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: TextField(
         controller: controller.searchController,
         onChanged: controller.onSearchChanged,
-        style: AppFonts.geistMono(fontSize: context.fontSM, color: ColorResources.labelColor),
+        style: AppFonts.geistMono(
+          fontSize: context.fontSM,
+          color: ColorResources.labelColor,
+          fontWeight: FontWeight.w500,
+        ),
         decoration: InputDecoration(
-          hintText: 'Search Product',
+          hintText: 'Search Product in this category...',
           hintStyle: AppFonts.geistMono(
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
             fontSize: context.fontSM,
-            color: ColorResources.labelColor,
+            color: ColorResources.labelColor.withOpacity(0.4),
           ),
-          suffixIcon: const Icon(Icons.search, color: ColorResources.blackColor),
+          prefixIcon: const Icon(Icons.search_rounded, color: ColorResources.blackColor),
+          suffixIcon: controller.searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear_rounded, color: Colors.grey),
+                  onPressed: () {
+                    controller.searchController.clear();
+                    controller.onSearchChanged('');
+                  },
+                )
+              : null,
           filled: true,
-          fillColor: ColorResources.whiteColor,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: ColorResources.cardBorderColor),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: ColorResources.cardBorderColor),
+          fillColor: Colors.transparent,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
           ),
           contentPadding: EdgeInsets.symmetric(
             horizontal: context.spacingSM,
-            vertical: context.spacingXS,
+            vertical: context.spacingSM,
           ),
         ),
       ),
@@ -92,7 +112,7 @@ class _ProductGrid extends StatelessWidget {
       final _ = controller.searchQuery.value; // rebuild trigger
       if (controller.isLoading.value) {
         return Center(
-          child: CircularProgressIndicator(color: theme.secondaryColor.value),
+          child: CircularProgressIndicator(color: theme.secondaryColor.value, strokeWidth: 3),
         );
       }
 
@@ -100,12 +120,24 @@ class _ProductGrid extends StatelessWidget {
 
       if (products.isEmpty) {
         return Center(
-          child: Text(
-            'No products found in this category',
-            style: AppFonts.geistMono(
-              fontSize: context.fontSM,
-              color: ColorResources.blackColor.withOpacity(0.5),
-            ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.shopping_bag_outlined,
+                size: 64,
+                color: ColorResources.blackColor.withOpacity(0.2),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'No products found in this category',
+                style: AppFonts.geistMono(
+                  fontSize: context.fontSM,
+                  fontWeight: FontWeight.w600,
+                  color: ColorResources.blackColor.withOpacity(0.5),
+                ),
+              ),
+            ],
           ),
         );
       }
@@ -114,8 +146,8 @@ class _ProductGrid extends StatelessWidget {
         itemCount: products.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 5,
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
           childAspectRatio: 0.72,
         ),
         itemBuilder: (_, i) => _ProductCard(
@@ -138,45 +170,83 @@ class _ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
+
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: ColorResources.cardBorderColor.withOpacity(0.6)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Image part with badge overlay
             Expanded(
               flex: 6,
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-                child: product.primaryImageUrl != null
-                    ? CachedNetworkImage(
-                        imageUrl: product.primaryImageUrl!,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                        errorWidget: (_, __, ___) => Container(
-                          color: const Color(0xFFE5E7EB),
-                          child: const Icon(Icons.image_not_supported_outlined, color: Colors.grey),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                      child: product.primaryImageUrl != null
+                          ? CachedNetworkImage(
+                              imageUrl: product.primaryImageUrl!,
+                              fit: BoxFit.contain,
+                              width: double.infinity,
+                              height: double.infinity,
+                              errorWidget: (_, __, ___) => Container(
+                                color: const Color(0xFFF3F4F6),
+                                child: const Icon(Icons.image_not_supported_outlined, color: Colors.grey),
+                              ),
+                            )
+                          : Container(
+                              color: const Color(0xFFF3F4F6),
+                              child: const Icon(Icons.image_outlined, color: Colors.grey),
+                            ),
+                    ),
+                  ),
+                  if (product.hasVariants)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: theme.primaryColor.value.withOpacity(0.85),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                      )
-                    : Container(
-                        color: const Color(0xFFE5E7EB),
-                        child: const Icon(Icons.image_outlined, color: Colors.grey),
+                        child: Text(
+                          '${product.variants.length} VARIANTS',
+                          style: AppFonts.geistMono(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w800,
+                            color: theme.onPrimaryColor,
+                          ),
+                        ),
                       ),
+                    ),
+                ],
               ),
             ),
+            // Info text part
             Expanded(
               flex: 4,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(6, 4, 6, 6),
+                padding: const EdgeInsets.all(10.0),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Text(
                       product.displayName,
@@ -184,25 +254,38 @@ class _ProductCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppFonts.geistMono(
                         fontSize: context.fontXS,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.bold,
                         color: ColorResources.labelColor,
                       ),
                     ),
-                    if (product.hasVariants)
+                    if (product.sku != null && product.sku!.isNotEmpty)
                       Text(
-                        '${product.variants.length} variants',
+                        'SKU: ${product.sku}',
                         style: AppFonts.geistMono(
-                          fontSize: context.fontXS - 1,
-                          color: ColorResources.labelColor.withOpacity(0.5),
+                          fontSize: 9,
+                          color: Colors.grey[500],
+                          fontWeight: FontWeight.w500,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    Text(
-                      'Rs. ${_fmt(product.effectivePrice)}',
-                      style: AppFonts.geistMono(
-                        fontSize: context.fontXS,
-                        fontWeight: FontWeight.w700,
-                        color: ColorResources.labelColor,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Rs. ${_fmt(product.effectivePrice)}',
+                          style: AppFonts.geistMono(
+                            fontSize: context.fontSM,
+                            fontWeight: FontWeight.w800,
+                            color: theme.secondaryColor.value,
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 14,
+                          color: theme.secondaryColor.value,
+                        ),
+                      ],
                     ),
                   ],
                 ),

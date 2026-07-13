@@ -29,9 +29,15 @@ import 'package:modfirstpos/modules/storeSelection/view/store_selection_view.dar
 import 'package:modfirstpos/modules/verifyOtp/binding/verify_otp_binding.dart';
 import 'package:modfirstpos/modules/verifyOtp/view/verify_otp_view.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
+import 'package:modfirstpos/modules/order/binding/order_binding.dart';
+import 'package:modfirstpos/modules/order/view/order_view.dart';
+import 'package:modfirstpos/modules/setting/binding/setting_binding.dart';
+import 'package:modfirstpos/modules/setting/view/setting_view.dart';
 import '../modules/splash/binding/splash_binding.dart';
 import '../modules/splash/view/splash_screen.dart';
 import '../modules/auth/view/auth_view.dart';
+import 'package:modfirstpos/modules/notification/binding/notification_binding.dart';
+import 'package:modfirstpos/modules/notification/view/notification_view.dart';
 
 class AppPages {
   static const initial = Routes.splash;
@@ -150,6 +156,27 @@ class AppPages {
       page: () => const ProductVariantView(),
       binding: ProductVariantBinding(),
       transition: Transition.rightToLeftWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage(
+      name: Routes.order,
+      page: () => const OrderView(),
+      binding: OrderBinding(),
+      transition: Transition.leftToRightWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage(
+      name: Routes.setting,
+      page: () => const SettingView(),
+      binding: SettingBinding(),
+      transition: Transition.leftToRightWithFade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage(
+      name: Routes.notification,
+      page: () => const NotificationView(),
+      binding: NotificationBinding(),
+      transition: Transition.leftToRightWithFade,
       transitionDuration: const Duration(milliseconds: 300),
     ),
 

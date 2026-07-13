@@ -77,14 +77,14 @@ class _MainTab extends StatelessWidget {
           children: [
             MenuList(
               menuIcon: Icons.grid_view_rounded,
-              menuTitle: 'Catalogue',
+              menuTitle: 'Category',
               menuTap: () => Get.toNamed(Routes.catalogue),
             ),
             MenuList(
               menuIcon: Icons.receipt_long_rounded,
               menuTitle: 'Orders',
               menuTap: () {
-                // Get.toNamed(Routes.order);
+                Get.toNamed(Routes.order);
               },
             ),
             MenuList(
@@ -106,45 +106,10 @@ class _MainTab extends StatelessWidget {
               menuTap: () {},
             ),
             MenuList(
-              menuIcon: Icons.account_balance_wallet_rounded,
-              menuTitle: 'Received on Account',
-              menuTap: () {
-                AppDialog.showSearchList(
-                  context,
-                  title: "Received On Account",
-                  items: [
-                    AppDialogListItem(
-                      id: "6-18-1",
-                      name: "Shaukat Ali",
-                      trailing: "Rs. 0",
-                    ),
-                    AppDialogListItem(
-                      id: "6-18-1",
-                      name: "Saleem Iqbal",
-                      trailing: "Rs. 0",
-                    ),
-                  ],
-                  onItemTap: (item) => print(item.name),
-                );
-              },
-            ),
-            MenuList(
-              menuIcon: Icons.payments_rounded,
-              menuTitle: 'Expense',
-              menuTap: () {
-                AppDialog.showInput(
-                  context,
-                  title: "Credit Voucher Refund",
-                  inputLabel: "Enter Voucher Number",
-                  onConfirm: (val) => log(val),
-                );
-              },
-            ),
-            MenuList(
               menuIcon: Icons.notifications_rounded,
               menuTitle: 'Notification',
               menuTap: () {
-                // Get.toNamed(Routes.notification);
+                Get.toNamed(Routes.notification);
               },
             ),
           ],
@@ -199,19 +164,9 @@ class _SystemTab extends StatelessWidget {
           title: "System",
           children: [
             MenuList(
-              menuIcon: Icons.bar_chart_rounded,
-              menuTitle: 'X Report',
-              menuTap: () {},
-            ),
-            MenuList(
               menuIcon: Icons.settings_rounded,
               menuTitle: 'Setting',
-              menuTap: () => {},
-            ),
-            MenuList(
-              menuIcon: Icons.system_update_alt_rounded,
-              menuTitle: 'Update',
-              menuTap: () => Get.toNamed(Routes.updateModule),
+              menuTap: () => Get.toNamed(Routes.setting),
             ),
             MenuList(
               menuIcon: Icons.perm_device_information_rounded,

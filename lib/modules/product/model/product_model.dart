@@ -53,9 +53,19 @@ class ProductImageModel {
   ProductImageModel({this.id, this.imageUrl, this.isPrimary, this.sortOrder});
 
   factory ProductImageModel.fromJson(Map<String, dynamic> json) {
+    String? imgUrl = json['image_url'] as String?;
+    if (imgUrl != null && !imgUrl.startsWith('http')) {
+      const baseHost = 'http://13.62.114.94:3000';
+      if (imgUrl.startsWith('/uploads')) {
+        imgUrl = '$baseHost$imgUrl';
+      } else {
+        final normalized = imgUrl.startsWith('/') ? imgUrl : '/$imgUrl';
+        imgUrl = '$baseHost/uploads$normalized';
+      }
+    }
     return ProductImageModel(
       id: json['id'] as int?,
-      imageUrl: json['image_url'] as String?,
+      imageUrl: imgUrl,
       isPrimary: json['is_primary'] as bool?,
       sortOrder: json['sort_order'] as int?,
     );

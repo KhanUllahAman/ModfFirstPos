@@ -9,8 +9,31 @@ import 'package:modfirstpos/shared/widgets/appBarWidget/app_bar_widget.dart';
 import 'package:modfirstpos/shared/widgets/noKeyboard/no_keyboard_extension.dart';
 import '../../../routes/app_routes.dart';
 
-class HomeView extends GetView<HomeController> {
+class HomeView extends StatefulWidget {
   const HomeView({super.key});
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  final HomeController controller = Get.find<HomeController>();
+
+  @override
+  void initState() {
+    super.initState();
+    // Reassign fresh ScrollController instances to HomeController to prevent
+    // "attached to more than one ScrollPosition" exceptions during page transitions.
+    controller.cartScrollController = ScrollController();
+    controller.productScrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    controller.cartScrollController.dispose();
+    controller.productScrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

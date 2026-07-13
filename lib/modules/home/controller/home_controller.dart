@@ -3,18 +3,23 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/modules/category/model/category_model.dart';
 import 'package:modfirstpos/modules/category/service/category_service.dart';
+import 'package:modfirstpos/modules/product/model/product_model.dart';
+import 'package:modfirstpos/modules/product/service/product_service.dart';
 import 'package:modfirstpos/modules/home/model/cart_item_model.dart';
 import 'package:modfirstpos/modules/home/model/product_item.dart';
-import 'package:modfirstpos/routes/app_routes.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
 class HomeController extends GetxController {
   final CategoryService _categoryService = CategoryService();
+  final ProductService _productService = ProductService();
 
   final TextEditingController scanController = TextEditingController();
   final TextEditingController searchController = TextEditingController();
-  final ScrollController cartScrollController = ScrollController();
-  final ScrollController productScrollController = ScrollController();
+  final TextEditingController productSearchController = TextEditingController();
+
+  ScrollController cartScrollController = ScrollController();
+  ScrollController productScrollController = ScrollController();
+
   final RxBool isLoading = false.obs;
   final RxList<CartItemModel> cartItems = <CartItemModel>[].obs;
   final RxString discountInput = ''.obs;
@@ -23,6 +28,15 @@ class HomeController extends GetxController {
   final RxList<CategoryModel> categories = <CategoryModel>[].obs;
   final RxBool isCategoriesLoading = false.obs;
   final RxString categorySearchQuery = ''.obs;
+
+  // New Category-Product flow inline states
+  final Rxn<CategoryModel> selectedCategory = Rxn<CategoryModel>();
+  final RxList<ProductModel> categoryProducts = <ProductModel>[].obs;
+  final RxBool isProductsLoading = false.obs;
+  final RxString productSearchQuery = ''.obs;
+  final Rxn<ProductModel> selectedProduct = Rxn<ProductModel>();
+  final Rxn<ProductVariantModel> selectedInlineVariant = Rxn<ProductVariantModel>();
+  final RxInt inlineQuantity = 1.obs;
 
   @override
   void onInit() {
@@ -34,6 +48,7 @@ class HomeController extends GetxController {
   void onClose() {
     scanController.dispose();
     searchController.dispose();
+    productSearchController.dispose();
     cartScrollController.dispose();
     productScrollController.dispose();
     super.onClose();
@@ -57,6 +72,29 @@ class HomeController extends GetxController {
     }
   }
 
+  Future<void> loadCategoryProducts(int? categoryId) async {
+    if (categoryId == null) return;
+    try {
+      isProductsLoading.value = true;
+      final response = await _productService.fetchProducts(
+        page: 1,
+        limit: 50, // fetch a batch of products to show inline
+        categoryId: categoryId,
+        status: 'published',
+        isActive: true,
+      );
+      if (response.isSuccess) {
+        categoryProducts.assignAll(response.payload);
+      } else {
+        categoryProducts.clear();
+      }
+    } catch (e) {
+      log("HomeController loadCategoryProducts error: $e");
+    } finally {
+      isProductsLoading.value = false;
+    }
+  }
+
   List<CategoryModel> get filteredCategories {
     final query = categorySearchQuery.value.trim().toLowerCase();
     if (query.isEmpty) return categories;
@@ -65,10 +103,48 @@ class HomeController extends GetxController {
         .toList();
   }
 
+  List<ProductModel> get filteredProducts {
+    final query = productSearchQuery.value.trim().toLowerCase();
+    if (query.isEmpty) return categoryProducts;
+    return categoryProducts
+        .where((p) => p.displayName.toLowerCase().contains(query))
+        .toList();
+  }
+
   void onCategorySearchChanged(String val) => categorySearchQuery.value = val;
 
+  void onProductSearchChanged(String val) => productSearchQuery.value = val;
+
   void onCategoryTap(CategoryModel category) {
-    Get.toNamed(Routes.categoryProducts, arguments: category);
+    selectedCategory.value = category;
+    selectedProduct.value = null;
+    productSearchController.clear();
+    productSearchQuery.value = '';
+    loadCategoryProducts(category.id);
+  }
+
+  void onProductTap(ProductModel product) {
+    if (product.hasVariants) {
+      selectedProduct.value = product;
+      if (product.variants.isNotEmpty) {
+        selectedInlineVariant.value = product.variants.first;
+      } else {
+        selectedInlineVariant.value = null;
+      }
+      inlineQuantity.value = 1;
+    } else {
+      addToCartFromProduct(product);
+    }
+  }
+
+  void incrementInlineQty() {
+    inlineQuantity.value++;
+  }
+
+  void decrementInlineQty() {
+    if (inlineQuantity.value > 1) {
+      inlineQuantity.value--;
+    }
   }
 
   List<ProductItem> get filteredPinnedProducts {
@@ -111,6 +187,46 @@ class HomeController extends GetxController {
     customSnackBar(
       'Added to Cart',
       '${product.displayName} added successfully',
+      snackBarType: SnackBarType.success,
+    );
+  }
+
+  void addToCartFromProduct(ProductModel product, {ProductVariantModel? variant, int quantity = 1}) {
+    final sku = variant != null ? (variant.sku ?? product.sku ?? '--') : (product.sku ?? '--');
+    final price = variant != null ? variant.effectivePrice : product.effectivePrice;
+    final displayName = variant != null ? '${product.displayName} (${variant.sku})' : product.displayName;
+
+    final existingIndex = cartItems.indexWhere(
+      (c) => c.product.skuCode == sku,
+    );
+
+    if (existingIndex != -1) {
+      cartItems[existingIndex].quantity += quantity;
+      cartItems.refresh();
+      customSnackBar(
+        'Already in Cart',
+        '$displayName qty increased to ${cartItems[existingIndex].quantity}',
+        snackBarType: SnackBarType.info,
+      );
+      return;
+    }
+
+    cartItems.add(
+      CartItemModel(
+        product: CartProduct(
+          name: displayName,
+          skuCode: sku,
+          imageUrl: product.primaryImageUrl,
+          amount: price,
+          unitPrice: price,
+        ),
+        quantity: quantity,
+      ),
+    );
+
+    customSnackBar(
+      'Added to Cart',
+      '$displayName added successfully',
       snackBarType: SnackBarType.success,
     );
   }
