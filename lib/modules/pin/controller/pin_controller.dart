@@ -14,6 +14,9 @@ class PinController extends GetxController with WidgetsBindingObserver {
   final RxBool isLoading = false.obs;
   final RxString verifyError = ''.obs;
 
+  // GetX-based pin entry state (replaces StatefulWidget state)
+  final RxString enteredPin = ''.obs;
+
   Timer? _tickTimer;
   DateTime? _lastActiveAt;
 
@@ -146,5 +149,28 @@ class PinController extends GetxController with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _stopIdleWatcher();
     super.onClose();
+  }
+
+  void onPinDigit(String digit) {
+    if (enteredPin.value.length >= 6) return;
+    verifyError.value = '';
+    enteredPin.value += digit;
+    if (enteredPin.value.length == 4) {
+      _tryVerifyPin();
+    }
+  }
+
+  void onPinBackspace() {
+    if (enteredPin.value.isEmpty) return;
+    enteredPin.value =
+        enteredPin.value.substring(0, enteredPin.value.length - 1);
+  }
+
+  Future<void> _tryVerifyPin() async {
+    final pin = enteredPin.value;
+    final success = await unlockWithPin(pin);
+    if (!success) {
+      enteredPin.value = '';
+    }
   }
 }

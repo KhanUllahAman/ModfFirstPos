@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -76,13 +75,6 @@ class _MainTab extends StatelessWidget {
         context.spacingMD,
       ),
       children: [
-        MenuHeroAction(
-          icon: Icons.home_rounded,
-          title: 'Home',
-          subtitle: 'Go to dashboard',
-          onTap: () => Get.offAllNamed(Routes.home),
-        ),
-        SizedBox(height: context.spacingMD),
         MenuSectionCard(
           title: "Qucick Actions",
           children: [

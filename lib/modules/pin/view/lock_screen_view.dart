@@ -9,40 +9,8 @@ import 'package:modfirstpos/modules/pin/controller/pin_controller.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 import 'package:modfirstpos/shared/widgets/numpad/pin_numpad.dart';
 
-class LockScreenView extends StatefulWidget {
+class LockScreenView extends GetView<PinController> {
   const LockScreenView({super.key});
-
-  @override
-  State<LockScreenView> createState() => _LockScreenViewState();
-}
-
-class _LockScreenViewState extends State<LockScreenView> {
-  final PinController controller = Get.find<PinController>();
-  String _enteredPin = '';
-
-  void _onDigit(String digit) {
-    if (_enteredPin.length >= 6) return;
-    setState(() => _enteredPin += digit);
-    controller.verifyError.value = '';
-    if (_enteredPin.length == 4) {
-      _tryVerify();
-    }
-  }
-
-  void _onBackspace() {
-    if (_enteredPin.isEmpty) return;
-    setState(
-      () => _enteredPin = _enteredPin.substring(0, _enteredPin.length - 1),
-    );
-  }
-
-  Future<void> _tryVerify() async {
-    final pin = _enteredPin;
-    final success = await controller.unlockWithPin(pin);
-    if (!success) {
-      setState(() => _enteredPin = '');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,23 +48,22 @@ class _LockScreenViewState extends State<LockScreenView> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: theme.primaryColor.value.withOpacity(
-                              0.15,
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.lock_outline_rounded,
-                            color: theme.primaryColor.value,
-                            size: 32,
-                          ),
-                        ),
+                        Obx(() => Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: theme.primaryColor.value
+                                    .withOpacity(0.15),
+                              ),
+                              child: Icon(
+                                Icons.lock_outline_rounded,
+                                color: theme.primaryColor.value,
+                                size: 32,
+                              ),
+                            )),
                         SizedBox(height: context.spacingMD),
                         Text(
-                          "Screen Locked",
+                          'Screen Locked',
                           style: AppFonts.geistMono(
                             fontSize: context.fontMD,
                             fontWeight: FontWeight.w600,
@@ -114,7 +81,7 @@ class _LockScreenViewState extends State<LockScreenView> {
                               return const SizedBox.shrink();
                             }
                             return Text(
-                              "Enter PIN to continue as $name",
+                              'Enter PIN to continue as $name',
                               textAlign: TextAlign.center,
                               style: AppFonts.geistMono(
                                 fontSize: context.fontXS,
@@ -124,20 +91,19 @@ class _LockScreenViewState extends State<LockScreenView> {
                           },
                         ),
                         SizedBox(height: context.spacingXL),
-                        PinDotsIndicator(
-                          enteredLength: _enteredPin.length,
-                          maxLength: 4,
-                          activeColor: theme.primaryColor.value,
-                          inactiveColor: Colors.white.withOpacity(0.3),
-                        ),
+                        Obx(() => PinDotsIndicator(
+                              enteredLength: controller.enteredPin.value.length,
+                              maxLength: 4,
+                              activeColor: theme.primaryColor.value,
+                              inactiveColor: Colors.white.withOpacity(0.3),
+                            )),
                         SizedBox(
                           height: 28,
                           child: Obx(
                             () => controller.verifyError.value.isNotEmpty
                                 ? Padding(
                                     padding: EdgeInsets.only(
-                                      top: context.spacingSM,
-                                    ),
+                                        top: context.spacingSM),
                                     child: Text(
                                       controller.verifyError.value,
                                       textAlign: TextAlign.center,
@@ -154,14 +120,16 @@ class _LockScreenViewState extends State<LockScreenView> {
                         Obx(
                           () => controller.isLoading.value
                               ? const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 24),
+                                  padding:
+                                      EdgeInsets.symmetric(vertical: 24),
                                   child: CircularProgressIndicator(
                                     color: Colors.white,
                                   ),
                                 )
                               : PinNumpad(
-                                  onDigitPressed: _onDigit,
-                                  onBackspacePressed: _onBackspace,
+                                  onDigitPressed: controller.onPinDigit,
+                                  onBackspacePressed:
+                                      controller.onPinBackspace,
                                 ),
                         ),
                       ],

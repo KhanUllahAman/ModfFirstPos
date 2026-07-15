@@ -17,8 +17,8 @@ class HomeController extends GetxController {
   final TextEditingController searchController = TextEditingController();
   final TextEditingController productSearchController = TextEditingController();
 
-  ScrollController cartScrollController = ScrollController();
-  ScrollController productScrollController = ScrollController();
+  late ScrollController cartScrollController;
+  late ScrollController productScrollController;
 
   final RxBool isLoading = false.obs;
   final RxList<CartItemModel> cartItems = <CartItemModel>[].obs;
@@ -41,6 +41,8 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    cartScrollController = ScrollController();
+    productScrollController = ScrollController();
     loadCategories();
   }
 
@@ -54,16 +56,25 @@ class HomeController extends GetxController {
     super.onClose();
   }
 
-  Future<void> loadCategories() async {
+
+  Future<void> loadCategories({bool forceSync = false}) async {
     try {
       isCategoriesLoading.value = true;
       final response = await _categoryService.fetchCategories(
         page: 1,
         limit: 20,
         isActive: true,
+        forceSync: forceSync,
       );
       if (response.isSuccess) {
         categories.assignAll(response.payload);
+        if (forceSync) {
+          customSnackBar(
+            'Synced Successfully',
+            'Fresh categories loaded from server',
+            snackBarType: SnackBarType.success,
+          );
+        }
       }
     } catch (e) {
       log("HomeController loadCategories error: $e");
@@ -72,7 +83,11 @@ class HomeController extends GetxController {
     }
   }
 
-  Future<void> loadCategoryProducts(int? categoryId) async {
+  Future<void> syncCategories() async {
+    await loadCategories(forceSync: true);
+  }
+
+  Future<void> loadCategoryProducts(int? categoryId, {bool forceSync = false}) async {
     if (categoryId == null) return;
     try {
       isProductsLoading.value = true;
@@ -82,9 +97,17 @@ class HomeController extends GetxController {
         categoryId: categoryId,
         status: 'published',
         isActive: true,
+        forceSync: forceSync,
       );
       if (response.isSuccess) {
         categoryProducts.assignAll(response.payload);
+        if (forceSync) {
+          customSnackBar(
+            'Synced Successfully',
+            'Fresh products loaded from server',
+            snackBarType: SnackBarType.success,
+          );
+        }
       } else {
         categoryProducts.clear();
       }
@@ -94,6 +117,13 @@ class HomeController extends GetxController {
       isProductsLoading.value = false;
     }
   }
+
+  Future<void> syncCategoryProducts() async {
+    if (selectedCategory.value?.id != null) {
+      await loadCategoryProducts(selectedCategory.value!.id, forceSync: true);
+    }
+  }
+
 
   List<CategoryModel> get filteredCategories {
     final query = categorySearchQuery.value.trim().toLowerCase();

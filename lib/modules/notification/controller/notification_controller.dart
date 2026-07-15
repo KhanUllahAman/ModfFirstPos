@@ -25,11 +25,12 @@ class NotificationController extends GetxController {
 
   final List<String> filterOptions = ['All', 'Orders', 'Inventory', 'System Alert', 'Diagnostics'];
 
-  final ScrollController scrollController = ScrollController();
+  late ScrollController scrollController;
 
   @override
   void onInit() {
     super.onInit();
+    scrollController = ScrollController();
     loadStaticNotifications();
   }
 
@@ -38,6 +39,7 @@ class NotificationController extends GetxController {
     scrollController.dispose();
     super.onClose();
   }
+
 
   void loadStaticNotifications() {
     final now = DateTime.now();

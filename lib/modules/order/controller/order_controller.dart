@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import 'package:modfirstpos/modules/order/model/order_model.dart';
 import 'package:modfirstpos/modules/order/service/order_service.dart';
 
+import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
+
 class OrderController extends GetxController {
   final OrderService _service = OrderService();
 
@@ -57,13 +59,14 @@ class OrderController extends GetxController {
     'store_pickup',
   ];
 
-  // Dedicated scroll controllers to prevent PrimaryScrollController collisions
-  ScrollController orderListScrollController = ScrollController();
-  ScrollController orderDetailsScrollController = ScrollController();
+  late ScrollController orderListScrollController;
+  late ScrollController orderDetailsScrollController;
 
   @override
   void onInit() {
     super.onInit();
+    orderListScrollController = ScrollController();
+    orderDetailsScrollController = ScrollController();
     loadOrders();
     
     // Add debounce to search to avoid calling API too many times
@@ -75,13 +78,14 @@ class OrderController extends GetxController {
 
   @override
   void onClose() {
+    searchController.dispose();
     orderListScrollController.dispose();
     orderDetailsScrollController.dispose();
-    searchController.dispose();
     super.onClose();
   }
 
-  Future<void> loadOrders({bool isRefresh = false}) async {
+
+  Future<void> loadOrders({bool isRefresh = false, bool forceSync = false}) async {
     if (isRefresh) {
       currentPage.value = 1;
     }
@@ -97,6 +101,7 @@ class OrderController extends GetxController {
         startDate: startDate.value,
         endDate: endDate.value,
         search: searchQuery.value,
+        forceSync: forceSync,
       );
 
       if (response.isSuccess) {
@@ -118,6 +123,14 @@ class OrderController extends GetxController {
         } else {
           selectedOrder.value = null;
         }
+
+        if (forceSync) {
+          customSnackBar(
+            'Synced Successfully',
+            'Fresh orders loaded from server',
+            snackBarType: SnackBarType.success,
+          );
+        }
       } else {
         orders.clear();
         selectedOrder.value = null;
@@ -128,6 +141,11 @@ class OrderController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  Future<void> syncOrders() async {
+    await loadOrders(isRefresh: true, forceSync: true);
+  }
+
 
   void onSearchChanged(String val) {
     searchQuery.value = val;

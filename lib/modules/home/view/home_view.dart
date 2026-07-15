@@ -10,40 +10,19 @@ import 'package:modfirstpos/shared/widgets/noKeyboard/no_keyboard_extension.dart
 import 'package:modfirstpos/shared/widgets/sideNav/pos_side_nav.dart';
 import '../../../routes/app_routes.dart';
 
-class HomeView extends StatefulWidget {
+class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
 
   @override
-  State<HomeView> createState() => _HomeViewState();
-}
-
-class _HomeViewState extends State<HomeView> {
-  final HomeController controller = Get.find<HomeController>();
-
-  @override
-  void initState() {
-    super.initState();
-    // Reassign fresh ScrollController instances to HomeController to prevent
-    // "attached to more than one ScrollPosition" exceptions during page transitions.
-    controller.cartScrollController = ScrollController();
-    controller.productScrollController = ScrollController();
-  }
-
-  @override
-  void dispose() {
-    controller.cartScrollController.dispose();
-    controller.productScrollController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final isLandscapeOrTablet =
+        MediaQuery.of(context).size.width >= 600 ||
+        MediaQuery.of(context).orientation == Orientation.landscape;
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: ColorResources.backgroundColor,
-      appBar: AppTopBar(
-        showMenuIcon: false,
-      ),
+      appBar: AppTopBar(showMenuIcon: false),
       body: Theme(
         data: Theme.of(context).copyWith(
           scrollbarTheme: ScrollbarThemeData(
@@ -51,9 +30,12 @@ class _HomeViewState extends State<HomeView> {
             trackVisibility: WidgetStateProperty.all(true),
             thickness: WidgetStateProperty.all(5),
             radius: const Radius.circular(8),
-            thumbColor: WidgetStateProperty.all(ColorResources.thumbColor),
-            trackColor: WidgetStateProperty.all(const Color(0xffE6E8EC)),
-            trackBorderColor: WidgetStateProperty.all(Colors.transparent),
+            thumbColor:
+                WidgetStateProperty.all(ColorResources.thumbColor),
+            trackColor:
+                WidgetStateProperty.all(const Color(0xffE6E8EC)),
+            trackBorderColor:
+                WidgetStateProperty.all(Colors.transparent),
             crossAxisMargin: 2,
             mainAxisMargin: 4,
             minThumbLength: 40,
@@ -68,43 +50,11 @@ class _HomeViewState extends State<HomeView> {
               const PosSideNav(currentRouteOverride: Routes.home),
               Expanded(
                 child: Padding(
-                  padding: EdgeInsets.all(context.responsiveWidth(0.02)),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        flex: 5,
-                        child: Container(
-                          padding: EdgeInsets.all(context.responsiveWidth(0.018)),
-                          decoration: BoxDecoration(
-                            color: ColorResources.homeBackgroundColor,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            children: [
-                              ScanField(controller: controller),
-                              SizedBox(height: context.spacingSM),
-                              Expanded(child: CartSection(controller: controller)),
-                              SizedBox(height: context.spacingSM),
-                              const Divider(
-                                height: 1,
-                                color: ColorResources.cardBorderColor,
-                              ),
-                              SizedBox(height: context.spacingSM),
-                              SummarySection(controller: controller),
-                              SizedBox(height: context.spacingSM),
-                              BottomButtons(controller: controller),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: context.responsiveWidth(0.015)),
-                      Expanded(
-                        flex: 4,
-                        child: ProductListPanel(controller: controller),
-                      ),
-                    ],
-                  ),
+                  padding:
+                      EdgeInsets.all(context.responsiveWidth(0.02)),
+                  child: isLandscapeOrTablet
+                      ? _buildTabletLayout(context)
+                      : _buildMobileLayout(context),
                 ),
               ),
             ],
@@ -112,5 +62,80 @@ class _HomeViewState extends State<HomeView> {
         ),
       ),
     ).noKeyboard();
+  }
+
+  Widget _buildTabletLayout(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          flex: 5,
+          child: _buildCartPanel(context),
+        ),
+        SizedBox(width: context.responsiveWidth(0.015)),
+        Expanded(
+          flex: 4,
+          child: ProductListPanel(controller: controller),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
+    return Obx(() {
+      final hasCategory = controller.selectedCategory.value != null;
+      return AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        child: hasCategory
+            ? ProductListPanel(
+                key: const ValueKey('products'),
+                controller: controller,
+              )
+            : Column(
+                key: const ValueKey('cart'),
+                children: [
+                  _buildCartPanel(context),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      onPressed: () =>
+                          controller.selectedCategory.value = null,
+                      icon: const Icon(Icons.grid_view_rounded),
+                      label: const Text('Browse Products'),
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+      );
+    });
+  }
+
+  Widget _buildCartPanel(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(context.responsiveWidth(0.018)),
+      decoration: BoxDecoration(
+        color: ColorResources.homeBackgroundColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          ScanField(controller: controller),
+          SizedBox(height: context.spacingSM),
+          Expanded(child: CartSection(controller: controller)),
+          SizedBox(height: context.spacingSM),
+          const Divider(height: 1, color: ColorResources.cardBorderColor),
+          SizedBox(height: context.spacingSM),
+          SummarySection(controller: controller),
+          SizedBox(height: context.spacingSM),
+          BottomButtons(controller: controller),
+        ],
+      ),
+    );
   }
 }

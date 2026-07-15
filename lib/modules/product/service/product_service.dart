@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:modfirstpos/core/exceptions/app_exceptions.dart';
 import 'package:modfirstpos/core/network/api_endpoints.dart';
 import 'package:modfirstpos/core/network/network_client.dart';
+import 'package:modfirstpos/modules/product/storage/product_cache_storage.dart';
 import 'package:modfirstpos/modules/product/model/product_model.dart';
 
 class ProductService {
@@ -18,8 +19,17 @@ class ProductService {
     bool? isFeatured,
     String sortBy = 'newest',
     String order = 'desc',
+    bool forceSync = false,
   }) async {
     try {
+      if (!forceSync && categoryId != null) {
+        final cachedData = await ProductCacheStorage.getProductsForCategory(categoryId);
+        if (cachedData != null) {
+          log("ProductService: Loaded products for category $categoryId from local storage cache.");
+          return ProductListResponse.fromJson(cachedData);
+        }
+      }
+
       final filters = <String, dynamic>{};
       if (categoryId != null) filters['category_id'] = categoryId;
       if (name != null && name.trim().isNotEmpty) filters['name'] = name.trim();
@@ -28,7 +38,7 @@ class ProductService {
       if (isFeatured != null) filters['is_featured'] = isFeatured;
 
       final response = await _client.post(
-        endpoint: ApiConstants.productListEndpoint, // ⚠️ actual path lagao
+        endpoint: ApiConstants.productListEndpoint,
         body: {
           'page': page,
           'limit': limit,
@@ -43,6 +53,10 @@ class ProductService {
           ? response.data as Map<String, dynamic>
           : jsonDecode(response.data?.toString() ?? '{}') as Map<String, dynamic>;
 
+      if (data['success'] == true && categoryId != null) {
+        await ProductCacheStorage.saveProductsForCategory(categoryId, data);
+      }
+
       return ProductListResponse.fromJson(data);
     } catch (e) {
       log("ProductService fetchProducts error: $e");
@@ -50,4 +64,4 @@ class ProductService {
       rethrow;
     }
   }
-}
+}

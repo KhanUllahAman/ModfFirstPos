@@ -5,6 +5,7 @@ import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/catalogue/controller/catalogue_controller.dart';
 import 'package:modfirstpos/modules/category/model/category_model.dart';
+import 'package:modfirstpos/shared/widgets/Buttons/sync_button_widget.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 
 class SearchBarCatalogue extends StatelessWidget {
@@ -13,39 +14,52 @@ class SearchBarCatalogue extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: context.responsiveHeight(0.060),
-      child: TextField(
-        controller: controller.searchController,
-        onChanged: controller.onSearch,
-        style: AppFonts.geistMono(fontSize: context.fontSM, color: ColorResources.labelColor),
-        decoration: InputDecoration(
-          hintText: 'Search Category',
-          hintStyle: AppFonts.geistMono(
-            fontWeight: FontWeight.w600,
-            fontSize: context.fontSM,
-            color: ColorResources.labelColor,
-          ),
-          suffixIcon: const Icon(Icons.search, color: ColorResources.blackColor),
-          filled: true,
-          fillColor: ColorResources.whiteColor,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: ColorResources.cardBorderColor),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: ColorResources.cardBorderColor),
-          ),
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: context.spacingSM,
-            vertical: context.spacingXS,
+    return Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            height: context.responsiveHeight(0.060),
+            child: TextField(
+              controller: controller.searchController,
+              onChanged: controller.onSearch,
+              style: AppFonts.geistMono(fontSize: context.fontSM, color: ColorResources.labelColor),
+              decoration: InputDecoration(
+                hintText: 'Search Category',
+                hintStyle: AppFonts.geistMono(
+                  fontWeight: FontWeight.w600,
+                  fontSize: context.fontSM,
+                  color: ColorResources.labelColor,
+                ),
+                suffixIcon: const Icon(Icons.search, color: ColorResources.blackColor),
+                filled: true,
+                fillColor: ColorResources.whiteColor,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: ColorResources.cardBorderColor),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: ColorResources.cardBorderColor),
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: context.spacingSM,
+                  vertical: context.spacingXS,
+                ),
+              ),
+            ),
           ),
         ),
-      ),
+        const SizedBox(width: 10),
+        Obx(() => AppSyncButton(
+          onPressed: controller.syncCategories,
+          isLoading: controller.isLoading.value,
+          label: 'Sync Server',
+        )),
+      ],
     );
   }
 }
+
 
 class ProductGrid extends StatelessWidget {
   final CatalogueController controller;
@@ -77,28 +91,16 @@ class ProductGrid extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              ElevatedButton.icon(
+              AppSyncButton(
                 onPressed: () => controller.loadCategories(),
-                icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: Text(
-                  'Reload Categories',
-                  style: AppFonts.geistMono(
-                    fontSize: context.fontXS,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.primaryColor.value,
-                  foregroundColor: theme.onPrimaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
+                label: 'Reload Categories',
+                icon: Icons.refresh_rounded,
               ),
             ],
           ),
         );
       }
+
 
       return ListView.separated(
         primary: false,

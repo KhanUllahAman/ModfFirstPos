@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
@@ -214,97 +212,6 @@ class MenuSegmentedTabs extends StatelessWidget {
           );
         },
       ),
-    );
-  }
-}
-
-class MenuHeroAction extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const MenuHeroAction({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Get.find<AppThemeService>();
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(20),
-      child: 
-      Obx(() => 
-      InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: context.spacingMD,
-            vertical: context.spacingMD,
-          ),
-          decoration: BoxDecoration(
-            color: theme.primaryColor.value,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: theme.secondaryColor.value,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: theme.onSecondaryColor, size: 23),
-              ),
-              SizedBox(width: context.spacingSM),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppFonts.geistMono(
-                        fontSize: context.fontMD,
-                        fontWeight: FontWeight.w700,
-                        color: theme.onPrimaryColor,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: AppFonts.geistMono(
-                        fontSize: context.fontXS,
-                        fontWeight: FontWeight.w500,
-                        color: theme.onPrimaryColor.withOpacity(0.85),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: theme.onPrimaryColor.withOpacity(0.18),
-                  shape: BoxShape.circle,
-                ),
-                child:  Icon(
-                  Icons.arrow_forward_rounded,
-                  color: theme.onPrimaryColor,
-                  size: 17,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),)
     );
   }
 }

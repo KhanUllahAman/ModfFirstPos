@@ -6,6 +6,8 @@ import 'package:modfirstpos/modules/product/model/product_model.dart';
 import 'package:modfirstpos/modules/product/service/product_service.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
 
+import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
+
 class CategoryProductsController extends GetxController {
   final ProductService _service = ProductService();
   late final CategoryModel category;
@@ -28,7 +30,7 @@ class CategoryProductsController extends GetxController {
     super.onClose();
   }
 
-  Future<void> fetchProducts() async {
+  Future<void> fetchProducts({bool forceSync = false}) async {
     try {
       isLoading.value = true;
       final response = await _service.fetchProducts(
@@ -37,9 +39,17 @@ class CategoryProductsController extends GetxController {
         categoryId: category.id,
         status: 'published',
         isActive: true,
+        forceSync: forceSync,
       );
       if (response.isSuccess) {
         products.assignAll(response.payload);
+        if (forceSync) {
+          customSnackBar(
+            'Synced Successfully',
+            'Fresh products for ${category.displayName} loaded from server',
+            snackBarType: SnackBarType.success,
+          );
+        }
       }
     } catch (e) {
       log("CategoryProductsController fetch error: $e");
@@ -47,6 +57,11 @@ class CategoryProductsController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  Future<void> syncProducts() async {
+    await fetchProducts(forceSync: true);
+  }
+
 
   void onSearchChanged(String val) => searchQuery.value = val;
 

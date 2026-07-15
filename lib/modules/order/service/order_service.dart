@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:modfirstpos/core/exceptions/app_exceptions.dart';
 import 'package:modfirstpos/core/network/api_endpoints.dart';
 import 'package:modfirstpos/core/network/network_client.dart';
+import 'package:modfirstpos/modules/order/storage/order_cache_storage.dart';
 import 'package:modfirstpos/modules/order/model/order_model.dart';
 
 class OrderService {
@@ -17,8 +18,25 @@ class OrderService {
     String? startDate,
     String? endDate,
     String? search,
+    bool forceSync = false,
   }) async {
     try {
+      final isDefaultFilters = page == 1 &&
+          (status == null || status == 'All') &&
+          (paymentStatus == null || paymentStatus == 'All') &&
+          (deliveryType == null || deliveryType == 'All') &&
+          (startDate == null || startDate.isEmpty) &&
+          (endDate == null || endDate.isEmpty) &&
+          (search == null || search.trim().isEmpty);
+
+      if (!forceSync && isDefaultFilters) {
+        final cachedData = await OrderCacheStorage.getOrders();
+        if (cachedData != null) {
+          log("OrderService: Loaded orders from local storage cache.");
+          return OrderListResponse.fromJson(cachedData);
+        }
+      }
+
       final filters = <String, dynamic>{};
       if (status != null && status.trim().isNotEmpty && status != 'All') {
         filters['status'] = status.trim();
@@ -59,6 +77,10 @@ class OrderService {
           : jsonDecode(response.data?.toString() ?? '{}')
                 as Map<String, dynamic>;
 
+      if (data['success'] == true && isDefaultFilters) {
+        await OrderCacheStorage.saveOrders(data);
+      }
+
       return OrderListResponse.fromJson(data);
     } catch (e) {
       log("OrderService fetchOrders error: $e");
@@ -67,3 +89,4 @@ class OrderService {
     }
   }
 }
+

@@ -6,6 +6,8 @@ import 'package:get/get.dart';
 import 'package:modfirstpos/modules/category/model/category_model.dart';
 import 'package:modfirstpos/modules/category/service/category_service.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
+import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
+
 
 class CatalogueController extends GetxController {
   final CategoryService _service = CategoryService();
@@ -27,23 +29,36 @@ class CatalogueController extends GetxController {
     super.onClose();
   }
 
-  Future<void> loadCategories() async {
+  Future<void> loadCategories({bool forceSync = false}) async {
     try {
       isLoading.value = true;
       final response = await _service.fetchCategories(
         page: 1,
         limit: 20,
         isActive: true,
+        forceSync: forceSync,
       );
       if (response.isSuccess) {
         categories.assignAll(response.payload);
+        if (forceSync) {
+          customSnackBar(
+            'Synced Successfully',
+            'Fresh catalogue data loaded from server',
+            snackBarType: SnackBarType.success,
+          );
+        }
       }
     } catch (e) {
-      log("CatalogueController _loadCategories error: $e");
+      log("CatalogueController loadCategories error: $e");
     } finally {
       isLoading.value = false;
     }
   }
+
+  Future<void> syncCategories() async {
+    await loadCategories(forceSync: true);
+  }
+
 
   List<CategoryModel> get filteredCategories {
     final query = searchController.text.trim().toLowerCase();

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
+import 'video_background_controller.dart';
 
-class VideoBackground extends StatefulWidget {
+class VideoBackground extends StatelessWidget {
   final String assetPath;
   final Color overlayColor;
   final double overlayOpacity;
@@ -14,51 +16,32 @@ class VideoBackground extends StatefulWidget {
   });
 
   @override
-  State<VideoBackground> createState() => _VideoBackgroundState();
-}
-
-class _VideoBackgroundState extends State<VideoBackground> {
-  late final VideoPlayerController _controller;
-  bool _isReady = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = VideoPlayerController.asset(widget.assetPath)
-      ..setLooping(true)
-      ..setVolume(0)
-      ..initialize().then((_) {
-        if (!mounted) return;
-        setState(() => _isReady = true);
-        _controller.play();
-      });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final tag = 'video_bg_$assetPath';
+    if (!Get.isRegistered<VideoBackgroundController>(tag: tag)) {
+      Get.put(VideoBackgroundController(assetPath: assetPath), tag: tag);
+    }
+    final ctrl = Get.find<VideoBackgroundController>(tag: tag);
+
     return Positioned.fill(
       child: ColoredBox(
         color: Colors.black,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (_isReady)
-              FittedBox(
+            Obx(() {
+              if (!ctrl.isReady.value) return const SizedBox.shrink();
+              return FittedBox(
                 fit: BoxFit.cover,
                 child: SizedBox(
-                  width: _controller.value.size.width,
-                  height: _controller.value.size.height,
-                  child: VideoPlayer(_controller),
+                  width: ctrl.videoController.value.size.width,
+                  height: ctrl.videoController.value.size.height,
+                  child: VideoPlayer(ctrl.videoController),
                 ),
-              ),
+              );
+            }),
             Container(
-              color: widget.overlayColor.withOpacity(widget.overlayOpacity),
+              color: overlayColor.withOpacity(overlayOpacity),
             ),
           ],
         ),

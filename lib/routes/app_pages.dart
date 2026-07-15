@@ -166,6 +166,13 @@ class AppPages {
       transitionDuration: const Duration(milliseconds: 300),
     ),
     GetPage(
+      name: Routes.customer,
+      page: () => const Customer(),
+      binding: OrderBinding(),
+      transition: Transition.fadeIn,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage(
       name: Routes.setting,
       page: () => const SettingView(),
       binding: SettingBinding(),

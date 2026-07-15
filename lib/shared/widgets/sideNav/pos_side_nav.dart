@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
@@ -33,32 +34,32 @@ class PosSideNav extends StatelessWidget {
   static const List<PosNavItem> navItems = [
     PosNavItem(
       route: Routes.home,
-      icon: Icons.home_rounded,
+      icon: Iconsax.home_2,
       label: 'Home',
     ),
     PosNavItem(
       route: Routes.catalogue,
-      icon: Icons.grid_view_rounded,
+      icon: Iconsax.category,
       label: 'Category',
     ),
     PosNavItem(
       route: Routes.order,
-      icon: Icons.receipt_long_rounded,
+      icon: Iconsax.receipt_2_1,
       label: 'Orders',
     ),
     PosNavItem(
-      route: Routes.notification,
-      icon: Icons.notifications_rounded,
-      label: 'Notifications',
+      route: Routes.customer,
+      icon: Iconsax.profile_2user,
+      label: 'Users',
     ),
     PosNavItem(
       route: Routes.profile,
-      icon: Icons.person_rounded,
+      icon: Iconsax.profile_circle,
       label: 'Profile',
     ),
     PosNavItem(
       route: Routes.setting,
-      icon: Icons.settings_rounded,
+      icon: Iconsax.setting_2,
       label: 'Setting',
     ),
   ];
@@ -67,11 +68,7 @@ class PosSideNav extends StatelessWidget {
     final activeRoute = currentRouteOverride ?? Get.currentRoute;
     if (activeRoute == route) return;
 
-    if (route == Routes.home) {
-      Get.offAllNamed(Routes.home);
-    } else {
-      Get.toNamed(route);
-    }
+    Get.offAllNamed(route);
   }
 
   void _onLogoutTap(BuildContext context) {
@@ -97,17 +94,19 @@ class PosSideNav extends StatelessWidget {
     final theme = Get.find<AppThemeService>();
 
     return Obx(() {
-      final navBgColor = backgroundColor ??
+      final navBgColor =
+          backgroundColor ??
           (theme.hasThemeData.value
               ? theme.primaryColor.value
               : ColorResources.blackColor);
 
       final activeRoute = currentRouteOverride ?? Get.currentRoute;
-      final selectedIndex =
-          navItems.indexWhere((item) => item.route == activeRoute);
+      final selectedIndex = navItems.indexWhere(
+        (item) => item.route == activeRoute,
+      );
 
       return Container(
-        width: 64,
+        width: 54,
         margin: const EdgeInsets.fromLTRB(10, 10, 4, 10),
         decoration: BoxDecoration(
           color: navBgColor,
@@ -130,16 +129,17 @@ class PosSideNav extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14),
                 onTap: () => Get.toNamed(Routes.menu),
                 child: Container(
-                  width: 44,
-                  height: 44,
+                  width: 40,
+                  height: 40,
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: theme.secondaryColor.value.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(14),
+                    color: theme.secondaryColor.value.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    Icons.menu_rounded,
+                    Iconsax.category_2,
                     color: theme.secondaryColor.value,
-                    size: 24,
+                    size: 22,
                   ),
                 ),
               ),
@@ -147,8 +147,8 @@ class PosSideNav extends StatelessWidget {
             const SizedBox(height: 16),
             const Divider(
               height: 1,
-              indent: 12,
-              endIndent: 12,
+              indent: 10,
+              endIndent: 10,
               color: Colors.white24,
             ),
             const SizedBox(height: 16),
@@ -156,7 +156,7 @@ class PosSideNav extends StatelessWidget {
             Expanded(
               child: ListView.separated(
                 primary: false,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 5),
                 itemCount: navItems.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
@@ -168,35 +168,54 @@ class PosSideNav extends StatelessWidget {
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                         onTap: () => _onItemTap(item.route),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 220),
                           curve: Curves.easeOutCubic,
-                          height: 46,
-                          width: 46,
+                          height: 48,
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? theme.secondaryColor.value
+                                ? theme.secondaryColor.value.withOpacity(0.14)
                                 : Colors.transparent,
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                      color: theme.secondaryColor.value
-                                          .withOpacity(0.35),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ]
-                                : null,
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(
-                            item.icon,
-                            size: 22,
-                            color: isSelected
-                                ? theme.onSecondaryColor
-                                : theme.onPrimaryColor.withOpacity(0.75),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Spacer(),
+                              Icon(
+                                item.icon,
+                                size: 22,
+                                color: isSelected
+                                    ? theme.secondaryColor.value
+                                    : theme.onPrimaryColor.withOpacity(0.65),
+                              ),
+                              const Spacer(),
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 220),
+                                curve: Curves.easeOutCubic,
+                                height: 3.5,
+                                width: isSelected ? 22 : 0,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? theme.secondaryColor.value
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(4),
+                                  boxShadow: isSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: theme.secondaryColor.value
+                                                .withOpacity(0.6),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 1),
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                            ],
                           ),
                         ),
                       ),
@@ -208,8 +227,8 @@ class PosSideNav extends StatelessWidget {
             // Bottom Logout Button
             const Divider(
               height: 1,
-              indent: 12,
-              endIndent: 12,
+              indent: 10,
+              endIndent: 10,
               color: Colors.white24,
             ),
             const SizedBox(height: 12),
@@ -223,7 +242,7 @@ class PosSideNav extends StatelessWidget {
                   height: 44,
                   alignment: Alignment.center,
                   child: const Icon(
-                    Icons.logout_rounded,
+                    Iconsax.logout_1,
                     color: ColorResources.gradientRed,
                     size: 22,
                   ),

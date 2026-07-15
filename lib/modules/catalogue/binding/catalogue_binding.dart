@@ -4,6 +4,6 @@ import 'package:modfirstpos/modules/catalogue/controller/catalogue_controller.da
 class CatalogueBinding extends Bindings {
   @override
   void dependencies() {
-    Get.put<CatalogueController>(CatalogueController(), permanent: true);
+    Get.lazyPut<CatalogueController>(() => CatalogueController());
   }
 }

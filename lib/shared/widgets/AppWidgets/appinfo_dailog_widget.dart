@@ -27,7 +27,7 @@ class AppDialogListItem {
   });
 }
 
-class AppDialog extends StatefulWidget {
+class AppDialog extends StatelessWidget {
   final AppDialogType type;
   final String title;
   final String? content;
@@ -206,41 +206,24 @@ class AppDialog extends StatefulWidget {
   }
 
   @override
-  State<AppDialog> createState() => _AppDialogState();
-}
-
-class _AppDialogState extends State<AppDialog> {
-  dynamic _selectedValue;
-  final TextEditingController _inputController = TextEditingController();
-  final TextEditingController _searchController = TextEditingController();
-  List<AppDialogListItem> _filteredItems = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedValue = widget.initialValue ?? widget.options?.first.value;
-    _filteredItems = widget.listItems ?? [];
-    _searchController.addListener(_onSearch);
-  }
-
-  void _onSearch() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      _filteredItems = (widget.listItems ?? [])
-          .where((e) => e.name.toLowerCase().contains(query))
-          .toList();
-    });
-  }
-
-  @override
-  void dispose() {
-    _inputController.dispose();
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    // RxBool/Rx values created inside build — these are local reactive state
+    final selectedValue = Rx<dynamic>(initialValue ?? options?.first.value);
+    final inputController = TextEditingController();
+    final searchController = TextEditingController();
+    final filteredItems = RxList<AppDialogListItem>(listItems ?? []);
+
+    void onSearch() {
+      final query = searchController.text.toLowerCase();
+      filteredItems.assignAll(
+        (listItems ?? [])
+            .where((e) => e.name.toLowerCase().contains(query))
+            .toList(),
+      );
+    }
+
+    searchController.addListener(onSearch);
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       backgroundColor: ColorResources.whiteColor,
@@ -256,7 +239,16 @@ class _AppDialogState extends State<AppDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [_buildTitle(context), _buildBody(context)],
+          children: [
+            _buildTitle(context),
+            _buildBody(
+              context,
+              selectedValue: selectedValue,
+              inputController: inputController,
+              searchController: searchController,
+              filteredItems: filteredItems,
+            ),
+          ],
         ),
       ),
     );
@@ -266,7 +258,7 @@ class _AppDialogState extends State<AppDialog> {
     return Column(
       children: [
         Text(
-          widget.title,
+          title,
           style: AppFonts.geistMono(
             fontSize: 16,
             fontWeight: FontWeight.w700,
@@ -282,14 +274,24 @@ class _AppDialogState extends State<AppDialog> {
     );
   }
 
-  Widget _buildBody(BuildContext context) {
-    switch (widget.type) {
+  Widget _buildBody(
+    BuildContext context, {
+    required Rx<dynamic> selectedValue,
+    required TextEditingController inputController,
+    required TextEditingController searchController,
+    required RxList<AppDialogListItem> filteredItems,
+  }) {
+    switch (type) {
       case AppDialogType.radioList:
-        return _buildRadioList(context);
+        return _buildRadioList(context, selectedValue: selectedValue);
       case AppDialogType.input:
-        return _buildInput(context);
+        return _buildInput(context, inputController: inputController);
       case AppDialogType.searchList:
-        return _buildSearchList(context);
+        return _buildSearchList(
+          context,
+          searchController: searchController,
+          filteredItems: filteredItems,
+        );
       case AppDialogType.confirm:
         return _buildConfirm(context);
       case AppDialogType.info:
@@ -297,129 +299,125 @@ class _AppDialogState extends State<AppDialog> {
     }
   }
 
-  Widget _buildRadioList(BuildContext context) {
+  Widget _buildRadioList(BuildContext context,
+      {required Rx<dynamic> selectedValue}) {
     final theme = Get.find<AppThemeService>();
-    final options = widget.options ?? [];
+    final opts = options ?? [];
     return Obx(() => Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final opt in options)
-          RadioListTile(
-            value: opt.value,
-            groupValue: _selectedValue,
-            onChanged: (val) => setState(() => _selectedValue = val),
-            title: Text(
-              opt.label,
-              style: AppFonts.geistMono(
-                fontSize: 13,
-                color: ColorResources.labelColor,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final opt in opts)
+              RadioListTile(
+                value: opt.value,
+                groupValue: selectedValue.value,
+                onChanged: (val) => selectedValue.value = val,
+                title: Text(
+                  opt.label,
+                  style: AppFonts.geistMono(
+                    fontSize: 13,
+                    color: ColorResources.labelColor,
+                  ),
+                ),
+                activeColor: theme.secondaryColor.value,
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                visualDensity: VisualDensity.compact,
               ),
+            SizedBox(height: context.responsiveHeight(0.02)),
+            _buildTwoButtons(
+              context,
+              cancelText: cancelText ?? 'Cancel',
+              confirmText: confirmText ?? 'Print',
+              onCancel: onCancel,
+              onConfirm: () {
+                Navigator.of(context).pop();
+                onConfirmRadio?.call(selectedValue.value);
+              },
             ),
-            activeColor: theme.secondaryColor.value,
-            contentPadding: EdgeInsets.zero,
-            dense: true,
-            visualDensity: VisualDensity.compact,
-          ),
-        SizedBox(height: context.responsiveHeight(0.02)),
-        _buildTwoButtons(
-          context,
-          cancelText: widget.cancelText ?? "Cancel",
-          confirmText: widget.confirmText ?? "Print",
-          onCancel: widget.onCancel,
-          onConfirm: () {
-            Navigator.of(context).pop();
-            widget.onConfirmRadio?.call(_selectedValue);
-          },
-        ),
-      ],
-    ));
+          ],
+        ));
   }
 
-  Widget _buildInput(BuildContext context) {
+  Widget _buildInput(BuildContext context,
+      {required TextEditingController inputController}) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         CustomTextFormField(
-          controller: _inputController,
-          labelText: widget.inputLabel ?? "",
-          keyboardType: widget.inputKeyboardType ?? TextInputType.text,
+          controller: inputController,
+          labelText: inputLabel ?? '',
+          keyboardType: inputKeyboardType ?? TextInputType.text,
         ),
         SizedBox(height: context.responsiveHeight(0.025)),
         _buildTwoButtons(
           context,
-          cancelText: widget.cancelText ?? "Cancel",
-          confirmText: widget.confirmText ?? "OK",
-          onCancel: widget.onCancel,
+          cancelText: cancelText ?? 'Cancel',
+          confirmText: confirmText ?? 'OK',
+          onCancel: onCancel,
           onConfirm: () {
             Navigator.of(context).pop();
-            widget.onConfirmInput?.call(_inputController.text.trim());
+            onConfirmInput?.call(inputController.text.trim());
           },
         ),
       ],
     );
   }
 
-  Widget _buildSearchList(BuildContext context) {
+  Widget _buildSearchList(
+    BuildContext context, {
+    required TextEditingController searchController,
+    required RxList<AppDialogListItem> filteredItems,
+  }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         CustomTextFormField(
-          controller: _searchController,
-          labelText: "Search Member",
+          controller: searchController,
+          labelText: 'Search Member',
           suffixIcon: Icons.search,
           keyboardType: TextInputType.text,
         ),
         SizedBox(height: context.responsiveHeight(0.015)),
         SizedBox(
           height: context.responsiveHeight(0.3),
-          child: ListView.separated(
-            itemCount: _filteredItems.length,
-            separatorBuilder: (_, __) =>
-                Divider(height: 1, color: ColorResources.labelBorderColor),
-            itemBuilder: (_, i) {
-              final item = _filteredItems[i];
-              return InkWell(
-                onTap: () {
-                  Navigator.of(context).pop();
-                  widget.onItemTap?.call(item);
-                },
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: context.responsiveHeight(0.012),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        item.id,
-                        style: AppFonts.geistMono(
-                          fontSize: 13,
-                          color: ColorResources.labelColor,
-                        ),
-                      ),
-                      SizedBox(width: context.responsiveWidth(0.015)),
-                      Expanded(
-                        child: Text(
-                          item.name,
-                          style: AppFonts.geistMono(
-                            fontSize: 13,
-                            color: ColorResources.labelColor,
+          child: Obx(() => ListView.separated(
+                itemCount: filteredItems.length,
+                separatorBuilder: (_, __) => Divider(
+                    height: 1, color: ColorResources.labelBorderColor),
+                itemBuilder: (_, i) {
+                  final item = filteredItems[i];
+                  return InkWell(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      onItemTap?.call(item);
+                    },
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                          vertical: context.responsiveHeight(0.012)),
+                      child: Row(
+                        children: [
+                          Text(item.id,
+                              style: AppFonts.geistMono(
+                                  fontSize: 13,
+                                  color: ColorResources.labelColor)),
+                          SizedBox(width: context.responsiveWidth(0.015)),
+                          Expanded(
+                            child: Text(item.name,
+                                style: AppFonts.geistMono(
+                                    fontSize: 13,
+                                    color: ColorResources.labelColor)),
                           ),
-                        ),
+                          Text(item.trailing,
+                              style: AppFonts.geistMono(
+                                  fontSize: 13,
+                                  color: ColorResources.labelColor)),
+                        ],
                       ),
-                      Text(
-                        item.trailing,
-                        style: AppFonts.geistMono(
-                          fontSize: 13,
-                          color: ColorResources.labelColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+                    ),
+                  );
+                },
+              )),
         ),
       ],
     );
@@ -428,18 +426,13 @@ class _AppDialogState extends State<AppDialog> {
   Widget _buildConfirm(BuildContext context) {
     final theme = Get.find<AppThemeService>();
     return Obx(() {
-      // yesButtonColor caller ne diya ho to wahi rahega (jaise delete = red),
-      // warna default secondaryColor use hoga
-      final confirmColor = widget.yesButtonColor ?? theme.secondaryColor.value;
+      final confirmColor = yesButtonColor ?? theme.secondaryColor.value;
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (widget.confirmImage != null) ...[
-            widget.confirmImage!,
-            SizedBox(height: context.responsiveHeight(0.02)),
-          ],
+          if (confirmImage != null) ...[confirmImage!, SizedBox(height: context.responsiveHeight(0.02))],
           Text(
-            widget.confirmMessage ?? "",
+            confirmMessage ?? '',
             style: AppFonts.geistMono(
               fontSize: 15,
               fontWeight: FontWeight.w700,
@@ -447,27 +440,23 @@ class _AppDialogState extends State<AppDialog> {
             ),
             textAlign: TextAlign.center,
           ),
-          if (widget.confirmSubMessage != null) ...[
+          if (confirmSubMessage != null) ...[
             SizedBox(height: context.responsiveHeight(0.006)),
-            Text(
-              widget.confirmSubMessage!,
-              style: AppFonts.geistMono(
-                fontSize: 13,
-                color: ColorResources.labelColor,
-              ),
-              textAlign: TextAlign.center,
-            ),
+            Text(confirmSubMessage!,
+                style: AppFonts.geistMono(
+                    fontSize: 13, color: ColorResources.labelColor),
+                textAlign: TextAlign.center),
           ],
           SizedBox(height: context.responsiveHeight(0.025)),
           _buildTwoButtons(
             context,
-            cancelText: widget.noText ?? "No",
-            confirmText: widget.yesText ?? "Yes",
+            cancelText: noText ?? 'No',
+            confirmText: yesText ?? 'Yes',
             confirmColor: confirmColor,
-            onCancel: widget.onNo,
+            onCancel: onNo,
             onConfirm: () {
               Navigator.of(context).pop();
-              widget.onYes?.call();
+              onYes?.call();
             },
           ),
         ],
@@ -478,36 +467,34 @@ class _AppDialogState extends State<AppDialog> {
   Widget _buildInfo(BuildContext context) {
     final theme = Get.find<AppThemeService>();
     return Obx(() => Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          widget.content ?? "",
-          style: AppFonts.geistMono(
-            fontSize: 14,
-            color: ColorResources.labelColor,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        SizedBox(height: context.responsiveHeight(0.025)),
-        SizedBox(
-          width: context.responsiveWidth(0.10),
-          child: AppButton(
-            backgroundColor: theme.secondaryColor.value,
-            onPressed:
-                widget.onButtonPressed ?? () => Navigator.of(context).pop(),
-            isLoading: false,
-            child: Text(
-              widget.buttonText ?? "OK",
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              content ?? '',
               style: AppFonts.geistMono(
-                color: theme.onSecondaryColor,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+                  fontSize: 14, color: ColorResources.labelColor),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: context.responsiveHeight(0.025)),
+            SizedBox(
+              width: context.responsiveWidth(0.10),
+              child: AppButton(
+                backgroundColor: theme.secondaryColor.value,
+                onPressed:
+                    onButtonPressed ?? () => Navigator.of(context).pop(),
+                isLoading: false,
+                child: Text(
+                  buttonText ?? 'OK',
+                  style: AppFonts.geistMono(
+                    color: theme.onSecondaryColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      ],
-    ));
+          ],
+        ));
   }
 
   Widget _buildTwoButtons(
@@ -519,44 +506,41 @@ class _AppDialogState extends State<AppDialog> {
     VoidCallback? onConfirm,
   }) {
     final theme = Get.find<AppThemeService>();
-    return Obx(() {
-
-      return Row(
-        children: [
-          Expanded(
-            child: AppButton(
-              backgroundColor:  theme.primaryColor.value,
-              onPressed: onCancel ?? () => Navigator.of(context).pop(),
-              isLoading: false,
-              child: Text(
-                cancelText,
-                style: AppFonts.geistMono(
-                  color: theme.onPrimaryColor,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+    return Obx(() => Row(
+          children: [
+            Expanded(
+              child: AppButton(
+                backgroundColor: theme.primaryColor.value,
+                onPressed: onCancel ?? () => Navigator.of(context).pop(),
+                isLoading: false,
+                child: Text(
+                  cancelText,
+                  style: AppFonts.geistMono(
+                    color: theme.onPrimaryColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
-          ),
-          SizedBox(width: context.responsiveWidth(0.02)),
-          Expanded(
-            child: AppButton(
-              backgroundColor: confirmColor ?? theme.secondaryColor.value,
-              onPressed: onConfirm ?? () => Navigator.of(context).pop(),
-              isLoading: false,
-              child: Text(
-                confirmText,
-                style: AppFonts.geistMono(
-                  color: theme.onSecondaryColor,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+            SizedBox(width: context.responsiveWidth(0.02)),
+            Expanded(
+              child: AppButton(
+                backgroundColor: confirmColor ?? theme.secondaryColor.value,
+                onPressed: onConfirm ?? () => Navigator.of(context).pop(),
+                isLoading: false,
+                child: Text(
+                  confirmText,
+                  style: AppFonts.geistMono(
+                    color: theme.onSecondaryColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      );
-    });
+          ],
+        ));
   }
 }
 

@@ -179,7 +179,7 @@ class VerifyOtpView extends GetView<VerifyOtpController> {
   }
 }
 
-class _OtpBox extends StatefulWidget {
+class _OtpBox extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
   final ValueChanged<String> onChanged;
@@ -191,84 +191,64 @@ class _OtpBox extends StatefulWidget {
   });
 
   @override
-  State<_OtpBox> createState() => _OtpBoxState();
-}
-
-class _OtpBoxState extends State<_OtpBox> {
-  bool _isFocused = false;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.focusNode.addListener(_handleFocusChange);
-  }
-
-  void _handleFocusChange() {
-    setState(() => _isFocused = widget.focusNode.hasFocus);
-  }
-
-  @override
-  void dispose() {
-    widget.focusNode.removeListener(_handleFocusChange);
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Get.find<AppThemeService>();
+    final isFocused = false.obs;
+    focusNode.addListener(() => isFocused.value = focusNode.hasFocus);
     return AspectRatio(
       aspectRatio: 0.85,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: _isFocused
-              ? ColorResources.whiteColor
-              : ColorResources.backgroundColor,
-          border: Border.all(
-            color: _isFocused
-                ? theme.secondaryColor.value
-                : const Color(0xFFE7E9F0),
-            width: _isFocused ? 1.5 : 1,
-          ),
-          boxShadow: _isFocused
-              ? [
-                  BoxShadow(
-                    color: theme.secondaryColor.value.withOpacity(0.15),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Center(
-          child: TextField(
-            controller: widget.controller,
-            focusNode: widget.focusNode,
-            onChanged: widget.onChanged,
-            textAlign: TextAlign.center,
-            textAlignVertical: TextAlignVertical.center,
-            keyboardType: TextInputType.number,
-            maxLength: 1,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            showCursor: true,
-            cursorColor: theme.secondaryColor.value,
-            style: AppFonts.geistMono(
-              fontSize: context.fontLG,
-              fontWeight: FontWeight.w600,
-              color: ColorResources.blackColor,
+      child: Obx(() => AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: isFocused.value
+                  ? ColorResources.whiteColor
+                  : ColorResources.backgroundColor,
+              border: Border.all(
+                color: isFocused.value
+                    ? theme.secondaryColor.value
+                    : const Color(0xFFE7E9F0),
+                width: isFocused.value ? 1.5 : 1,
+              ),
+              boxShadow: isFocused.value
+                  ? [
+                      BoxShadow(
+                        color:
+                            theme.secondaryColor.value.withOpacity(0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : null,
             ),
-            decoration: const InputDecoration(
-              counterText: '',
-              contentPadding: EdgeInsets.zero,
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              isCollapsed: true,
+            child: Center(
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                onChanged: onChanged,
+                textAlign: TextAlign.center,
+                textAlignVertical: TextAlignVertical.center,
+                keyboardType: TextInputType.number,
+                maxLength: 1,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                showCursor: true,
+                cursorColor: theme.secondaryColor.value,
+                style: AppFonts.geistMono(
+                  fontSize: context.fontLG,
+                  fontWeight: FontWeight.w600,
+                  color: ColorResources.blackColor,
+                ),
+                decoration: const InputDecoration(
+                  counterText: '',
+                  contentPadding: EdgeInsets.zero,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  isCollapsed: true,
+                ),
+              ),
             ),
-          ),
-        ),
-      ),
+          )),
     );
   }
 }
