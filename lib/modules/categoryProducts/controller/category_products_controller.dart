@@ -19,7 +19,7 @@ class CategoryProductsController extends GetxController {
   void onInit() {
     super.onInit();
     category = Get.arguments as CategoryModel;
-    _fetchProducts();
+    fetchProducts();
   }
 
   @override
@@ -28,7 +28,7 @@ class CategoryProductsController extends GetxController {
     super.onClose();
   }
 
-  Future<void> _fetchProducts() async {
+  Future<void> fetchProducts() async {
     try {
       isLoading.value = true;
       final response = await _service.fetchProducts(

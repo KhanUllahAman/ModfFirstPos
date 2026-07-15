@@ -11,6 +11,9 @@ import 'package:modfirstpos/shared/widgets/appBarWidget/app_bar_widget.dart';
 import 'package:modfirstpos/shared/widgets/backButtonWidgt/back_button_widget.dart';
 import 'package:modfirstpos/shared/widgets/noKeyboard/no_keyboard_extension.dart';
 
+import 'package:modfirstpos/routes/app_routes.dart';
+import 'package:modfirstpos/shared/widgets/sideNav/pos_side_nav.dart';
+
 class NotificationView extends GetView<NotificationController> {
   const NotificationView({super.key});
 
@@ -22,20 +25,22 @@ class NotificationView extends GetView<NotificationController> {
       resizeToAvoidBottomInset: false,
       backgroundColor: ColorResources.backgroundColor,
       appBar: AppTopBar(
-        showMenuIcon: true,
-        onMenuPressed: () {
-          Get.back();
-        },
+        showMenuIcon: false,
       ),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
-        child: Padding(
-          padding: EdgeInsets.all(context.responsiveWidth(0.02)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              BackBar(title: "Notifications"),
-              SizedBox(height: context.spacingSM),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const PosSideNav(currentRouteOverride: Routes.notification),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(context.responsiveWidth(0.02)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    BackBar(title: "Notifications"),
+                    SizedBox(height: context.spacingSM),
               Expanded(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -70,6 +75,7 @@ class NotificationView extends GetView<NotificationController> {
                             const SizedBox(height: 16),
                             Expanded(
                               child: ListView.separated(
+                                primary: false,
                                 itemCount: controller.filterOptions.length,
                                 separatorBuilder: (_, __) => const SizedBox(height: 8),
                                 itemBuilder: (context, index) {
@@ -195,6 +201,9 @@ class NotificationView extends GetView<NotificationController> {
           ),
         ),
       ),
+    ],
+  ),
+),
     ).noKeyboard();
   }
 
@@ -252,14 +261,37 @@ class NotificationView extends GetView<NotificationController> {
                   color: Colors.grey[400],
                 ),
               ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () => controller.loadStaticNotifications(),
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: Text(
+                  'Reload Notifications',
+                  style: AppFonts.geistMono(
+                    fontSize: context.fontXS,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Get.find<AppThemeService>().primaryColor.value,
+                  foregroundColor: Get.find<AppThemeService>().onPrimaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                ),
+              ),
             ],
           ),
         );
       }
 
       return Scrollbar(
+        controller: controller.scrollController,
         thumbVisibility: true,
         child: ListView.separated(
+          controller: controller.scrollController,
+          primary: false,
           padding: const EdgeInsets.only(right: 8),
           itemCount: list.length,
           separatorBuilder: (_, __) => const SizedBox(height: 12),

@@ -12,6 +12,9 @@ import 'package:modfirstpos/shared/widgets/appBarWidget/app_bar_widget.dart';
 import 'package:modfirstpos/shared/widgets/backButtonWidgt/back_button_widget.dart';
 import 'package:modfirstpos/shared/widgets/noKeyboard/no_keyboard_extension.dart';
 
+import 'package:modfirstpos/routes/app_routes.dart';
+import 'package:modfirstpos/shared/widgets/sideNav/pos_side_nav.dart';
+
 class OrderView extends GetView<OrderController> {
   const OrderView({super.key});
 
@@ -21,20 +24,22 @@ class OrderView extends GetView<OrderController> {
       resizeToAvoidBottomInset: false,
       backgroundColor: ColorResources.backgroundColor,
       appBar: AppTopBar(
-        showMenuIcon: true,
-        onMenuPressed: () {
-          Get.back();
-        },
+        showMenuIcon: false,
       ),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
-        child: Padding(
-          padding: EdgeInsets.all(context.responsiveWidth(0.02)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              BackBar(title: "Orders"),
-              SizedBox(height: context.spacingSM),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const PosSideNav(currentRouteOverride: Routes.order),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(context.responsiveWidth(0.02)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    BackBar(title: "Orders"),
+                    SizedBox(height: context.spacingSM),
               Expanded(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -96,6 +101,9 @@ class OrderView extends GetView<OrderController> {
           ),
         ),
       ),
+    ],
+  ),
+),
     ).noKeyboard();
   }
 
@@ -144,6 +152,7 @@ class OrderView extends GetView<OrderController> {
     return SizedBox(
       height: 36,
       child: ListView.separated(
+        primary: false,
         scrollDirection: Axis.horizontal,
         itemCount: controller.statusOptions.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
@@ -321,14 +330,37 @@ class OrderView extends GetView<OrderController> {
                   color: Colors.grey[600],
                 ),
               ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () => controller.loadOrders(isRefresh: true),
+                icon: const Icon(Icons.refresh_rounded, size: 16),
+                label: Text(
+                  'Retry / Reload',
+                  style: AppFonts.geistMono(
+                    fontSize: context.fontXS,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Get.find<AppThemeService>().primaryColor.value,
+                  foregroundColor: Get.find<AppThemeService>().onPrimaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                ),
+              ),
             ],
           ),
         );
       }
 
       return Scrollbar(
+        controller: controller.orderListScrollController,
         thumbVisibility: true,
         child: ListView.separated(
+          controller: controller.orderListScrollController,
+          primary: false,
           padding: const EdgeInsets.only(right: 8),
           itemCount: controller.orders.length,
           separatorBuilder: (_, __) => SizedBox(height: context.spacingSM),
@@ -469,8 +501,11 @@ class OrderView extends GetView<OrderController> {
         // Scrollable Body
         Expanded(
           child: Scrollbar(
+            controller: controller.orderDetailsScrollController,
             thumbVisibility: true,
             child: ListView(
+              controller: controller.orderDetailsScrollController,
+              primary: false,
               padding: const EdgeInsets.only(right: 8),
               children: [
                 // Section 1: Customer Details
@@ -515,6 +550,7 @@ class OrderView extends GetView<OrderController> {
                       _buildItemsTableHeader(context),
                       const Divider(),
                       ListView.separated(
+                        primary: false,
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: order.items.length,
@@ -534,6 +570,7 @@ class OrderView extends GetView<OrderController> {
                     title: 'Payment Transactions',
                     icon: Icons.receipt_outlined,
                     child: ListView.separated(
+                      primary: false,
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: order.paymentLogs.length,

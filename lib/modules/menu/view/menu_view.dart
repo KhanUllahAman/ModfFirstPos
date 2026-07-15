@@ -13,6 +13,8 @@ import 'package:modfirstpos/shared/widgets/appBarWidget/app_bar_widget.dart';
 import 'package:modfirstpos/shared/widgets/helperFunction/get_device_id_function.dart';
 import 'package:modfirstpos/shared/widgets/noKeyboard/no_keyboard_extension.dart';
 
+import 'package:modfirstpos/shared/widgets/sideNav/pos_side_nav.dart';
+
 class MenuView extends StatelessWidget {
   const MenuView({super.key});
 
@@ -26,22 +28,30 @@ class MenuView extends StatelessWidget {
         appBar: AppTopBar(showMenuIcon: false, showBackIcon: true),
         body: AnnotatedRegion<SystemUiOverlayStyle>(
           value: SystemUiOverlayStyle.light,
-          child: Column(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  context.spacingMD,
-                  context.spacingSM,
-                  context.spacingMD,
-                  context.spacingXS,
-                ),
-                child: const MenuSegmentedTabs(
-                  labels: ["Main", "Account", "System"],
-                ),
-              ),
+              const PosSideNav(currentRouteOverride: Routes.menu),
               Expanded(
-                child: TabBarView(
-                  children: [_MainTab(), _AccountTab(), _SystemTab()],
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        context.spacingMD,
+                        context.spacingSM,
+                        context.spacingMD,
+                        context.spacingXS,
+                      ),
+                      child: const MenuSegmentedTabs(
+                        labels: ["Main", "Account", "System"],
+                      ),
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        children: [_MainTab(), _AccountTab(), _SystemTab()],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -58,6 +68,7 @@ class _MainTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      primary: false,
       padding: EdgeInsets.fromLTRB(
         context.spacingMD,
         context.spacingSM,
@@ -125,6 +136,7 @@ class _AccountTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      primary: false,
       padding: EdgeInsets.all(context.spacingMD),
       children: [
         MenuSectionCard(
@@ -158,6 +170,7 @@ class _SystemTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      primary: false,
       padding: EdgeInsets.all(context.spacingMD),
       children: [
         MenuSectionCard(

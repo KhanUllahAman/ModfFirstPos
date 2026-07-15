@@ -66,17 +66,42 @@ class ProductGrid extends StatelessWidget {
 
       if (categories.isEmpty) {
         return Center(
-          child: Text(
-            'No categories found',
-            style: AppFonts.geistMono(
-              fontSize: context.fontSM,
-              color: ColorResources.blackColor.withOpacity(0.5),
-            ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'No categories found',
+                style: AppFonts.geistMono(
+                  fontSize: context.fontSM,
+                  color: ColorResources.blackColor.withOpacity(0.5),
+                ),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () => controller.loadCategories(),
+                icon: const Icon(Icons.refresh_rounded, size: 16),
+                label: Text(
+                  'Reload Categories',
+                  style: AppFonts.geistMono(
+                    fontSize: context.fontXS,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.primaryColor.value,
+                  foregroundColor: theme.onPrimaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       }
 
       return ListView.separated(
+        primary: false,
         padding: EdgeInsets.symmetric(horizontal: context.spacingSM),
         itemCount: categories.length,
         separatorBuilder: (_, __) => SizedBox(height: context.spacingSM),

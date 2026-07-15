@@ -39,6 +39,7 @@ class StoreSelectionView extends GetView<StoreSelectionController> {
               SizedBox(height: context.spacingLG),
               Expanded(
                 child: ListView.separated(
+                  primary: false,
                   itemCount: controller.stores.length,
                   separatorBuilder: (_, __) => SizedBox(height: context.spacingSM),
                   itemBuilder: (_, index) {

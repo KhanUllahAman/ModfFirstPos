@@ -11,6 +11,9 @@ import 'package:modfirstpos/shared/widgets/appBarWidget/app_bar_widget.dart';
 import 'package:modfirstpos/shared/widgets/backButtonWidgt/back_button_widget.dart';
 import 'package:modfirstpos/shared/widgets/noKeyboard/no_keyboard_extension.dart';
 
+import 'package:modfirstpos/routes/app_routes.dart';
+import 'package:modfirstpos/shared/widgets/sideNav/pos_side_nav.dart';
+
 class GetProfileView extends GetView<GetProfileController> {
   const GetProfileView({super.key});
 
@@ -20,16 +23,21 @@ class GetProfileView extends GetView<GetProfileController> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: ColorResources.backgroundColor,
-      appBar: AppTopBar(showMenuIcon: true, onMenuPressed: () => Get.back()),
+      appBar: AppTopBar(showMenuIcon: false),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
-        child: Padding(
-          padding: EdgeInsets.all(context.responsiveWidth(0.03)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const BackBar(title: "Profile"),
-              SizedBox(height: context.spacingMD),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const PosSideNav(currentRouteOverride: Routes.profile),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(context.responsiveWidth(0.03)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const BackBar(title: "Profile"),
+                    SizedBox(height: context.spacingMD),
               Expanded(
                 child: Obx(() {
                   final profile = controller.profile.value;
@@ -56,6 +64,7 @@ class GetProfileView extends GetView<GetProfileController> {
                   }
 
                   return SingleChildScrollView(
+                    primary: false,
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 420),
                       child: Column(
@@ -171,6 +180,9 @@ class GetProfileView extends GetView<GetProfileController> {
           ),
         ),
       ),
+    ],
+  ),
+),
     ).noKeyboard();
   }
 }

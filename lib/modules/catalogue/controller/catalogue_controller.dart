@@ -18,7 +18,7 @@ class CatalogueController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _loadCategories();
+    loadCategories();
   }
 
   @override
@@ -27,7 +27,7 @@ class CatalogueController extends GetxController {
     super.onClose();
   }
 
-  Future<void> _loadCategories() async {
+  Future<void> loadCategories() async {
     try {
       isLoading.value = true;
       final response = await _service.fetchCategories(

@@ -59,6 +59,7 @@ class AboutView extends GetView<AboutController> {
           }
         
           return ListView(
+            primary: false,
             padding: EdgeInsets.all(context.spacingMD),
             children: [
               _HeaderCard(controller: controller, theme: theme),

@@ -57,6 +57,10 @@ class OrderController extends GetxController {
     'store_pickup',
   ];
 
+  // Dedicated scroll controllers to prevent PrimaryScrollController collisions
+  ScrollController orderListScrollController = ScrollController();
+  ScrollController orderDetailsScrollController = ScrollController();
+
   @override
   void onInit() {
     super.onInit();
@@ -71,6 +75,8 @@ class OrderController extends GetxController {
 
   @override
   void onClose() {
+    orderListScrollController.dispose();
+    orderDetailsScrollController.dispose();
     searchController.dispose();
     super.onClose();
   }

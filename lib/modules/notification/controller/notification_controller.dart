@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class NotificationItem {
@@ -24,10 +25,18 @@ class NotificationController extends GetxController {
 
   final List<String> filterOptions = ['All', 'Orders', 'Inventory', 'System Alert', 'Diagnostics'];
 
+  final ScrollController scrollController = ScrollController();
+
   @override
   void onInit() {
     super.onInit();
     loadStaticNotifications();
+  }
+
+  @override
+  void onClose() {
+    scrollController.dispose();
+    super.onClose();
   }
 
   void loadStaticNotifications() {

@@ -129,6 +129,7 @@ class ProductVariantView extends GetView<ProductVariantController> {
                               const SizedBox(height: 4),
                               Expanded(
                                 child: SingleChildScrollView(
+                                  primary: false,
                                   child: Text(
                                     controller.product.shortDesc!,
                                     style: AppFonts.geistMono(
@@ -196,6 +197,7 @@ class ProductVariantView extends GetView<ProductVariantController> {
                               Expanded(
                                 child: Scrollbar(
                                   child: SingleChildScrollView(
+                                    primary: false,
                                     child: Obx(() => Wrap(
                                       spacing: 10,
                                       runSpacing: 10,

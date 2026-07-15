@@ -137,12 +137,32 @@ class _ProductGrid extends StatelessWidget {
                   color: ColorResources.blackColor.withOpacity(0.5),
                 ),
               ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () => controller.fetchProducts(),
+                icon: const Icon(Icons.refresh_rounded, size: 16),
+                label: Text(
+                  'Reload Products',
+                  style: AppFonts.geistMono(
+                    fontSize: context.fontXS,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.primaryColor.value,
+                  foregroundColor: theme.onPrimaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
             ],
           ),
         );
       }
 
       return GridView.builder(
+        primary: false,
         itemCount: products.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 5,

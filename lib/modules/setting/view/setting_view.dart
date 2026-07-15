@@ -12,6 +12,9 @@ import 'package:modfirstpos/shared/widgets/appBarWidget/app_bar_widget.dart';
 import 'package:modfirstpos/shared/widgets/backButtonWidgt/back_button_widget.dart';
 import 'package:modfirstpos/shared/widgets/noKeyboard/no_keyboard_extension.dart';
 
+import 'package:modfirstpos/routes/app_routes.dart';
+import 'package:modfirstpos/shared/widgets/sideNav/pos_side_nav.dart';
+
 class SettingView extends GetView<SettingController> {
   const SettingView({super.key});
 
@@ -23,20 +26,22 @@ class SettingView extends GetView<SettingController> {
       resizeToAvoidBottomInset: false,
       backgroundColor: ColorResources.backgroundColor,
       appBar: AppTopBar(
-        showMenuIcon: true,
-        onMenuPressed: () {
-          Get.back();
-        },
+        showMenuIcon: false,
       ),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
-        child: Padding(
-          padding: EdgeInsets.all(context.responsiveWidth(0.02)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              BackBar(title: "Settings"),
-              SizedBox(height: context.spacingSM),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const PosSideNav(currentRouteOverride: Routes.setting),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(context.responsiveWidth(0.02)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    BackBar(title: "Settings"),
+                    SizedBox(height: context.spacingSM),
               Expanded(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -77,6 +82,7 @@ class SettingView extends GetView<SettingController> {
                             const SizedBox(height: 20),
                             Expanded(
                               child: ListView(
+                                primary: false,
                                 children: [
                                   // Printer IP Address
                                   Text(
@@ -253,6 +259,9 @@ class SettingView extends GetView<SettingController> {
           ),
         ),
       ),
+    ],
+  ),
+),
     ).noKeyboard();
   }
 
