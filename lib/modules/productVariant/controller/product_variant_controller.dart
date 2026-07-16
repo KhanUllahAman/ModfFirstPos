@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
 import 'package:modfirstpos/modules/home/model/product_item.dart';
@@ -10,15 +11,27 @@ class ProductVariantController extends GetxController {
   final RxBool addedToCart = false.obs;
   final RxInt quantity = 1.obs;
 
+  /// Dedicated controller for the variant list scrollbar; a Scrollbar without
+  /// its own controller falls back to the PrimaryScrollController, which can
+  /// be attached to multiple scroll views on this layout.
+  late final ScrollController variantScrollController;
+
   HomeController get _home => Get.find<HomeController>();
 
   @override
   void onInit() {
     super.onInit();
+    variantScrollController = ScrollController();
     product = Get.arguments as ProductModel;
     if (product.variants.isNotEmpty) {
       selectedVariant.value = product.variants.first;
     }
+  }
+
+  @override
+  void onClose() {
+    variantScrollController.dispose();
+    super.onClose();
   }
 
   void selectVariant(ProductVariantModel variant) {

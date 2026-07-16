@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/app_theme_service.dart';
+import 'package:modfirstpos/core/services/website_settings_service.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
+import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/core/utils/images_constant.dart';
 import 'package:modfirstpos/modules/menu/widget/menu_widget.dart';
@@ -64,6 +67,47 @@ class MenuView extends StatelessWidget {
 class _MainTab extends StatelessWidget {
   const _MainTab();
 
+  /// Re-fetches the website settings from the API, updates the local cache
+  /// and applies the latest theme/branding immediately.
+  Future<void> _refreshWebsiteSettings() async {
+    final storeSlug = await SecureStorageService.getSelectedStore();
+    if (storeSlug == null || storeSlug.trim().isEmpty) {
+      customSnackBar(
+        'No Store Selected',
+        'Select a store before refreshing website settings',
+        snackBarType: SnackBarType.warning,
+      );
+      return;
+    }
+    try {
+      final response =
+          await WebsiteSettingsService().fetchAndSaveWebsiteSettings(storeSlug);
+      if (response.isSuccess) {
+        // Apply theme, colors, branding and configuration immediately.
+        await Get.find<AppThemeService>().refreshFromStorage();
+        customSnackBar(
+          'Settings Refreshed',
+          'Latest website settings applied',
+          snackBarType: SnackBarType.success,
+        );
+      } else {
+        customSnackBar(
+          'Refresh Failed',
+          response.message.isNotEmpty
+              ? response.message
+              : 'Could not refresh website settings',
+          snackBarType: SnackBarType.error,
+        );
+      }
+    } catch (e) {
+      customSnackBar(
+        'Refresh Failed',
+        'Could not reach the server. Cached settings remain active.',
+        snackBarType: SnackBarType.error,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -114,6 +158,11 @@ class _MainTab extends StatelessWidget {
               menuTap: () {
                 Get.toNamed(Routes.notification);
               },
+            ),
+            MenuList(
+              menuIcon: Icons.refresh_rounded,
+              menuTitle: 'Refresh Website Settings',
+              menuTap: _refreshWebsiteSettings,
             ),
           ],
         ),

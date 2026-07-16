@@ -1,35 +1,15 @@
-import 'dart:convert';
-import 'dart:developer';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:modfirstpos/core/database/key_value_store.dart';
 
+/// Category list cache, backed by SQLite (offline-first).
 class CategoryCacheStorage {
-  static const _storage = FlutterSecureStorage();
   static const String _keyCategories = 'cache_categories_data';
 
-  static Future<void> saveCategories(Map<String, dynamic> jsonResponse) async {
-    try {
-      await _storage.write(key: _keyCategories, value: jsonEncode(jsonResponse));
-    } catch (e) {
-      log('CategoryCacheStorage saveCategories error: $e');
-    }
-  }
+  static Future<void> saveCategories(Map<String, dynamic> jsonResponse) =>
+      KeyValueStore.setJsonCache(_keyCategories, jsonResponse);
 
-  static Future<Map<String, dynamic>?> getCategories() async {
-    try {
-      final jsonStr = await _storage.read(key: _keyCategories);
-      if (jsonStr == null || jsonStr.isEmpty) return null;
-      return jsonDecode(jsonStr) as Map<String, dynamic>;
-    } catch (e) {
-      log('CategoryCacheStorage getCategories error: $e');
-      return null;
-    }
-  }
+  static Future<Map<String, dynamic>?> getCategories() =>
+      KeyValueStore.getJsonCache(_keyCategories);
 
-  static Future<void> clearCategories() async {
-    try {
-      await _storage.delete(key: _keyCategories);
-    } catch (e) {
-      log('CategoryCacheStorage clearCategories error: $e');
-    }
-  }
+  static Future<void> clearCategories() =>
+      KeyValueStore.removeJsonCache(_keyCategories);
 }

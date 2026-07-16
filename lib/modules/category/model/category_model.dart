@@ -1,4 +1,6 @@
 import 'package:modfirstpos/core/models/pagination_model.dart';
+import 'package:modfirstpos/core/utils/json_utils.dart';
+import 'package:modfirstpos/core/utils/url_utils.dart';
 
 class CategoryModel {
   final int? id;
@@ -6,6 +8,7 @@ class CategoryModel {
   final String? slug;
   final String? description;
   final int? parentId;
+  final String? imageUrl;
   final bool? isActive;
   final bool? isDeleted;
   final int? createdBy;
@@ -20,6 +23,7 @@ class CategoryModel {
     this.slug,
     this.description,
     this.parentId,
+    this.imageUrl,
     this.isActive,
     this.isDeleted,
     this.createdBy,
@@ -30,24 +34,23 @@ class CategoryModel {
   });
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
+    final parentMap = JsonUtils.asMapOrNull(json['parent']);
     return CategoryModel(
-      id: json['id'] as int?,
-      name: json['name'] as String?,
-      slug: json['slug'] as String?,
-      description: json['description'] as String?,
-      parentId: json['parent_id'] as int?,
-      isActive: json['is_active'] as bool?,
-      isDeleted: json['is_deleted'] as bool?,
-      createdBy: json['created_by'] as int?,
-      createdAt: json['created_at'] as String?,
-      updatedAt: json['updated_at'] as String?,
-      parent: json['parent'] is Map<String, dynamic>
-          ? CategoryModel.fromJson(json['parent'] as Map<String, dynamic>)
-          : null,
-      children: (json['children'] as List<dynamic>? ?? [])
-          .whereType<Map<String, dynamic>>()
-          .map((e) => CategoryModel.fromJson(e))
-          .toList(),
+      id: JsonUtils.asIntOrNull(json['id']),
+      name: JsonUtils.asStringOrNull(json['name']),
+      slug: JsonUtils.asStringOrNull(json['slug']),
+      description: JsonUtils.asStringOrNull(json['description']),
+      parentId: JsonUtils.asIntOrNull(json['parent_id']),
+      imageUrl: UrlUtils.resolveImageUrl(
+        JsonUtils.asStringOrNull(json['image_url']),
+      ),
+      isActive: JsonUtils.asBoolOrNull(json['is_active']),
+      isDeleted: JsonUtils.asBoolOrNull(json['is_deleted']),
+      createdBy: JsonUtils.asIntOrNull(json['created_by']),
+      createdAt: JsonUtils.asStringOrNull(json['created_at']),
+      updatedAt: JsonUtils.asStringOrNull(json['updated_at']),
+      parent: parentMap != null ? CategoryModel.fromJson(parentMap) : null,
+      children: JsonUtils.asModelList(json['children'], CategoryModel.fromJson),
     );
   }
 
@@ -68,20 +71,12 @@ class CategoryListResponse {
   });
 
   factory CategoryListResponse.fromJson(Map<String, dynamic> json) {
-    final rawPayload = json['payload'];
-    final list = rawPayload is List
-        ? rawPayload
-            .whereType<Map<String, dynamic>>()
-            .map((e) => CategoryModel.fromJson(e))
-            .toList()
-        : <CategoryModel>[];
-
     return CategoryListResponse(
-      isSuccess: json['success'] as bool? ?? false,
-      message: json['message'] as String? ?? '',
-      payload: list,
+      isSuccess: JsonUtils.asBool(json['success']),
+      message: JsonUtils.asString(json['message']),
+      payload: JsonUtils.asModelList(json['payload'], CategoryModel.fromJson),
       pagination: PaginationModel.fromJson(
-        json['pagination'] as Map<String, dynamic>?,
+        JsonUtils.asMapOrNull(json['pagination']),
       ),
     );
   }

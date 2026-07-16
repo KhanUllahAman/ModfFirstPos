@@ -38,6 +38,8 @@ import '../modules/splash/view/splash_screen.dart';
 import '../modules/auth/view/auth_view.dart';
 import 'package:modfirstpos/modules/notification/binding/notification_binding.dart';
 import 'package:modfirstpos/modules/notification/view/notification_view.dart';
+import 'package:modfirstpos/modules/customer/binding/customer_binding.dart';
+import 'package:modfirstpos/modules/customer/view/customer_view.dart';
 
 class AppPages {
   static const initial = Routes.splash;
@@ -167,8 +169,8 @@ class AppPages {
     ),
     GetPage(
       name: Routes.customer,
-      page: () => const Customer(),
-      binding: OrderBinding(),
+      page: () => const CustomerView(),
+      binding: CustomerBinding(),
       transition: Transition.fadeIn,
       transitionDuration: const Duration(milliseconds: 300),
     ),

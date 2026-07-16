@@ -7,11 +7,19 @@ import 'package:modfirstpos/modules/product/model/product_model.dart';
 import 'package:modfirstpos/modules/product/service/product_service.dart';
 import 'package:modfirstpos/modules/home/model/cart_item_model.dart';
 import 'package:modfirstpos/modules/home/model/product_item.dart';
+import 'package:modfirstpos/modules/customer/model/customer_model.dart';
+import 'package:modfirstpos/modules/home/model/suspended_order_model.dart';
+import 'package:modfirstpos/modules/home/repository/sales_local_repository.dart';
+import 'package:modfirstpos/modules/home/repository/suspended_order_repository.dart';
+import 'package:modfirstpos/core/services/sync_service.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
 class HomeController extends GetxController {
   final CategoryService _categoryService = CategoryService();
   final ProductService _productService = ProductService();
+
+  final Rxn<CustomerModel> selectedCartCustomer = Rxn<CustomerModel>();
+  final RxBool showCustomerPanel = false.obs;
 
   final TextEditingController scanController = TextEditingController();
   final TextEditingController searchController = TextEditingController();
@@ -19,6 +27,8 @@ class HomeController extends GetxController {
 
   late ScrollController cartScrollController;
   late ScrollController productScrollController;
+  late ScrollController customerListScrollController;
+  late ScrollController variantPanelScrollController;
 
   final RxBool isLoading = false.obs;
   final RxList<CartItemModel> cartItems = <CartItemModel>[].obs;
@@ -43,6 +53,8 @@ class HomeController extends GetxController {
     super.onInit();
     cartScrollController = ScrollController();
     productScrollController = ScrollController();
+    customerListScrollController = ScrollController();
+    variantPanelScrollController = ScrollController();
     loadCategories();
   }
 
@@ -53,6 +65,8 @@ class HomeController extends GetxController {
     productSearchController.dispose();
     cartScrollController.dispose();
     productScrollController.dispose();
+    customerListScrollController.dispose();
+    variantPanelScrollController.dispose();
     super.onClose();
   }
 
@@ -186,49 +200,48 @@ class HomeController extends GetxController {
   }
 
   void addToCartFromItem(ProductItem product, {int quantity = 1}) {
-    final existingIndex = cartItems.indexWhere(
-      (c) => c.product.skuCode == product.skuCode,
-    );
-
-    if (existingIndex != -1) {
-      cartItems[existingIndex].quantity += quantity;
-      cartItems.refresh();
-      customSnackBar(
-        'Already in Cart',
-        '${product.displayName} qty increased to ${cartItems[existingIndex].quantity}',
-        snackBarType: SnackBarType.info,
-      );
-      return;
-    }
-
-    cartItems.add(
-      CartItemModel(
-        product: CartProduct(
-          name: product.name,
-          skuCode: product.skuCode ?? '--',
-          imageUrl: product.imageUrl,
-          amount: product.productPrice ?? 0,
-          unitPrice: product.productPrice ?? 0,
-        ),
-        quantity: quantity,
-      ),
-    );
-
-    customSnackBar(
-      'Added to Cart',
-      '${product.displayName} added successfully',
-      snackBarType: SnackBarType.success,
+    _addOrIncrementCartItem(
+      name: product.name,
+      displayName: product.displayName,
+      sku: product.skuCode ?? '--',
+      imageUrl: product.imageUrl,
+      unitPrice: product.productPrice ?? 0,
+      quantity: quantity,
     );
   }
 
-  void addToCartFromProduct(ProductModel product, {ProductVariantModel? variant, int quantity = 1}) {
-    final sku = variant != null ? (variant.sku ?? product.sku ?? '--') : (product.sku ?? '--');
-    final price = variant != null ? variant.effectivePrice : product.effectivePrice;
-    final displayName = variant != null ? '${product.displayName} (${variant.sku})' : product.displayName;
-
-    final existingIndex = cartItems.indexWhere(
-      (c) => c.product.skuCode == sku,
+  void addToCartFromProduct(
+    ProductModel product, {
+    ProductVariantModel? variant,
+    int quantity = 1,
+  }) {
+    final sku = variant?.sku ?? product.sku ?? '--';
+    final price = variant?.effectivePrice ?? product.effectivePrice;
+    final displayName = variant != null
+        ? '${product.displayName} (${variant.sku})'
+        : product.displayName;
+    _addOrIncrementCartItem(
+      name: displayName,
+      displayName: displayName,
+      sku: sku,
+      imageUrl: product.primaryImageUrl,
+      unitPrice: price,
+      quantity: quantity,
     );
+  }
+
+  /// Adds a line to the cart, or bumps the quantity when the SKU is already
+  /// in the cart. Single source of truth for all add-to-cart flows.
+  void _addOrIncrementCartItem({
+    required String name,
+    required String displayName,
+    required String sku,
+    required String? imageUrl,
+    required double unitPrice,
+    required int quantity,
+  }) {
+    final existingIndex =
+        cartItems.indexWhere((c) => c.product.skuCode == sku);
 
     if (existingIndex != -1) {
       cartItems[existingIndex].quantity += quantity;
@@ -244,11 +257,11 @@ class HomeController extends GetxController {
     cartItems.add(
       CartItemModel(
         product: CartProduct(
-          name: displayName,
+          name: name,
           skuCode: sku,
-          imageUrl: product.primaryImageUrl,
-          amount: price,
-          unitPrice: price,
+          imageUrl: imageUrl,
+          amount: unitPrice,
+          unitPrice: unitPrice,
         ),
         quantity: quantity,
       ),
@@ -313,5 +326,222 @@ class HomeController extends GetxController {
 
   double get balance => subTotal < 0 ? 0 : subTotal;
 
-  void getOptions() {}
+  void clearCart() {
+    cartItems.clear();
+    selectedCartCustomer.value = null;
+  }
+
+  // ------------------------------------------------------------------------
+  // Suspend / Resume / Void
+  // ------------------------------------------------------------------------
+
+  final RxList<SuspendedOrderModel> suspendedOrders =
+      <SuspendedOrderModel>[].obs;
+
+  /// Parks the current order (customer, cart, discounts, totals) locally so
+  /// the cashier can serve another customer and resume later.
+  Future<bool> suspendCurrentOrder() async {
+    if (cartItems.isEmpty) {
+      customSnackBar(
+        'Nothing to Suspend',
+        'Add items to the cart before suspending an order',
+        snackBarType: SnackBarType.warning,
+      );
+      return false;
+    }
+    try {
+      final order = SuspendedOrderModel(
+        customer: selectedCartCustomer.value,
+        items: cartItems.map((e) => e).toList(),
+        discountInput: discountInput.value,
+        taxAmount: 0,
+        total: balance,
+        createdAt: DateTime.now().toIso8601String(),
+      );
+      await SuspendedOrderRepository.suspend(order);
+      _resetSale();
+      customSnackBar(
+        'Order Suspended',
+        'The order was parked and can be resumed anytime',
+        snackBarType: SnackBarType.success,
+      );
+      return true;
+    } catch (e) {
+      log('HomeController suspendCurrentOrder error: $e');
+      customSnackBar(
+        'Suspend Failed',
+        'The order could not be saved locally',
+        snackBarType: SnackBarType.error,
+      );
+      return false;
+    }
+  }
+
+  Future<void> loadSuspendedOrders() async {
+    try {
+      suspendedOrders.assignAll(await SuspendedOrderRepository.getAll());
+    } catch (e) {
+      log('HomeController loadSuspendedOrders error: $e');
+    }
+  }
+
+  /// Restores a suspended session exactly as it was before suspension.
+  Future<void> resumeSuspendedOrder(SuspendedOrderModel order) async {
+    cartItems.assignAll(order.items);
+    selectedCartCustomer.value = order.customer;
+    discountInput.value = order.discountInput;
+    if (order.id != null) {
+      await SuspendedOrderRepository.remove(order.id!);
+      suspendedOrders.removeWhere((o) => o.id == order.id);
+    }
+    customSnackBar(
+      'Order Resumed',
+      'The suspended order was restored to the cart',
+      snackBarType: SnackBarType.success,
+    );
+  }
+
+  /// Clears the whole sale and returns the POS to its initial state.
+  /// Call after explicit confirmation only.
+  void voidCurrentOrder() {
+    _resetSale();
+    customSnackBar(
+      'Order Voided',
+      'The order was cleared',
+      snackBarType: SnackBarType.info,
+    );
+  }
+
+  void _resetSale() {
+    cartItems.clear();
+    selectedCartCustomer.value = null;
+    discountInput.value = '';
+    showCashPanel.value = false;
+    cashReceivedInput.value = '';
+  }
+
+  // ------------------------------------------------------------------------
+  // Payment (cash)
+  // ------------------------------------------------------------------------
+
+  /// When true, the right-hand panel shows the cash payment keypad.
+  final RxBool showCashPanel = false.obs;
+
+  /// Amount typed on the POS keypad (kept as a string for display control).
+  final RxString cashReceivedInput = ''.obs;
+
+  double get cashReceived => double.tryParse(cashReceivedInput.value) ?? 0.0;
+
+  double get changeDue {
+    final change = cashReceived - balance;
+    return change > 0 ? change : 0.0;
+  }
+
+  bool get canConfirmCashPayment =>
+      cartItems.isNotEmpty && cashReceived >= balance && balance > 0;
+
+  void openCashPayment() {
+    if (cartItems.isEmpty) {
+      customSnackBar(
+        'Empty Cart',
+        'Add items to the cart before taking a payment',
+        snackBarType: SnackBarType.warning,
+      );
+      return;
+    }
+    cashReceivedInput.value = '';
+    showCashPanel.value = true;
+  }
+
+  void closeCashPayment() {
+    showCashPanel.value = false;
+    cashReceivedInput.value = '';
+  }
+
+  void keypadAppend(String digit) {
+    final current = cashReceivedInput.value;
+    if (digit == '.' && current.contains('.')) return;
+    // Cap decimals at 2 places.
+    final dotIndex = current.indexOf('.');
+    if (dotIndex != -1 && digit != '.' && current.length - dotIndex > 2) {
+      return;
+    }
+    if (current.replaceAll('.', '').length >= 9) return;
+    cashReceivedInput.value =
+        (current == '0' && digit != '.') ? digit : current + digit;
+  }
+
+  void keypadBackspace() {
+    final current = cashReceivedInput.value;
+    if (current.isEmpty) return;
+    cashReceivedInput.value = current.substring(0, current.length - 1);
+  }
+
+  void keypadClear() => cashReceivedInput.value = '';
+
+  void setExactCash() =>
+      cashReceivedInput.value = balance.toStringAsFixed(2);
+
+  void addQuickAmount(double amount) {
+    cashReceivedInput.value = (cashReceived + amount).toStringAsFixed(2);
+  }
+
+  /// Completes the cash sale: records it locally (offline-first) with a
+  /// locally generated invoice number, then lets the sync service push it.
+  Future<void> confirmCashPayment() async {
+    if (!canConfirmCashPayment) {
+      customSnackBar(
+        'Insufficient Cash',
+        'Received amount must cover the payable balance',
+        snackBarType: SnackBarType.warning,
+      );
+      return;
+    }
+    try {
+      final customer = selectedCartCustomer.value;
+      final invoiceNumber = await SalesLocalRepository.recordSale({
+        'channel': 'pos',
+        'payment_method': 'cash',
+        'customer_id': customer?.id,
+        'customer_name': customer?.fullName,
+        'customer_email': customer?.email,
+        'items': cartItems
+            .map((item) => {
+                  'name': item.product.name,
+                  'sku': item.product.skuCode,
+                  'quantity': item.quantity,
+                  'unit_price': item.product.unitPrice,
+                  'total': item.total,
+                })
+            .toList(),
+        'subtotal': productTotal,
+        'discount_amount': discount,
+        'total_amount': balance,
+        'cash_received': cashReceived,
+        'change_due': changeDue,
+        'order_date': DateTime.now().toIso8601String(),
+      });
+
+      final change = changeDue;
+      _resetSale();
+      customSnackBar(
+        'Payment Complete',
+        'Invoice $invoiceNumber'
+        '${change > 0 ? ' • Change Rs. ${change.toStringAsFixed(2)}' : ''}',
+        snackBarType: SnackBarType.success,
+      );
+
+      // Push in the background when online; never blocks the cashier.
+      if (Get.isRegistered<SyncService>()) {
+        Get.find<SyncService>().syncNow();
+      }
+    } catch (e) {
+      log('HomeController confirmCashPayment error: $e');
+      customSnackBar(
+        'Payment Failed',
+        'The sale could not be recorded. Please try again.',
+        snackBarType: SnackBarType.error,
+      );
+    }
+  }
 }

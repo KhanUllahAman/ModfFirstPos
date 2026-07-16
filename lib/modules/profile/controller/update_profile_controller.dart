@@ -30,8 +30,8 @@ class UpdateProfileController extends GetxController {
   String get displayImageUrl {
     final raw = existingImageUrl.value;
     if (raw.isEmpty) return raw;
-    if (raw.startsWith('http')) return raw;
-    return 'http://13.62.114.94:3000$raw';
+    if (raw.startsWith('https')) return raw;
+    return 'https://command.modfirst.com/uploads$raw';
   }
 
   void _prefillFromExistingProfile() {

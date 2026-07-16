@@ -17,7 +17,8 @@ class CustomerService {
     bool forceSync = false,
   }) async {
     try {
-      final isDefaultCall = page == 1 &&
+      final isDefaultCall =
+          page == 1 &&
           (startDate == null || startDate.isEmpty) &&
           (endDate == null || endDate.isEmpty);
 
@@ -32,9 +33,7 @@ class CustomerService {
       final body = <String, dynamic>{
         'page': page,
         'limit': limit,
-        'filters': {
-          'role': 'customer',
-        },
+        'filters': {'role': 'customer'},
       };
 
       if (startDate != null && startDate.isNotEmpty) {
@@ -49,7 +48,7 @@ class CustomerService {
         body: body,
         showErrorSnackbar: false,
       );
-
+      log("Body User List $body");
       final Map<String, dynamic> data = response.data is Map<String, dynamic>
           ? response.data as Map<String, dynamic>
           : jsonDecode(response.data?.toString() ?? '{}')
@@ -62,6 +61,13 @@ class CustomerService {
       return CustomerListResponse.fromJson(data);
     } catch (e) {
       log("CustomerService fetchCustomers error: $e");
+      // Offline-first fallback: serve the cached list when the network is
+      // unavailable so the cashier is never blocked.
+      final cachedData = await CustomerCacheStorage.getCustomers();
+      if (cachedData != null) {
+        log("CustomerService: network failed, serving cached customers.");
+        return CustomerListResponse.fromJson(cachedData);
+      }
       if (e is AppException) rethrow;
       rethrow;
     }

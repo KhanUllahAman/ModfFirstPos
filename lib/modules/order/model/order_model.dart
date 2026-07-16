@@ -1,4 +1,5 @@
 import 'package:modfirstpos/core/models/pagination_model.dart';
+import 'package:modfirstpos/core/utils/json_utils.dart';
 
 class OrderModel {
   final int? id;
@@ -89,53 +90,47 @@ class OrderModel {
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(
-      id: json['id'] as int?,
-      orderNumber: json['order_number'] as String?,
-      userId: json['user_id'] as int?,
-      email: json['email'] as String?,
-      phone: json['phone'] as String?,
-      fullName: json['full_name'] as String?,
-      status: json['status'] as String?,
-      paymentStatus: json['payment_status'] as String?,
-      deliveryType: json['delivery_type'] as String?,
-      shippingStatus: json['shipping_status'] as String?,
-      channel: json['channel'] as String?,
-      shippingAddressId: json['shipping_address_id'] as int?,
-      billingAddressId: json['billing_address_id'] as int?,
-      couponId: json['coupon_id'] as int?,
-      pickupLocationId: json['pickup_location_id'] as int?,
+      id: JsonUtils.asIntOrNull(json['id']),
+      orderNumber: JsonUtils.asStringOrNull(json['order_number']),
+      userId: JsonUtils.asIntOrNull(json['user_id']),
+      email: JsonUtils.asStringOrNull(json['email']),
+      phone: JsonUtils.asStringOrNull(json['phone']),
+      fullName: JsonUtils.asStringOrNull(json['full_name']),
+      status: JsonUtils.asStringOrNull(json['status']),
+      paymentStatus: JsonUtils.asStringOrNull(json['payment_status']),
+      deliveryType: JsonUtils.asStringOrNull(json['delivery_type']),
+      shippingStatus: JsonUtils.asStringOrNull(json['shipping_status']),
+      channel: JsonUtils.asStringOrNull(json['channel']),
+      shippingAddressId: JsonUtils.asIntOrNull(json['shipping_address_id']),
+      billingAddressId: JsonUtils.asIntOrNull(json['billing_address_id']),
+      couponId: JsonUtils.asIntOrNull(json['coupon_id']),
+      pickupLocationId: JsonUtils.asIntOrNull(json['pickup_location_id']),
       subtotal: json['subtotal']?.toString(),
       shippingFee: json['shipping_fee']?.toString(),
       discountAmount: json['discount_amount']?.toString(),
       taxAmount: json['tax_amount']?.toString(),
       paidAmount: json['paid_amount']?.toString(),
       totalAmount: json['total_amount']?.toString(),
-      discountSource: json['discount_source'] as String?,
+      discountSource: JsonUtils.asStringOrNull(json['discount_source']),
       onlineAmount: json['online_amount']?.toString(),
       cashAmount: json['cash_amount']?.toString(),
-      notes: json['notes'] as String?,
-      serviceCode: json['service_code'] as String?,
-      orderDate: json['order_date'] as String?,
-      estimatedDeliveryDate: json['estimated_delivery_date'] as String?,
-      cancelledAt: json['cancelled_at'] as String?,
-      isActive: json['is_active'] as bool?,
-      isDeleted: json['is_deleted'] as bool?,
-      createdBy: json['created_by'] as int?,
-      updatedBy: json['updated_by'] as int?,
-      deletedBy: json['deleted_by'] as int?,
-      createdAt: json['created_at'] as String?,
-      updatedAt: json['updated_at'] as String?,
-      deletedAt: json['deleted_at'] as String?,
-      items: (json['items'] as List<dynamic>? ?? [])
-          .whereType<Map<String, dynamic>>()
-          .map((e) => OrderItemModel.fromJson(e))
-          .toList(),
-      shipments: json['shipments'] as List<dynamic>? ?? [],
-      pickupLoc: json['pickupLoc'] as Map<String, dynamic>?,
-      paymentLogs: (json['paymentLogs'] as List<dynamic>? ?? [])
-          .whereType<Map<String, dynamic>>()
-          .map((e) => OrderPaymentLogModel.fromJson(e))
-          .toList(),
+      notes: JsonUtils.asStringOrNull(json['notes']),
+      serviceCode: JsonUtils.asStringOrNull(json['service_code']),
+      orderDate: JsonUtils.asStringOrNull(json['order_date']),
+      estimatedDeliveryDate: JsonUtils.asStringOrNull(json['estimated_delivery_date']),
+      cancelledAt: JsonUtils.asStringOrNull(json['cancelled_at']),
+      isActive: JsonUtils.asBoolOrNull(json['is_active']),
+      isDeleted: JsonUtils.asBoolOrNull(json['is_deleted']),
+      createdBy: JsonUtils.asIntOrNull(json['created_by']),
+      updatedBy: JsonUtils.asIntOrNull(json['updated_by']),
+      deletedBy: JsonUtils.asIntOrNull(json['deleted_by']),
+      createdAt: JsonUtils.asStringOrNull(json['created_at']),
+      updatedAt: JsonUtils.asStringOrNull(json['updated_at']),
+      deletedAt: JsonUtils.asStringOrNull(json['deleted_at']),
+      items: JsonUtils.asModelList(json['items'], OrderItemModel.fromJson),
+      shipments: json['shipments'] is List ? json['shipments'] as List : const [],
+      pickupLoc: JsonUtils.asMapOrNull(json['pickupLoc']),
+      paymentLogs: JsonUtils.asModelList(json['paymentLogs'], OrderPaymentLogModel.fromJson),
     );
   }
 }
@@ -171,20 +166,20 @@ class OrderItemModel {
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
     return OrderItemModel(
-      id: json['id'] as int?,
-      orderId: json['order_id'] as int?,
-      productId: json['product_id'] as int?,
-      variantId: json['variant_id'] as int?,
-      quantity: json['quantity'] as int?,
+      id: JsonUtils.asIntOrNull(json['id']),
+      orderId: JsonUtils.asIntOrNull(json['order_id']),
+      productId: JsonUtils.asIntOrNull(json['product_id']),
+      variantId: JsonUtils.asIntOrNull(json['variant_id']),
+      quantity: JsonUtils.asIntOrNull(json['quantity']),
       unitPrice: json['unit_price']?.toString(),
-      printMethod: json['print_method'] as String?,
-      customText: json['custom_text'] as String?,
-      productName: json['product_name'] as String?,
-      variantName: json['variant_name'] as String?,
-      product: json['product'] is Map<String, dynamic>
-          ? OrderProductModel.fromJson(json['product'] as Map<String, dynamic>)
+      printMethod: JsonUtils.asStringOrNull(json['print_method']),
+      customText: JsonUtils.asStringOrNull(json['custom_text']),
+      productName: JsonUtils.asStringOrNull(json['product_name']),
+      variantName: JsonUtils.asStringOrNull(json['variant_name']),
+      product: JsonUtils.asMapOrNull(json['product']) != null
+          ? OrderProductModel.fromJson(JsonUtils.asMap(json['product']))
           : null,
-      designs: json['designs'] as List<dynamic>? ?? [],
+      designs: json['designs'] is List ? json['designs'] as List : const [],
     );
   }
 
@@ -275,47 +270,43 @@ class OrderProductModel {
 
   factory OrderProductModel.fromJson(Map<String, dynamic> json) {
     return OrderProductModel(
-      id: json['id'] as int?,
-      name: json['name'] as String?,
-      slug: json['slug'] as String?,
-      sku: json['sku'] as String?,
+      id: JsonUtils.asIntOrNull(json['id']),
+      name: JsonUtils.asStringOrNull(json['name']),
+      slug: JsonUtils.asStringOrNull(json['slug']),
+      sku: JsonUtils.asStringOrNull(json['sku']),
       basePrice: json['base_price']?.toString(),
       salePrice: json['sale_price']?.toString(),
-      discountPercent: json['discount_percent'] as int?,
+      discountPercent: JsonUtils.asIntOrNull(json['discount_percent']),
       discountAmount: json['discount_amount']?.toString(),
       costPrice: json['cost_price']?.toString(),
-      description: json['description'] as String?,
-      shortDesc: json['short_desc'] as String?,
-      printMethods: (json['print_methods'] as List<dynamic>? ?? [])
-          .map((e) => e.toString())
-          .toList(),
-      isCustomizable: json['is_customizable'] as bool?,
-      isFeatured: json['is_featured'] as bool?,
-      views: json['views'] as int?,
-      isPickupAllowed: json['is_pickup_allowed'] as bool?,
-      isDeliveryAllowed: json['is_delivery_allowed'] as bool?,
-      metaTitle: json['meta_title'] as String?,
-      metaDesc: json['meta_desc'] as String?,
-      metaKeywords: json['meta_keywords'] as String?,
-      canonicalUrl: json['canonical_url'] as String?,
-      categoryId: json['category_id'] as int?,
-      vendorId: json['vendor_id'] as int?,
-      tags: (json['tags'] as List<dynamic>? ?? [])
-          .map((e) => e.toString())
-          .toList(),
+      description: JsonUtils.asStringOrNull(json['description']),
+      shortDesc: JsonUtils.asStringOrNull(json['short_desc']),
+      printMethods: JsonUtils.asStringList(json['print_methods']),
+      isCustomizable: JsonUtils.asBoolOrNull(json['is_customizable']),
+      isFeatured: JsonUtils.asBoolOrNull(json['is_featured']),
+      views: JsonUtils.asIntOrNull(json['views']),
+      isPickupAllowed: JsonUtils.asBoolOrNull(json['is_pickup_allowed']),
+      isDeliveryAllowed: JsonUtils.asBoolOrNull(json['is_delivery_allowed']),
+      metaTitle: JsonUtils.asStringOrNull(json['meta_title']),
+      metaDesc: JsonUtils.asStringOrNull(json['meta_desc']),
+      metaKeywords: JsonUtils.asStringOrNull(json['meta_keywords']),
+      canonicalUrl: JsonUtils.asStringOrNull(json['canonical_url']),
+      categoryId: JsonUtils.asIntOrNull(json['category_id']),
+      vendorId: JsonUtils.asIntOrNull(json['vendor_id']),
+      tags: JsonUtils.asStringList(json['tags']),
       weight: json['weight']?.toString(),
       length: json['length']?.toString(),
       width: json['width']?.toString(),
       height: json['height']?.toString(),
-      status: json['status'] as String?,
-      isActive: json['is_active'] as bool?,
-      isDeleted: json['is_deleted'] as bool?,
-      createdBy: json['created_by'] as int?,
-      updatedBy: json['updated_by'] as int?,
-      deletedBy: json['deleted_by'] as int?,
-      createdAt: json['created_at'] as String?,
-      updatedAt: json['updated_at'] as String?,
-      deletedAt: json['deleted_at'] as String?,
+      status: JsonUtils.asStringOrNull(json['status']),
+      isActive: JsonUtils.asBoolOrNull(json['is_active']),
+      isDeleted: JsonUtils.asBoolOrNull(json['is_deleted']),
+      createdBy: JsonUtils.asIntOrNull(json['created_by']),
+      updatedBy: JsonUtils.asIntOrNull(json['updated_by']),
+      deletedBy: JsonUtils.asIntOrNull(json['deleted_by']),
+      createdAt: JsonUtils.asStringOrNull(json['created_at']),
+      updatedAt: JsonUtils.asStringOrNull(json['updated_at']),
+      deletedAt: JsonUtils.asStringOrNull(json['deleted_at']),
     );
   }
 }
@@ -343,14 +334,14 @@ class OrderPaymentLogModel {
 
   factory OrderPaymentLogModel.fromJson(Map<String, dynamic> json) {
     return OrderPaymentLogModel(
-      id: json['id'] as int?,
-      orderId: json['order_id'] as int?,
+      id: JsonUtils.asIntOrNull(json['id']),
+      orderId: JsonUtils.asIntOrNull(json['order_id']),
       amount: json['amount']?.toString(),
-      paymentMethod: json['payment_method'] as String?,
-      transactionId: json['transaction_id'] as String?,
-      status: json['status'] as String?,
-      gatewayResponse: json['gateway_response'] as String?,
-      createdAt: json['created_at'] as String?,
+      paymentMethod: JsonUtils.asStringOrNull(json['payment_method']),
+      transactionId: JsonUtils.asStringOrNull(json['transaction_id']),
+      status: JsonUtils.asStringOrNull(json['status']),
+      gatewayResponse: JsonUtils.asStringOrNull(json['gateway_response']),
+      createdAt: JsonUtils.asStringOrNull(json['created_at']),
     );
   }
 }
@@ -369,20 +360,12 @@ class OrderListResponse {
   });
 
   factory OrderListResponse.fromJson(Map<String, dynamic> json) {
-    final rawPayload = json['payload'];
-    final list = rawPayload is List
-        ? rawPayload
-            .whereType<Map<String, dynamic>>()
-            .map((e) => OrderModel.fromJson(e))
-            .toList()
-        : <OrderModel>[];
-
     return OrderListResponse(
-      isSuccess: json['success'] as bool? ?? false,
-      message: json['message'] as String? ?? '',
-      payload: list,
+      isSuccess: JsonUtils.asBool(json['success']),
+      message: JsonUtils.asString(json['message']),
+      payload: JsonUtils.asModelList(json['payload'], OrderModel.fromJson),
       pagination: PaginationModel.fromJson(
-        json['pagination'] as Map<String, dynamic>?,
+        JsonUtils.asMapOrNull(json['pagination']),
       ),
     );
   }

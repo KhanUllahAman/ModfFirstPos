@@ -1,3 +1,5 @@
+import 'package:modfirstpos/core/utils/json_utils.dart';
+
 class WebsiteSettingsModel {
   final int? id;
   final String? siteName;
@@ -111,59 +113,59 @@ class WebsiteSettingsModel {
 
   factory WebsiteSettingsModel.fromJson(Map<String, dynamic> json) {
     return WebsiteSettingsModel(
-      id: json['id'] as int?,
-      siteName: json['site_name'] as String?,
-      siteTagline: json['site_tagline'] as String?,
-      siteDescription: json['site_description'] as String?,
-      logoUrl: json['logo_url'] as String?,
-      faviconUrl: json['favicon_url'] as String?,
-      footerLogoUrl: json['footer_logo_url'] as String?,
-      primaryColor: json['primary_color'] as String?,
-      secondaryColor: json['secondary_color'] as String?,
-      accentColor: json['accent_color'] as String?,
-      fontPrimary: json['font_primary'] as String?,
-      fontHeading: json['font_heading'] as String?,
-      contactEmail: json['contact_email'] as String?,
-      supportEmail: json['support_email'] as String?,
-      contactPhone: json['contact_phone'] as String?,
-      whatsappNumber: json['whatsapp_number'] as String?,
-      address: json['address'] as String?,
-      city: json['city'] as String?,
-      countryCode: json['country_code'] as String?,
-      postalCode: json['postal_code'] as String?,
-      provinceCode: json['province_code'] as String?,
-      businessHours: json['business_hours'] as String?,
-      facebookUrl: json['facebook_url'] as String?,
-      instagramUrl: json['instagram_url'] as String?,
-      twitterUrl: json['twitter_url'] as String?,
-      linkedinUrl: json['linkedin_url'] as String?,
-      youtubeUrl: json['youtube_url'] as String?,
-      tiktokUrl: json['tiktok_url'] as String?,
-      pinterestUrl: json['pinterest_url'] as String?,
-      playstoreUrl: json['playstore_url'] as String?,
-      appstoreUrl: json['appstore_url'] as String?,
-      currency: json['currency'] as String?,
-      currencySymbol: json['currency_symbol'] as String?,
+      id: JsonUtils.asIntOrNull(json['id']),
+      siteName: JsonUtils.asStringOrNull(json['site_name']),
+      siteTagline: JsonUtils.asStringOrNull(json['site_tagline']),
+      siteDescription: JsonUtils.asStringOrNull(json['site_description']),
+      logoUrl: JsonUtils.asStringOrNull(json['logo_url']),
+      faviconUrl: JsonUtils.asStringOrNull(json['favicon_url']),
+      footerLogoUrl: JsonUtils.asStringOrNull(json['footer_logo_url']),
+      primaryColor: JsonUtils.asStringOrNull(json['primary_color']),
+      secondaryColor: JsonUtils.asStringOrNull(json['secondary_color']),
+      accentColor: JsonUtils.asStringOrNull(json['accent_color']),
+      fontPrimary: JsonUtils.asStringOrNull(json['font_primary']),
+      fontHeading: JsonUtils.asStringOrNull(json['font_heading']),
+      contactEmail: JsonUtils.asStringOrNull(json['contact_email']),
+      supportEmail: JsonUtils.asStringOrNull(json['support_email']),
+      contactPhone: JsonUtils.asStringOrNull(json['contact_phone']),
+      whatsappNumber: JsonUtils.asStringOrNull(json['whatsapp_number']),
+      address: JsonUtils.asStringOrNull(json['address']),
+      city: JsonUtils.asStringOrNull(json['city']),
+      countryCode: JsonUtils.asStringOrNull(json['country_code']),
+      postalCode: JsonUtils.asStringOrNull(json['postal_code']),
+      provinceCode: JsonUtils.asStringOrNull(json['province_code']),
+      businessHours: JsonUtils.asStringOrNull(json['business_hours']),
+      facebookUrl: JsonUtils.asStringOrNull(json['facebook_url']),
+      instagramUrl: JsonUtils.asStringOrNull(json['instagram_url']),
+      twitterUrl: JsonUtils.asStringOrNull(json['twitter_url']),
+      linkedinUrl: JsonUtils.asStringOrNull(json['linkedin_url']),
+      youtubeUrl: JsonUtils.asStringOrNull(json['youtube_url']),
+      tiktokUrl: JsonUtils.asStringOrNull(json['tiktok_url']),
+      pinterestUrl: JsonUtils.asStringOrNull(json['pinterest_url']),
+      playstoreUrl: JsonUtils.asStringOrNull(json['playstore_url']),
+      appstoreUrl: JsonUtils.asStringOrNull(json['appstore_url']),
+      currency: JsonUtils.asStringOrNull(json['currency']),
+      currencySymbol: JsonUtils.asStringOrNull(json['currency_symbol']),
       taxPercentage: json['tax_percentage']?.toString(),
       defaultShippingFee: json['default_shipping_fee']?.toString(),
       freeShippingThreshold: json['free_shipping_threshold']?.toString(),
       minOrderAmount: json['min_order_amount']?.toString(),
-      firstOrderDiscountEnabled: json['first_order_discount_enabled'] as bool?,
-      firstOrderDiscountType: json['first_order_discount_type'] as String?,
+      firstOrderDiscountEnabled: JsonUtils.asBoolOrNull(json['first_order_discount_enabled']),
+      firstOrderDiscountType: JsonUtils.asStringOrNull(json['first_order_discount_type']),
       firstOrderDiscountValue: json['first_order_discount_value']?.toString(),
       firstOrderMaxDiscount: json['first_order_max_discount']?.toString(),
-      metaTitle: json['meta_title'] as String?,
-      metaDescription: json['meta_description'] as String?,
-      metaKeywords: json['meta_keywords'] as String?,
-      ogImageUrl: json['og_image_url'] as String?,
-      isActive: json['is_active'] as bool?,
-      isDeleted: json['is_deleted'] as bool?,
-      createdBy: json['created_by'] as int?,
-      updatedBy: json['updated_by'] as int?,
-      deletedBy: json['deleted_by'] as int?,
-      createdAt: json['created_at'] as String?,
-      updatedAt: json['updated_at'] as String?,
-      deletedAt: json['deleted_at'] as String?,
+      metaTitle: JsonUtils.asStringOrNull(json['meta_title']),
+      metaDescription: JsonUtils.asStringOrNull(json['meta_description']),
+      metaKeywords: JsonUtils.asStringOrNull(json['meta_keywords']),
+      ogImageUrl: JsonUtils.asStringOrNull(json['og_image_url']),
+      isActive: JsonUtils.asBoolOrNull(json['is_active']),
+      isDeleted: JsonUtils.asBoolOrNull(json['is_deleted']),
+      createdBy: JsonUtils.asIntOrNull(json['created_by']),
+      updatedBy: JsonUtils.asIntOrNull(json['updated_by']),
+      deletedBy: JsonUtils.asIntOrNull(json['deleted_by']),
+      createdAt: JsonUtils.asStringOrNull(json['created_at']),
+      updatedAt: JsonUtils.asStringOrNull(json['updated_at']),
+      deletedAt: JsonUtils.asStringOrNull(json['deleted_at']),
     );
   }
 
@@ -246,15 +248,14 @@ class WebsiteSettingsResponse {
     if (rawPayload is Map<String, dynamic>) {
       model = WebsiteSettingsModel.fromJson(rawPayload);
     } else if (rawPayload is List && rawPayload.isNotEmpty) {
-      model = WebsiteSettingsModel.fromJson(
-        rawPayload.first as Map<String, dynamic>,
-      );
+      final firstMap = JsonUtils.asMapOrNull(rawPayload.first);
+      if (firstMap != null) model = WebsiteSettingsModel.fromJson(firstMap);
     }
 
     return WebsiteSettingsResponse(
-      isSuccess: json['success'] as bool? ?? false,
-      status: json['status'] as int? ?? 0,
-      message: json['message'] as String? ?? '',
+      isSuccess: JsonUtils.asBool(json['success']),
+      status: JsonUtils.asInt(json['status']),
+      message: JsonUtils.asString(json['message']),
       payload: model,
     );
   }

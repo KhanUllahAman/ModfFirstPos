@@ -138,7 +138,7 @@ class PinSettingsView extends GetView<PinSettingsController> {
         fields: [PinDialogField(controller: pinCtrl, label: "Current PIN")],
         onConfirm: () => controller.disablePin(pinCtrl.text.trim()),
       ),
-    );
+    ).whenComplete(pinCtrl.dispose);
   }
 
   void _showChangePinDialog(BuildContext context) {
@@ -162,7 +162,11 @@ class PinSettingsView extends GetView<PinSettingsController> {
           confirmNewPin: confirmCtrl.text.trim(),
         ),
       ),
-    );
+    ).whenComplete(() {
+      currentCtrl.dispose();
+      newCtrl.dispose();
+      confirmCtrl.dispose();
+    });
   }
 }
 

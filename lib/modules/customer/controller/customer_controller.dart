@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/modules/customer/model/customer_model.dart';
+import 'package:modfirstpos/modules/customer/repository/customer_local_repository.dart';
 import 'package:modfirstpos/modules/customer/service/customer_service.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
@@ -54,7 +55,7 @@ class CustomerController extends GetxController {
       );
 
       if (response.isSuccess) {
-        customers.assignAll(response.payload);
+        customers.assignAll(await _mergeWithLocal(response.payload));
         totalCount.value = response.pagination.total ?? 0;
         totalPages.value = response.pagination.totalPages ?? 1;
         hasNext.value = response.pagination.hasNext ?? false;
@@ -79,8 +80,62 @@ class CustomerController extends GetxController {
       }
     } catch (e) {
       log("CustomerController loadCustomers error: $e");
+      // Fully offline with no cache: still show locally created customers.
+      if (customers.isEmpty) {
+        customers.assignAll(await _mergeWithLocal(const []));
+      }
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  /// Prepends customers created on this device (offline-first) that the
+  /// server list does not know about yet.
+  Future<List<CustomerModel>> _mergeWithLocal(
+    List<CustomerModel> serverCustomers,
+  ) async {
+    try {
+      final local = await CustomerLocalRepository.getAll();
+      final pendingLocal = local.where((localCustomer) {
+        return !serverCustomers.any((server) =>
+            server.id == localCustomer.id ||
+            (localCustomer.phone != null &&
+                localCustomer.phone!.isNotEmpty &&
+                server.phone == localCustomer.phone));
+      }).toList();
+      return [...pendingLocal, ...serverCustomers];
+    } catch (e) {
+      log("CustomerController _mergeWithLocal error: $e");
+      return serverCustomers;
+    }
+  }
+
+  /// Creates a customer locally (offline-first), selects it and refreshes
+  /// the visible list. Sync to the backend happens in the background.
+  Future<CustomerModel?> addCustomer({
+    required String fullName,
+    required String phone,
+    String? email,
+    String? address,
+  }) async {
+    try {
+      final customer = await CustomerLocalRepository.addCustomer(
+        fullName: fullName,
+        phone: phone,
+        email: email,
+        address: address,
+      );
+      customers.insert(0, customer);
+      selectedCustomer.value = customer;
+      return customer;
+    } catch (e) {
+      log("CustomerController addCustomer error: $e");
+      customSnackBar(
+        'Could Not Save',
+        'The customer could not be saved locally. Please try again.',
+        snackBarType: SnackBarType.error,
+      );
+      return null;
     }
   }
 
@@ -114,6 +169,7 @@ class CustomerController extends GetxController {
         arguments: {
           'email': customer.email,
           'customerName': customer.fullName,
+          'customer': customer,
         },
       );
     } else {

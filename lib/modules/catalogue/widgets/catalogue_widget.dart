@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
@@ -102,11 +103,16 @@ class ProductGrid extends StatelessWidget {
       }
 
 
-      return ListView.separated(
+      return GridView.builder(
         primary: false,
         padding: EdgeInsets.symmetric(horizontal: context.spacingSM),
         itemCount: categories.length,
-        separatorBuilder: (_, __) => SizedBox(height: context.spacingSM),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 0.85,
+        ),
         itemBuilder: (_, i) => _CategoryCard(
           category: categories[i],
           onTap: () => controller.onCategoryTap(categories[i]),
@@ -127,46 +133,70 @@ class _CategoryCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Obx(() => Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: context.spacingMD,
-          vertical: context.spacingMD,
-        ),
         decoration: BoxDecoration(
           color: ColorResources.whiteColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: ColorResources.cardBorderColor),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: theme.secondaryColor.value.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(11),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                category.displayName.isNotEmpty ? category.displayName[0].toUpperCase() : '?',
-                style: AppFonts.geistMono(
-                  fontSize: context.fontMD,
-                  fontWeight: FontWeight.w700,
-                  color: theme.secondaryColor.value,
-                ),
-              ),
-            ),
-            SizedBox(width: context.spacingSM),
             Expanded(
-              child: Text(
-                category.displayName,
-                style: AppFonts.geistMono(
-                  fontSize: context.fontSM,
-                  fontWeight: FontWeight.w600,
-                  color: ColorResources.labelColor,
+              flex: 4,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                child: category.imageUrl != null && category.imageUrl!.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: category.imageUrl!,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        errorWidget: (_, __, ___) => Container(
+                          color: theme.secondaryColor.value.withOpacity(0.12),
+                          child: Center(
+                            child: Text(
+                              category.displayName.isNotEmpty ? category.displayName[0].toUpperCase() : '?',
+                              style: AppFonts.geistMono(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w700,
+                                color: theme.secondaryColor.value,
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    : Container(
+                        color: theme.secondaryColor.value.withOpacity(0.12),
+                        child: Center(
+                          child: Text(
+                            category.displayName.isNotEmpty ? category.displayName[0].toUpperCase() : '?',
+                            style: AppFonts.geistMono(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              color: theme.secondaryColor.value,
+                            ),
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                alignment: Alignment.center,
+                child: Text(
+                  category.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: AppFonts.geistMono(
+                    fontSize: context.fontSM,
+                    fontWeight: FontWeight.w600,
+                    color: ColorResources.labelColor,
+                  ),
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: Colors.grey),
           ],
         ),
       )),

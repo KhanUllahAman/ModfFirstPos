@@ -1,9 +1,11 @@
 import 'package:get/get.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
+import 'package:modfirstpos/modules/customer/controller/customer_controller.dart';
 
 class HomeBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<HomeController>(() => HomeController());
+    Get.lazyPut<CustomerController>(() => CustomerController());
   }
 }

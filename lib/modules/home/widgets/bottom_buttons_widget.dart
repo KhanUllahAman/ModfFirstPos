@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
+import 'package:modfirstpos/modules/home/widgets/order_options_dialog.dart';
+import 'package:modfirstpos/modules/home/widgets/payment_method_dialog.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 
@@ -18,7 +20,7 @@ class BottomButtons extends StatelessWidget {
         children: [
           Expanded(
             child: AppButton(
-              onPressed: () => controller.getOptions(),
+              onPressed: () => OrderOptionsDialog.show(context, controller),
               isLoading: false,
               backgroundColor: theme.primaryColor.value,
               borderRadius: 10,
@@ -36,7 +38,7 @@ class BottomButtons extends StatelessWidget {
           Expanded(
             child: AppButton(
               backgroundColor: theme.secondaryColor.value,
-              onPressed: () {},
+              onPressed: () => PaymentMethodDialog.show(context, controller),
               isLoading: false,
               borderRadius: 10,
               child: Text(

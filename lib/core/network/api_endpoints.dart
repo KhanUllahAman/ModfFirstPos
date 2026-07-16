@@ -21,5 +21,7 @@ class ApiConstants {
   static final String productListEndpoint = '${baseUrl}products/list';   
   static final String orderListEndpoint = '${baseUrl}orders/list';
   static final String userListEndpoint = '${baseUrl}users/list';
+  static final String userCreateEndpoint = '${baseUrl}users/create';
+  static final String orderCreateEndpoint = '${baseUrl}orders/create';
   static String websiteSettingsEndpoint(String storeName) => '${baseUrl}website-settings/frontend/$storeName';
 }

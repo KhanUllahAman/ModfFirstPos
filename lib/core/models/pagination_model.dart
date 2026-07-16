@@ -1,3 +1,5 @@
+import 'package:modfirstpos/core/utils/json_utils.dart';
+
 class PaginationModel {
   final int? page;
   final int? limit;
@@ -18,12 +20,21 @@ class PaginationModel {
   factory PaginationModel.fromJson(Map<String, dynamic>? json) {
     if (json == null) return PaginationModel();
     return PaginationModel(
-      page: json['page'] as int?,
-      limit: json['limit'] as int?,
-      total: json['total'] as int?,
-      totalPages: json['totalPages'] as int?,
-      hasNext: json['hasNext'] as bool?,
-      hasPrev: json['hasPrev'] as bool?,
+      page: JsonUtils.asIntOrNull(json['page']),
+      limit: JsonUtils.asIntOrNull(json['limit']),
+      total: JsonUtils.asIntOrNull(json['total']),
+      totalPages: JsonUtils.asIntOrNull(json['totalPages']),
+      hasNext: JsonUtils.asBoolOrNull(json['hasNext']),
+      hasPrev: JsonUtils.asBoolOrNull(json['hasPrev']),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'page': page,
+        'limit': limit,
+        'total': total,
+        'totalPages': totalPages,
+        'hasNext': hasNext,
+        'hasPrev': hasPrev,
+      };
 }

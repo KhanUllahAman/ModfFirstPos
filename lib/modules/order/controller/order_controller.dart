@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/modules/order/model/order_model.dart';
 import 'package:modfirstpos/modules/order/service/order_service.dart';
-
+import 'package:modfirstpos/modules/customer/model/customer_model.dart';
+import 'package:modfirstpos/modules/home/controller/home_controller.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
 class OrderController extends GetxController {
@@ -62,11 +63,45 @@ class OrderController extends GetxController {
   late ScrollController orderListScrollController;
   late ScrollController orderDetailsScrollController;
 
+  final Rxn<CustomerModel> currentFilterCustomer = Rxn<CustomerModel>();
+
+  bool get isCustomerInCart {
+    final customer = currentFilterCustomer.value;
+    if (customer == null) return false;
+    final homeController = Get.find<HomeController>();
+    return homeController.selectedCartCustomer.value?.email == customer.email;
+  }
+
+  void toggleCustomerInCart() {
+    final customer = currentFilterCustomer.value;
+    if (customer == null) return;
+    final homeController = Get.find<HomeController>();
+    if (isCustomerInCart) {
+      homeController.selectedCartCustomer.value = null;
+      customSnackBar('Customer Removed', 'Customer removed from cart', snackBarType: SnackBarType.success);
+    } else {
+      homeController.selectedCartCustomer.value = customer;
+      customSnackBar('Customer Added', 'Customer added to cart', snackBarType: SnackBarType.success);
+    }
+  }
+
   @override
   void onInit() {
     super.onInit();
     orderListScrollController = ScrollController();
     orderDetailsScrollController = ScrollController();
+
+    final args = Get.arguments;
+    if (args is Map) {
+      if (args['customer'] is CustomerModel) {
+        currentFilterCustomer.value = args['customer'] as CustomerModel;
+      }
+      if (args['email'] != null) {
+        searchQuery.value = args['email'];
+        searchController.text = args['email'];
+      }
+    }
+
     loadOrders();
     
     // Add debounce to search to avoid calling API too many times

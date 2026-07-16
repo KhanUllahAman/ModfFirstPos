@@ -14,6 +14,10 @@ class ConnectivityService extends GetxService {
 
   bool get isConnected => _connectionStatus.value;
 
+  /// Reactive connectivity status; sync/offline consumers can listen for
+  /// transitions (e.g. to trigger an automatic sync when back online).
+  Stream<bool> get statusStream => _connectionStatus.stream;
+
   @override
   void onInit() {
     super.onInit();

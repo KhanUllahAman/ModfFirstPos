@@ -1,8 +1,13 @@
+import 'package:modfirstpos/core/models/pagination_model.dart';
+import 'package:modfirstpos/core/utils/json_utils.dart';
+import 'package:modfirstpos/core/utils/url_utils.dart';
+
 class CustomerModel {
   final int id;
   final String? fullName;
   final String? email;
   final String? phone;
+  final String? address;
   final String? role;
   final String? image;
   final bool isActive;
@@ -12,11 +17,16 @@ class CustomerModel {
   final String? updatedAt;
   final bool emailVerified;
 
+  /// True when the customer was created on this device and has not been
+  /// pushed to the backend yet (offline-first support).
+  final bool isLocalOnly;
+
   CustomerModel({
     required this.id,
     this.fullName,
     this.email,
     this.phone,
+    this.address,
     this.role,
     this.image,
     this.isActive = true,
@@ -25,22 +35,28 @@ class CustomerModel {
     this.createdAt,
     this.updatedAt,
     this.emailVerified = false,
+    this.isLocalOnly = false,
   });
 
   factory CustomerModel.fromJson(Map<String, dynamic> json) {
     return CustomerModel(
-      id: json['id'] is int ? json['id'] as int : int.tryParse(json['id']?.toString() ?? '0') ?? 0,
-      fullName: json['full_name'] as String?,
-      email: json['email'] as String?,
-      phone: json['phone'] as String?,
-      role: json['role'] as String?,
-      image: json['image'] as String?,
-      isActive: json['is_active'] == true,
-      isLocked: json['is_locked'] == true,
-      lastLoginDate: json['last_login_date'] as String?,
-      createdAt: json['created_at'] as String?,
-      updatedAt: json['updated_at'] as String?,
-      emailVerified: json['email_verified'] == true,
+      id: JsonUtils.asInt(json['id']),
+      fullName: JsonUtils.asStringOrNull(json['full_name']),
+      email: JsonUtils.asStringOrNull(json['email']),
+      phone: JsonUtils.asStringOrNull(json['phone']),
+      address: JsonUtils.asStringOrNull(json['address']),
+      role: JsonUtils.asStringOrNull(json['role']),
+      image: UrlUtils.resolveImageUrl(
+        JsonUtils.asStringOrNull(json['image']),
+        baseHost: 'http://13.62.114.94:3000',
+      ),
+      isActive: JsonUtils.asBool(json['is_active'], fallback: true),
+      isLocked: JsonUtils.asBool(json['is_locked']),
+      lastLoginDate: JsonUtils.asStringOrNull(json['last_login_date']),
+      createdAt: JsonUtils.asStringOrNull(json['created_at']),
+      updatedAt: JsonUtils.asStringOrNull(json['updated_at']),
+      emailVerified: JsonUtils.asBool(json['email_verified']),
+      isLocalOnly: JsonUtils.asBool(json['is_local_only']),
     );
   }
 
@@ -50,6 +66,7 @@ class CustomerModel {
       'full_name': fullName,
       'email': email,
       'phone': phone,
+      'address': address,
       'role': role,
       'image': image,
       'is_active': isActive,
@@ -58,47 +75,39 @@ class CustomerModel {
       'created_at': createdAt,
       'updated_at': updatedAt,
       'email_verified': emailVerified,
+      'is_local_only': isLocalOnly,
     };
   }
-}
 
-class CustomerPaginationModel {
-  final int? page;
-  final int? limit;
-  final int? total;
-  final int? totalPages;
-  final bool? hasNext;
-  final bool? hasPrev;
-
-  CustomerPaginationModel({
-    this.page,
-    this.limit,
-    this.total,
-    this.totalPages,
-    this.hasNext,
-    this.hasPrev,
-  });
-
-  factory CustomerPaginationModel.fromJson(Map<String, dynamic> json) {
-    return CustomerPaginationModel(
-      page: json['page'] as int?,
-      limit: json['limit'] as int?,
-      total: json['total'] as int?,
-      totalPages: json['totalPages'] as int?,
-      hasNext: json['hasNext'] as bool?,
-      hasPrev: json['hasPrev'] as bool?,
+  CustomerModel copyWith({
+    int? id,
+    String? fullName,
+    String? email,
+    String? phone,
+    String? address,
+    bool? isLocalOnly,
+  }) {
+    return CustomerModel(
+      id: id ?? this.id,
+      fullName: fullName ?? this.fullName,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      address: address ?? this.address,
+      role: role,
+      image: image,
+      isActive: isActive,
+      isLocked: isLocked,
+      lastLoginDate: lastLoginDate,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      emailVerified: emailVerified,
+      isLocalOnly: isLocalOnly ?? this.isLocalOnly,
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'page': page,
-      'limit': limit,
-      'total': total,
-      'totalPages': totalPages,
-      'hasNext': hasNext,
-      'hasPrev': hasPrev,
-    };
+  String get displayName {
+    final name = fullName?.trim();
+    return (name == null || name.isEmpty) ? 'Unnamed Customer' : name;
   }
 }
 
@@ -107,7 +116,7 @@ class CustomerListResponse {
   final int status;
   final String message;
   final List<CustomerModel> payload;
-  final CustomerPaginationModel pagination;
+  final PaginationModel pagination;
 
   CustomerListResponse({
     required this.isSuccess,
@@ -118,19 +127,12 @@ class CustomerListResponse {
   });
 
   factory CustomerListResponse.fromJson(Map<String, dynamic> json) {
-    final rawList = json['payload'] as List<dynamic>? ?? [];
-    final items = rawList
-        .map((e) => CustomerModel.fromJson(e as Map<String, dynamic>))
-        .toList();
-
     return CustomerListResponse(
-      isSuccess: json['success'] == true,
-      status: json['status'] is int ? json['status'] as int : 200,
-      message: json['message'] as String? ?? '',
-      payload: items,
-      pagination: CustomerPaginationModel.fromJson(
-        json['pagination'] as Map<String, dynamic>? ?? {},
-      ),
+      isSuccess: JsonUtils.asBool(json['success']),
+      status: JsonUtils.asInt(json['status'], fallback: 200),
+      message: JsonUtils.asString(json['message']),
+      payload: JsonUtils.asModelList(json['payload'], CustomerModel.fromJson),
+      pagination: PaginationModel.fromJson(JsonUtils.asMap(json['pagination'])),
     );
   }
 }

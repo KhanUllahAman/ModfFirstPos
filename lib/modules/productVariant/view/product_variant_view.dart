@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
-import 'package:modfirstpos/modules/home/widgets/home_widget.dart';
 import 'package:modfirstpos/modules/productVariant/controller/product_variant_controller.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
@@ -196,7 +195,11 @@ class ProductVariantView extends GetView<ProductVariantController> {
                               const SizedBox(height: 10),
                               Expanded(
                                 child: Scrollbar(
+                                  controller:
+                                      controller.variantScrollController,
                                   child: SingleChildScrollView(
+                                    controller:
+                                        controller.variantScrollController,
                                     primary: false,
                                     child: Obx(() => Wrap(
                                       spacing: 10,
@@ -253,6 +256,7 @@ class ProductVariantView extends GetView<ProductVariantController> {
                                     color: Colors.grey[500],
                                   ),
                                 ),
+                                
                                 Obx(() => Row(
                                   children: [
                                     QtyBtn(
@@ -333,6 +337,35 @@ class _ProductImage extends StatelessWidget {
                 ),
               )
             : const Icon(Icons.image_outlined, color: Colors.grey, size: 40),
+      ),
+    );
+  }
+}
+
+class QtyBtn extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  const QtyBtn({super.key, required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          border: Border.all(color: ColorResources.cardBorderColor),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        alignment: Alignment.center,
+        child: Icon(
+          icon,
+          size: 18,
+          color: theme.secondaryColor.value,
+        ),
       ),
     );
   }

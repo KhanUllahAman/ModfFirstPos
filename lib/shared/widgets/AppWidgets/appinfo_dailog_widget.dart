@@ -207,23 +207,6 @@ class AppDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // RxBool/Rx values created inside build — these are local reactive state
-    final selectedValue = Rx<dynamic>(initialValue ?? options?.first.value);
-    final inputController = TextEditingController();
-    final searchController = TextEditingController();
-    final filteredItems = RxList<AppDialogListItem>(listItems ?? []);
-
-    void onSearch() {
-      final query = searchController.text.toLowerCase();
-      filteredItems.assignAll(
-        (listItems ?? [])
-            .where((e) => e.name.toLowerCase().contains(query))
-            .toList(),
-      );
-    }
-
-    searchController.addListener(onSearch);
-
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       backgroundColor: ColorResources.whiteColor,
@@ -241,13 +224,7 @@ class AppDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildTitle(context),
-            _buildBody(
-              context,
-              selectedValue: selectedValue,
-              inputController: inputController,
-              searchController: searchController,
-              filteredItems: filteredItems,
-            ),
+            _buildBody(context),
           ],
         ),
       ),
@@ -274,153 +251,19 @@ class AppDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildBody(
-    BuildContext context, {
-    required Rx<dynamic> selectedValue,
-    required TextEditingController inputController,
-    required TextEditingController searchController,
-    required RxList<AppDialogListItem> filteredItems,
-  }) {
+  Widget _buildBody(BuildContext context) {
     switch (type) {
       case AppDialogType.radioList:
-        return _buildRadioList(context, selectedValue: selectedValue);
+        return _RadioListBody(dialog: this);
       case AppDialogType.input:
-        return _buildInput(context, inputController: inputController);
+        return _InputBody(dialog: this);
       case AppDialogType.searchList:
-        return _buildSearchList(
-          context,
-          searchController: searchController,
-          filteredItems: filteredItems,
-        );
+        return _SearchListBody(dialog: this);
       case AppDialogType.confirm:
         return _buildConfirm(context);
       case AppDialogType.info:
         return _buildInfo(context);
     }
-  }
-
-  Widget _buildRadioList(BuildContext context,
-      {required Rx<dynamic> selectedValue}) {
-    final theme = Get.find<AppThemeService>();
-    final opts = options ?? [];
-    return Obx(() => Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final opt in opts)
-              RadioListTile(
-                value: opt.value,
-                groupValue: selectedValue.value,
-                onChanged: (val) => selectedValue.value = val,
-                title: Text(
-                  opt.label,
-                  style: AppFonts.geistMono(
-                    fontSize: 13,
-                    color: ColorResources.labelColor,
-                  ),
-                ),
-                activeColor: theme.secondaryColor.value,
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-                visualDensity: VisualDensity.compact,
-              ),
-            SizedBox(height: context.responsiveHeight(0.02)),
-            _buildTwoButtons(
-              context,
-              cancelText: cancelText ?? 'Cancel',
-              confirmText: confirmText ?? 'Print',
-              onCancel: onCancel,
-              onConfirm: () {
-                Navigator.of(context).pop();
-                onConfirmRadio?.call(selectedValue.value);
-              },
-            ),
-          ],
-        ));
-  }
-
-  Widget _buildInput(BuildContext context,
-      {required TextEditingController inputController}) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        CustomTextFormField(
-          controller: inputController,
-          labelText: inputLabel ?? '',
-          keyboardType: inputKeyboardType ?? TextInputType.text,
-        ),
-        SizedBox(height: context.responsiveHeight(0.025)),
-        _buildTwoButtons(
-          context,
-          cancelText: cancelText ?? 'Cancel',
-          confirmText: confirmText ?? 'OK',
-          onCancel: onCancel,
-          onConfirm: () {
-            Navigator.of(context).pop();
-            onConfirmInput?.call(inputController.text.trim());
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSearchList(
-    BuildContext context, {
-    required TextEditingController searchController,
-    required RxList<AppDialogListItem> filteredItems,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        CustomTextFormField(
-          controller: searchController,
-          labelText: 'Search Member',
-          suffixIcon: Icons.search,
-          keyboardType: TextInputType.text,
-        ),
-        SizedBox(height: context.responsiveHeight(0.015)),
-        SizedBox(
-          height: context.responsiveHeight(0.3),
-          child: Obx(() => ListView.separated(
-                itemCount: filteredItems.length,
-                separatorBuilder: (_, __) => Divider(
-                    height: 1, color: ColorResources.labelBorderColor),
-                itemBuilder: (_, i) {
-                  final item = filteredItems[i];
-                  return InkWell(
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onItemTap?.call(item);
-                    },
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                          vertical: context.responsiveHeight(0.012)),
-                      child: Row(
-                        children: [
-                          Text(item.id,
-                              style: AppFonts.geistMono(
-                                  fontSize: 13,
-                                  color: ColorResources.labelColor)),
-                          SizedBox(width: context.responsiveWidth(0.015)),
-                          Expanded(
-                            child: Text(item.name,
-                                style: AppFonts.geistMono(
-                                    fontSize: 13,
-                                    color: ColorResources.labelColor)),
-                          ),
-                          Text(item.trailing,
-                              style: AppFonts.geistMono(
-                                  fontSize: 13,
-                                  color: ColorResources.labelColor)),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              )),
-        ),
-      ],
-    );
   }
 
   Widget _buildConfirm(BuildContext context) {
@@ -544,50 +387,216 @@ class AppDialog extends StatelessWidget {
   }
 }
 
-//App Widgets ///
+/// Radio-list dialog body. Owns its local selection state.
+class _RadioListBody extends StatefulWidget {
+  final AppDialog dialog;
+  const _RadioListBody({required this.dialog});
 
-class AppSyncButton extends StatelessWidget {
-  final String label;
-  final VoidCallback? onPressed;
-  final double iconSize;
+  @override
+  State<_RadioListBody> createState() => _RadioListBodyState();
+}
 
-  const AppSyncButton({
-    super.key,
-    this.label = "All Sync",
-    this.onPressed,
-    this.iconSize = 14,
-  });
+class _RadioListBodyState extends State<_RadioListBody> {
+  dynamic _selectedValue;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedValue =
+        widget.dialog.initialValue ?? widget.dialog.options?.first.value;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final dialog = widget.dialog;
     final theme = Get.find<AppThemeService>();
-    return Obx(() => OutlinedButton.icon(
-      onPressed: onPressed ?? () {},
-      icon: Icon(
-        Icons.sync,
-        size: iconSize,
-        color: theme.secondaryColor.value,
-      ),
-      label: Text(
-        label,
-        style: AppFonts.geistMono(
-          fontSize: 12,
-          color: theme.secondaryColor.value,
-          fontWeight: FontWeight.w500,
+    final opts = dialog.options ?? [];
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final opt in opts)
+          RadioListTile(
+            value: opt.value,
+            groupValue: _selectedValue,
+            onChanged: (val) => setState(() => _selectedValue = val),
+            title: Text(
+              opt.label,
+              style: AppFonts.geistMono(
+                fontSize: 13,
+                color: ColorResources.labelColor,
+              ),
+            ),
+            activeColor: theme.secondaryColor.value,
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            visualDensity: VisualDensity.compact,
+          ),
+        SizedBox(height: context.responsiveHeight(0.02)),
+        dialog._buildTwoButtons(
+          context,
+          cancelText: dialog.cancelText ?? 'Cancel',
+          confirmText: dialog.confirmText ?? 'Print',
+          onCancel: dialog.onCancel,
+          onConfirm: () {
+            Navigator.of(context).pop();
+            dialog.onConfirmRadio?.call(_selectedValue);
+          },
         ),
-      ),
-      style: OutlinedButton.styleFrom(
-        backgroundColor: ColorResources.backgroundColor,
-        side: BorderSide(color: ColorResources.backgroundColor),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        padding: EdgeInsets.symmetric(
-          horizontal: context.responsiveWidth(0.015),
-          vertical: context.responsiveHeight(0.008),
-        ),
-      ),
-    ));
+      ],
+    );
   }
 }
+
+/// Input dialog body. Owns and disposes its [TextEditingController].
+class _InputBody extends StatefulWidget {
+  final AppDialog dialog;
+  const _InputBody({required this.dialog});
+
+  @override
+  State<_InputBody> createState() => _InputBodyState();
+}
+
+class _InputBodyState extends State<_InputBody> {
+  late final TextEditingController _inputController;
+
+  @override
+  void initState() {
+    super.initState();
+    _inputController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _inputController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dialog = widget.dialog;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        CustomTextFormField(
+          controller: _inputController,
+          labelText: dialog.inputLabel ?? '',
+          keyboardType: dialog.inputKeyboardType ?? TextInputType.text,
+        ),
+        SizedBox(height: context.responsiveHeight(0.025)),
+        dialog._buildTwoButtons(
+          context,
+          cancelText: dialog.cancelText ?? 'Cancel',
+          confirmText: dialog.confirmText ?? 'OK',
+          onCancel: dialog.onCancel,
+          onConfirm: () {
+            final value = _inputController.text.trim();
+            Navigator.of(context).pop();
+            dialog.onConfirmInput?.call(value);
+          },
+        ),
+      ],
+    );
+  }
+}
+
+/// Search-list dialog body. Owns and disposes its search controller and
+/// keeps the filtered list as local state (no listener leaks).
+class _SearchListBody extends StatefulWidget {
+  final AppDialog dialog;
+  const _SearchListBody({required this.dialog});
+
+  @override
+  State<_SearchListBody> createState() => _SearchListBodyState();
+}
+
+class _SearchListBodyState extends State<_SearchListBody> {
+  late final TextEditingController _searchController;
+  late List<AppDialogListItem> _filteredItems;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+    _filteredItems = widget.dialog.listItems ?? [];
+    _searchController.addListener(_onSearch);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearch);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearch() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredItems = (widget.dialog.listItems ?? [])
+          .where((e) => e.name.toLowerCase().contains(query))
+          .toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dialog = widget.dialog;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        CustomTextFormField(
+          controller: _searchController,
+          labelText: 'Search Member',
+          suffixIcon: Icons.search,
+          keyboardType: TextInputType.text,
+        ),
+        SizedBox(height: context.responsiveHeight(0.015)),
+        SizedBox(
+          height: context.responsiveHeight(0.3),
+          child: ListView.separated(
+            itemCount: _filteredItems.length,
+            separatorBuilder: (_, __) =>
+                Divider(height: 1, color: ColorResources.labelBorderColor),
+            itemBuilder: (_, i) {
+              final item = _filteredItems[i];
+              return InkWell(
+                onTap: () {
+                  Navigator.of(context).pop();
+                  dialog.onItemTap?.call(item);
+                },
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                      vertical: context.responsiveHeight(0.012)),
+                  child: Row(
+                    children: [
+                      Text(item.id,
+                          style: AppFonts.geistMono(
+                              fontSize: 13,
+                              color: ColorResources.labelColor)),
+                      SizedBox(width: context.responsiveWidth(0.015)),
+                      Expanded(
+                        child: Text(item.name,
+                            style: AppFonts.geistMono(
+                                fontSize: 13,
+                                color: ColorResources.labelColor)),
+                      ),
+                      Text(item.trailing,
+                          style: AppFonts.geistMono(
+                              fontSize: 13,
+                              color: ColorResources.labelColor)),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+//App Widgets ///
 
 class AppSearchBar extends StatelessWidget {
   final String hintText;

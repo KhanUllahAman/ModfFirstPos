@@ -1,3 +1,4 @@
+import 'package:modfirstpos/core/utils/json_utils.dart';
 import 'dart:developer';
 
 class ProfileModel {
@@ -73,11 +74,11 @@ class ProfilePayload {
       phone: json['phone']?.toString(),
       imageUrl: json['image']?.toString(),
       role: json['role']?.toString(),
-      isAdmin: json['is_admin'] as bool?,
-      isActive: json['is_active'] as bool?,
-      isdeleted: json['is_deleted'] as bool?,
+      isAdmin: JsonUtils.asBoolOrNull(json['is_admin']),
+      isActive: JsonUtils.asBoolOrNull(json['is_active']),
+      isdeleted: JsonUtils.asBoolOrNull(json['is_deleted']),
       pinCode: json['pin_code'],
-      pinEnabled: json['pin_enabled'] as bool?,
+      pinEnabled: JsonUtils.asBoolOrNull(json['pin_enabled']),
       pinAttempts: json['pin_attempts'] is num
           ? (json['pin_attempts'] as num).toInt()
           : null,
@@ -113,7 +114,7 @@ class ProfilePayload {
     if (imageUrl!.startsWith('http://') || imageUrl!.startsWith('https://')) {
       return imageUrl;
     }
-    return 'http://13.62.114.94:3000$imageUrl';
+    return 'https://command.modfirst.com/uploads$imageUrl';
   }
 }
 

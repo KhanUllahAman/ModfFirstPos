@@ -96,6 +96,13 @@ void customSnackBar(
 
   final screenWidth = MediaQuery.of(Get.context!).size.width;
 
+  // Keep the toast a readable width and centered on wide/landscape
+  // POS screens instead of stretching (or collapsing) across the display.
+  const maxToastWidth = 480.0;
+  final horizontalMargin = screenWidth > maxToastWidth + 32
+      ? (screenWidth - maxToastWidth) / 2
+      : screenWidth * 0.04;
+
   Get.snackbar(
     '',
     '',
@@ -107,7 +114,7 @@ void customSnackBar(
     messageText: const SizedBox.shrink(),
     padding: EdgeInsets.zero,
     margin: EdgeInsets.symmetric(
-      horizontal: screenWidth * 0.04,
+      horizontal: horizontalMargin,
       vertical: 10.0,
     ),
     duration: Duration(seconds: durationSeconds),

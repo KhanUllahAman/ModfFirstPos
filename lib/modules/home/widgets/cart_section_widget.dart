@@ -17,25 +17,141 @@ class CartSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return Obx(() {
-      if (controller.cartItems.isEmpty) return const _EmptyCart();
-      return Scrollbar(
-        controller: controller.cartScrollController,
-        thumbVisibility: true,
-        thickness: 5,
-        radius: const Radius.circular(8),
-        scrollbarOrientation: ScrollbarOrientation.right,
-        child: ListView.separated(
-          controller: controller.cartScrollController,
-          padding: EdgeInsets.only(right: context.responsiveWidth(0.018)),
-          itemCount: controller.cartItems.length,
-          separatorBuilder: (_, __) =>
-              SizedBox(height: context.responsiveHeight(0.010)),
-          itemBuilder: (_, index) => _CartItemTile(
-            item: controller.cartItems[index],
-            controller: controller,
+      final hasCustomer = controller.selectedCartCustomer.value != null;
+      final customer = controller.selectedCartCustomer.value;
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (hasCustomer)
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: theme.secondaryColor.value.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: theme.secondaryColor.value.withOpacity(0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Iconsax.user_tag,
+                          size: 18,
+                          color: theme.secondaryColor.value,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                customer?.fullName ?? 'Unnamed Customer',
+                                style: AppFonts.geistMono(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: ColorResources.labelColor,
+                                ),
+                              ),
+                              Text(
+                                customer?.email ?? 'No Email',
+                                style: AppFonts.geistMono(
+                                  fontSize: 9,
+                                  color: Colors.grey[600],
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 16, color: Colors.grey),
+                          onPressed: () {
+                            controller.selectedCartCustomer.value = null;
+                          },
+                          constraints: const BoxConstraints(),
+                          padding: EdgeInsets.zero,
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                TextButton.icon(
+                  onPressed: () {
+                    controller.showCustomerPanel.value = true;
+                  },
+                  icon: Icon(Iconsax.user_add, size: 16, color: theme.secondaryColor.value),
+                  label: Text(
+                    'Add Customer',
+                    style: AppFonts.geistMono(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: theme.secondaryColor.value,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    backgroundColor: theme.secondaryColor.value.withOpacity(0.12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                ),
+              const SizedBox(width: 8),
+              if (controller.cartItems.isNotEmpty)
+                TextButton.icon(
+                  onPressed: () {
+                    controller.clearCart();
+                  },
+                  icon: const Icon(Icons.delete_sweep_rounded, size: 16, color: ColorResources.gradientRed),
+                  label: Text(
+                    'Delete All',
+                    style: AppFonts.geistMono(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: ColorResources.gradientRed,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    backgroundColor: ColorResources.gradientRed.withOpacity(0.12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                ),
+            ],
           ),
-        ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: controller.cartItems.isEmpty
+                ? const _EmptyCart()
+                : Scrollbar(
+                    controller: controller.cartScrollController,
+                    thumbVisibility: true,
+                    thickness: 5,
+                    radius: const Radius.circular(8),
+                    scrollbarOrientation: ScrollbarOrientation.right,
+                    child: ListView.separated(
+                      controller: controller.cartScrollController,
+                      padding: EdgeInsets.only(right: context.responsiveWidth(0.018)),
+                      itemCount: controller.cartItems.length,
+                      separatorBuilder: (_, __) =>
+                          SizedBox(height: context.responsiveHeight(0.010)),
+                      itemBuilder: (_, index) => _CartItemTile(
+                        item: controller.cartItems[index],
+                        controller: controller,
+                      ),
+                    ),
+                  ),
+          ),
+        ],
       );
     });
   }
@@ -88,6 +204,7 @@ class _CartItemTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final imgSize = context.responsiveHeight(0.075);
+    final theme = Get.find<AppThemeService>();
     return Container(
       padding: EdgeInsets.all(context.responsiveHeight(0.012)),
       decoration: BoxDecoration(
@@ -100,27 +217,27 @@ class _CartItemTile extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: item.product.imageUrl != null &&
-                    item.product.imageUrl!.isNotEmpty
+            child: item.product.imageUrl != null
                 ? CachedNetworkImage(
                     imageUrl: item.product.imageUrl!,
                     width: imgSize,
                     height: imgSize,
                     fit: BoxFit.contain,
-                    placeholder: (_, __) => Container(
+                    errorWidget: (_, __, ___) => Container(
+                      color: Colors.grey[200],
                       width: imgSize,
                       height: imgSize,
-                      color: const Color(0xFFE5E7EB),
-                      child: const Center(
-                        child: CircularProgressIndicator(strokeWidth: 1.5),
-                      ),
+                      child: const Icon(Icons.image_not_supported_outlined, size: 20),
                     ),
-                    errorWidget: (_, __, ___) =>
-                        _CartImagePlaceholder(size: imgSize),
                   )
-                : _CartImagePlaceholder(size: imgSize),
+                : Container(
+                    color: Colors.grey[200],
+                    width: imgSize,
+                    height: imgSize,
+                    child: const Icon(Icons.image_outlined, size: 20),
+                  ),
           ),
-          SizedBox(width: context.responsiveWidth(0.012)),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,65 +247,60 @@ class _CartItemTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppFonts.geistMono(
-                    fontSize: context.fontSM,
+                    fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: ColorResources.blackColor,
-                  ),
-                ),
-                SizedBox(height: context.responsiveHeight(0.004)),
-                Text(
-                  'SKU: ${item.product.skuCode}',
-                  style: AppFonts.geistMono(
-                    fontSize: context.fontXS,
                     color: ColorResources.labelColor,
                   ),
                 ),
-                Text(
-                  'Amount: Rs. ${item.product.amount.toStringAsFixed(0)}',
-                  style: AppFonts.geistMono(
-                    fontSize: context.fontXS,
-                    color: ColorResources.labelColor,
+                if (item.product.skuCode.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    'SKU: ${item.product.skuCode}',
+                    style: AppFonts.geistMono(
+                      fontSize: 8,
+                      color: Colors.grey[600],
+                    ),
                   ),
-                ),
-                Text(
-                  'Unit Price: Rs. ${item.product.unitPrice.toStringAsFixed(0)}',
-                  style: AppFonts.geistMono(
-                    fontSize: context.fontXS,
-                    color: ColorResources.labelColor,
-                  ),
-                ),
-                SizedBox(height: context.responsiveHeight(0.004)),
+                ],
+                const SizedBox(height: 4),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    QtyBtn(
-                      icon: Icons.remove,
-                      onTap: () => controller.decrementQty(item),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: context.responsiveWidth(0.007),
+                    Text(
+                      'Rs. ${item.product.unitPrice.toStringAsFixed(0)}',
+                      style: AppFonts.geistMono(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: theme.secondaryColor.value,
                       ),
-                      child: Text(
-                        '${item.quantity}',
-                        style: AppFonts.geistMono(
-                          fontSize: context.fontSM,
-                          fontWeight: FontWeight.w600,
-                          color: ColorResources.blackColor,
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.remove_circle_outline, size: 16),
+                          onPressed: () => controller.decrementQty(item),
+                          constraints: const BoxConstraints(),
+                          padding: EdgeInsets.zero,
+                          color: ColorResources.gradientRed,
                         ),
-                      ),
-                    ),
-                    QtyBtn(
-                      icon: Icons.add,
-                      onTap: () => controller.incrementQty(item),
-                    ),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () => controller.removeFromCart(item),
-                      child: const Icon(
-                        Iconsax.trash,
-                        color: ColorResources.gradientRed,
-                        size: 18,
-                      ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                          child: Text(
+                            '${item.quantity}',
+                            style: AppFonts.geistMono(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add_circle_outline, size: 16),
+                          onPressed: () => controller.incrementQty(item),
+                          constraints: const BoxConstraints(),
+                          padding: EdgeInsets.zero,
+                          color: ColorResources.successGreen,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -196,49 +308,6 @@ class _CartItemTile extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _CartImagePlaceholder extends StatelessWidget {
-  final double size;
-  const _CartImagePlaceholder({required this.size});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: const Color(0xFFE5E7EB),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: const Icon(Icons.image_outlined, color: Colors.grey, size: 20),
-    );
-  }
-}
-
-class QtyBtn extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  const QtyBtn({super.key, required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Get.find<AppThemeService>();
-    return Obx(
-      () => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 20,
-          height: 20,
-          decoration: BoxDecoration(
-            color: theme.secondaryColor.value,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: theme.onSecondaryColor, size: 14),
-        ),
       ),
     );
   }

@@ -1,16 +1,17 @@
 // lib/core/services/website_settings_storage_service.dart
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:modfirstpos/core/contants/storage_keys.dart';
+import 'package:modfirstpos/core/database/key_value_store.dart';
 import 'package:modfirstpos/core/models/website_settings_model.dart';
 
+/// Website settings cache. Non-secret configuration, so it lives in the
+/// SQLite-backed [KeyValueStore] (with transparent migration from the legacy
+/// secure-storage backend), not in Flutter Secure Storage.
 class WebsiteSettingsStorageService {
-  static const _storage = FlutterSecureStorage();
-
   static Future<void> _write(String key, String value) =>
-      _storage.write(key: key, value: value);
+      KeyValueStore.setString(key, value);
 
-  static Future<String?> _read(String key) => _storage.read(key: key);
+  static Future<String?> _read(String key) => KeyValueStore.getString(key);
 
   static Future<void> _writeIfNotNull(String key, dynamic value) async {
     if (value == null) return;

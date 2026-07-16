@@ -1,4 +1,6 @@
 import 'package:modfirstpos/core/models/pagination_model.dart';
+import 'package:modfirstpos/core/utils/json_utils.dart';
+import 'package:modfirstpos/core/utils/url_utils.dart';
 import 'package:modfirstpos/modules/category/model/category_model.dart';
 
 class ProductVariantModel {
@@ -26,21 +28,20 @@ class ProductVariantModel {
 
   factory ProductVariantModel.fromJson(Map<String, dynamic> json) {
     return ProductVariantModel(
-      id: json['id'] as int?,
-      productId: json['product_id'] as int?,
-      colorId: json['color_id'] as int?,
-      sizeId: json['size_id'] as int?,
-      sku: json['sku'] as String?,
-      price: json['price']?.toString(),
-      salePrice: json['sale_price']?.toString(),
-      status: json['status'] as String?,
-      isActive: json['is_active'] as bool?,
+      id: JsonUtils.asIntOrNull(json['id']),
+      productId: JsonUtils.asIntOrNull(json['product_id']),
+      colorId: JsonUtils.asIntOrNull(json['color_id']),
+      sizeId: JsonUtils.asIntOrNull(json['size_id']),
+      sku: JsonUtils.asStringOrNull(json['sku']),
+      price: JsonUtils.asStringOrNull(json['price']),
+      salePrice: JsonUtils.asStringOrNull(json['sale_price']),
+      status: JsonUtils.asStringOrNull(json['status']),
+      isActive: JsonUtils.asBoolOrNull(json['is_active']),
     );
   }
 
-  double get priceValue => double.tryParse(price ?? '') ?? 0;
-  double? get salePriceValue =>
-      salePrice != null && salePrice!.isNotEmpty ? double.tryParse(salePrice!) : null;
+  double get priceValue => JsonUtils.asDouble(price);
+  double? get salePriceValue => JsonUtils.asDoubleOrNull(salePrice);
   double get effectivePrice => salePriceValue ?? priceValue;
 }
 
@@ -53,21 +54,13 @@ class ProductImageModel {
   ProductImageModel({this.id, this.imageUrl, this.isPrimary, this.sortOrder});
 
   factory ProductImageModel.fromJson(Map<String, dynamic> json) {
-    String? imgUrl = json['image_url'] as String?;
-    if (imgUrl != null && !imgUrl.startsWith('http')) {
-      const baseHost = 'http://13.62.114.94:3000';
-      if (imgUrl.startsWith('/uploads')) {
-        imgUrl = '$baseHost$imgUrl';
-      } else {
-        final normalized = imgUrl.startsWith('/') ? imgUrl : '/$imgUrl';
-        imgUrl = '$baseHost/uploads$normalized';
-      }
-    }
     return ProductImageModel(
-      id: json['id'] as int?,
-      imageUrl: imgUrl,
-      isPrimary: json['is_primary'] as bool?,
-      sortOrder: json['sort_order'] as int?,
+      id: JsonUtils.asIntOrNull(json['id']),
+      imageUrl: UrlUtils.resolveImageUrl(
+        JsonUtils.asStringOrNull(json['image_url']),
+      ),
+      isPrimary: JsonUtils.asBoolOrNull(json['is_primary']),
+      sortOrder: JsonUtils.asIntOrNull(json['sort_order']),
     );
   }
 }
@@ -81,9 +74,9 @@ class ProductDescriptionModel {
 
   factory ProductDescriptionModel.fromJson(Map<String, dynamic> json) {
     return ProductDescriptionModel(
-      id: json['id'] as int?,
-      heading: json['heading'] as String?,
-      description: json['description'] as String?,
+      id: JsonUtils.asIntOrNull(json['id']),
+      heading: JsonUtils.asStringOrNull(json['heading']),
+      description: JsonUtils.asStringOrNull(json['description']),
     );
   }
 }
@@ -128,43 +121,39 @@ class ProductModel {
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
+    final categoryMap = JsonUtils.asMapOrNull(json['category']);
     return ProductModel(
-      id: json['id'] as int?,
-      name: json['name'] as String?,
-      slug: json['slug'] as String?,
-      sku: json['sku'] as String?,
-      basePrice: json['base_price']?.toString(),
-      salePrice: json['sale_price']?.toString(),
-      shortDesc: json['short_desc'] as String?,
-      description: json['description'] as String?,
-      printMethods: (json['print_methods'] as List<dynamic>? ?? [])
-          .map((e) => e.toString())
-          .toList(),
-      isCustomizable: json['is_customizable'] as bool?,
-      isActive: json['is_active'] as bool?,
-      status: json['status'] as String?,
-      categoryId: json['category_id'] as int?,
-      variants: (json['variants'] as List<dynamic>? ?? [])
-          .whereType<Map<String, dynamic>>()
-          .map((e) => ProductVariantModel.fromJson(e))
-          .toList(),
-      descriptions: (json['descriptions'] as List<dynamic>? ?? [])
-          .whereType<Map<String, dynamic>>()
-          .map((e) => ProductDescriptionModel.fromJson(e))
-          .toList(),
-      images: (json['images'] as List<dynamic>? ?? [])
-          .whereType<Map<String, dynamic>>()
-          .map((e) => ProductImageModel.fromJson(e))
-          .toList(),
-      category: json['category'] is Map<String, dynamic>
-          ? CategoryModel.fromJson(json['category'] as Map<String, dynamic>)
-          : null,
+      id: JsonUtils.asIntOrNull(json['id']),
+      name: JsonUtils.asStringOrNull(json['name']),
+      slug: JsonUtils.asStringOrNull(json['slug']),
+      sku: JsonUtils.asStringOrNull(json['sku']),
+      basePrice: JsonUtils.asStringOrNull(json['base_price']),
+      salePrice: JsonUtils.asStringOrNull(json['sale_price']),
+      shortDesc: JsonUtils.asStringOrNull(json['short_desc']),
+      description: JsonUtils.asStringOrNull(json['description']),
+      printMethods: JsonUtils.asStringList(json['print_methods']),
+      isCustomizable: JsonUtils.asBoolOrNull(json['is_customizable']),
+      isActive: JsonUtils.asBoolOrNull(json['is_active']),
+      status: JsonUtils.asStringOrNull(json['status']),
+      categoryId: JsonUtils.asIntOrNull(json['category_id']),
+      variants: JsonUtils.asModelList(
+        json['variants'],
+        ProductVariantModel.fromJson,
+      ),
+      descriptions: JsonUtils.asModelList(
+        json['descriptions'],
+        ProductDescriptionModel.fromJson,
+      ),
+      images: JsonUtils.asModelList(
+        json['images'],
+        ProductImageModel.fromJson,
+      ),
+      category: categoryMap != null ? CategoryModel.fromJson(categoryMap) : null,
     );
   }
 
-  double get basePriceValue => double.tryParse(basePrice ?? '') ?? 0;
-  double? get salePriceValue =>
-      salePrice != null && salePrice!.isNotEmpty ? double.tryParse(salePrice!) : null;
+  double get basePriceValue => JsonUtils.asDouble(basePrice);
+  double? get salePriceValue => JsonUtils.asDoubleOrNull(salePrice);
   double get effectivePrice => salePriceValue ?? basePriceValue;
 
   String get displayName => name ?? 'Unnamed Product';
@@ -195,20 +184,12 @@ class ProductListResponse {
   });
 
   factory ProductListResponse.fromJson(Map<String, dynamic> json) {
-    final rawPayload = json['payload'];
-    final list = rawPayload is List
-        ? rawPayload
-            .whereType<Map<String, dynamic>>()
-            .map((e) => ProductModel.fromJson(e))
-            .toList()
-        : <ProductModel>[];
-
     return ProductListResponse(
-      isSuccess: json['success'] as bool? ?? false,
-      message: json['message'] as String? ?? '',
-      payload: list,
+      isSuccess: JsonUtils.asBool(json['success']),
+      message: JsonUtils.asString(json['message']),
+      payload: JsonUtils.asModelList(json['payload'], ProductModel.fromJson),
       pagination: PaginationModel.fromJson(
-        json['pagination'] as Map<String, dynamic>?,
+        JsonUtils.asMapOrNull(json['pagination']),
       ),
     );
   }
