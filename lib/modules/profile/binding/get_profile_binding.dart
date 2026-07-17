@@ -5,7 +5,7 @@ import 'package:modfirstpos/modules/profile/service/get_profile_service.dart';
 class GetProfileViewBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<GetProfileService>(() => GetProfileService());
-    Get.lazyPut<GetProfileController>(() => GetProfileController());
+    Get.lazyPut<GetProfileService>(() => GetProfileService(), fenix: true);
+    Get.lazyPut<GetProfileController>(() => GetProfileController(), fenix: true);
   }
 }

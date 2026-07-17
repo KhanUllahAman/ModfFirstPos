@@ -12,7 +12,7 @@ import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 import 'package:modfirstpos/shared/widgets/appBarWidget/app_bar_widget.dart';
 import 'package:modfirstpos/shared/widgets/backButtonWidgt/back_button_widget.dart';
 import 'package:modfirstpos/shared/widgets/noKeyboard/no_keyboard_extension.dart';
-import 'package:modfirstpos/shared/widgets/sideNav/pos_side_nav.dart';
+import 'package:modfirstpos/shared/widgets/sideNav/app_nav_drawer.dart';
 
 class OrderView extends GetView<OrderController> {
   const OrderView({super.key});
@@ -25,13 +25,13 @@ class OrderView extends GetView<OrderController> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: ColorResources.backgroundColor,
-      appBar: AppTopBar(showMenuIcon: false),
+      appBar: AppTopBar(),
+      drawer: const AppNavDrawer(),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const PosSideNav(currentRouteOverride: Routes.order),
             Expanded(
               child: Padding(
                 padding: EdgeInsets.all(context.responsiveWidth(0.02)),

@@ -1,3 +1,4 @@
+import 'package:modfirstpos/core/utils/currency_utils.dart';
 import 'dart:developer';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
@@ -11,7 +12,9 @@ import 'package:modfirstpos/modules/customer/model/customer_model.dart';
 import 'package:modfirstpos/modules/home/model/suspended_order_model.dart';
 import 'package:modfirstpos/modules/home/repository/sales_local_repository.dart';
 import 'package:modfirstpos/modules/home/repository/suspended_order_repository.dart';
+import 'package:modfirstpos/core/database/key_value_store.dart';
 import 'package:modfirstpos/core/services/sync_service.dart';
+import 'package:modfirstpos/core/utils/json_utils.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
 class HomeController extends GetxController {
@@ -20,6 +23,7 @@ class HomeController extends GetxController {
 
   final Rxn<CustomerModel> selectedCartCustomer = Rxn<CustomerModel>();
   final RxBool showCustomerPanel = false.obs;
+  final RxBool showCheckoutPanel = false.obs;
 
   final TextEditingController scanController = TextEditingController();
   final TextEditingController searchController = TextEditingController();
@@ -56,6 +60,7 @@ class HomeController extends GetxController {
     customerListScrollController = ScrollController();
     variantPanelScrollController = ScrollController();
     loadCategories();
+    _loadPinnedProducts();
   }
 
   @override
@@ -207,6 +212,8 @@ class HomeController extends GetxController {
       imageUrl: product.imageUrl,
       unitPrice: product.productPrice ?? 0,
       quantity: quantity,
+      productId: product.productId,
+      variantId: product.variantId,
     );
   }
 
@@ -227,6 +234,8 @@ class HomeController extends GetxController {
       imageUrl: product.primaryImageUrl,
       unitPrice: price,
       quantity: quantity,
+      productId: product.id,
+      variantId: variant?.id,
     );
   }
 
@@ -239,6 +248,8 @@ class HomeController extends GetxController {
     required String? imageUrl,
     required double unitPrice,
     required int quantity,
+    int? productId,
+    int? variantId,
   }) {
     final existingIndex =
         cartItems.indexWhere((c) => c.product.skuCode == sku);
@@ -262,6 +273,8 @@ class HomeController extends GetxController {
           imageUrl: imageUrl,
           amount: unitPrice,
           unitPrice: unitPrice,
+          productId: productId,
+          variantId: variantId,
         ),
         quantity: quantity,
       ),
@@ -292,8 +305,42 @@ class HomeController extends GetxController {
     cartItems.remove(item);
   }
 
+  // ------------------------------------------------------------------------
+  // Pinned products (persisted locally, offline-first)
+  // ------------------------------------------------------------------------
+
+  static const _pinnedProductsCacheKey = 'pinned_products';
+
+  /// When true, the right-hand panel shows the pinned products list.
+  final RxBool showPinnedPanel = false.obs;
+
+  List<ProductItem> get pinnedProducts => _pinnedProducts;
+
+  Future<void> _loadPinnedProducts() async {
+    try {
+      final cached = await KeyValueStore.getJsonCache(_pinnedProductsCacheKey);
+      if (cached != null) {
+        _pinnedProducts.assignAll(
+          JsonUtils.asModelList(cached['items'], ProductItem.fromJson),
+        );
+      }
+    } catch (e) {
+      log('HomeController _loadPinnedProducts error: $e');
+    }
+  }
+
+  Future<void> _persistPinnedProducts() async {
+    await KeyValueStore.setJsonCache(_pinnedProductsCacheKey, {
+      'items': _pinnedProducts.map((p) => p.toJson()).toList(),
+    });
+  }
+
+  bool isPinned(String productId) =>
+      _pinnedProducts.any((p) => p.id == productId);
+
   void removePinnedProduct(ProductItem product) {
     _pinnedProducts.removeWhere((p) => p.id == product.id);
+    _persistPinnedProducts();
   }
 
   void addPinnedProduct(ProductItem product) {
@@ -307,12 +354,39 @@ class HomeController extends GetxController {
       return;
     }
     _pinnedProducts.add(product);
+    _persistPinnedProducts();
     customSnackBar(
       'Added',
       '${product.displayName} added to quick access list',
       snackBarType: SnackBarType.success,
     );
   }
+
+  /// Pins a full product (optionally a specific variant) for quick access.
+  void pinProduct(ProductModel product, {ProductVariantModel? variant}) {
+    final sku = variant?.sku ?? product.sku;
+    final price = variant?.effectivePrice ?? product.effectivePrice;
+    final name = variant != null
+        ? '${product.displayName} (${variant.sku})'
+        : product.displayName;
+    addPinnedProduct(
+      ProductItem(
+        id: variant != null
+            ? '${product.id ?? ''}-v${variant.id ?? ''}'
+            : (product.id?.toString() ?? name),
+        name: name,
+        skuCode: sku,
+        imageUrl: product.primaryImageUrl,
+        productPrice: price,
+        productId: product.id,
+        variantId: variant?.id,
+      ),
+    );
+  }
+
+  void openPinnedPanel() => showPinnedPanel.value = true;
+
+  void closePinnedPanel() => showPinnedPanel.value = false;
 
   double get productTotal =>
       cartItems.fold(0.0, (sum, item) => sum + item.total);
@@ -417,6 +491,7 @@ class HomeController extends GetxController {
     selectedCartCustomer.value = null;
     discountInput.value = '';
     showCashPanel.value = false;
+    showCheckoutPanel.value = false;
     cashReceivedInput.value = '';
   }
 
@@ -527,7 +602,7 @@ class HomeController extends GetxController {
       customSnackBar(
         'Payment Complete',
         'Invoice $invoiceNumber'
-        '${change > 0 ? ' • Change Rs. ${change.toStringAsFixed(2)}' : ''}',
+        '${change > 0 ? ' • Change ${CurrencyUtils.format(change, decimals: 2)}' : ''}',
         snackBarType: SnackBarType.success,
       );
 

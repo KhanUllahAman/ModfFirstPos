@@ -5,7 +5,7 @@ import 'package:modfirstpos/modules/storeSelection/controller/store_selection_co
 class StoreSelectionBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<WebsiteSettingsService>(() => WebsiteSettingsService());
-    Get.lazyPut<StoreSelectionController>(() => StoreSelectionController());
+    Get.lazyPut<WebsiteSettingsService>(() => WebsiteSettingsService(), fenix: true);
+    Get.lazyPut<StoreSelectionController>(() => StoreSelectionController(), fenix: true);
   }
 }

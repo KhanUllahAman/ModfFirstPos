@@ -1,3 +1,4 @@
+import 'package:modfirstpos/core/utils/currency_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
@@ -324,7 +325,7 @@ class _SuspendedOrderTile extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Rs. ${order.total.toStringAsFixed(2)}',
+                  CurrencyUtils.format(order.total, decimals: 2),
                   style: AppFonts.geistMono(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,

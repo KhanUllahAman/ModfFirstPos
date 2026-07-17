@@ -63,7 +63,10 @@ import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
                             color: iconColor,
                             onPressed: showBackIcon
                                 ? (onBackPressed ?? () => Get.back())
-                                : onMenuPressed,
+                                : (onMenuPressed ??
+                                      () => Scaffold.maybeOf(
+                                        context,
+                                      )?.openDrawer()),
                           ),
                         SizedBox(width: context.responsiveWidth(0.035)),
                         DynamicAppLogo(height: context.responsiveHeight(0.028)),

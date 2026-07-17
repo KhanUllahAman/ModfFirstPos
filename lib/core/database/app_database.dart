@@ -3,11 +3,7 @@ import 'dart:developer';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
-/// Application-wide SQLite database (offline-first source of truth).
-///
-/// Bulk/business data (cached API responses, customers, suspended orders,
-/// pending sales, invoice counters, configuration) lives here. Flutter Secure
-/// Storage is reserved for secrets only (tokens, credentials).
+
 class AppDatabase {
   AppDatabase._();
 
@@ -32,7 +28,6 @@ class AppDatabase {
   }
 
   static Future<void> _createSchema(Database db, int version) async {
-    // Raw API response cache, keyed by logical cache key.
     await db.execute('''
       CREATE TABLE api_cache (
         cache_key TEXT PRIMARY KEY,
@@ -41,7 +36,6 @@ class AppDatabase {
       )
     ''');
 
-    // Non-secret key/value configuration (website settings, invoice counter).
     await db.execute('''
       CREATE TABLE app_config (
         key TEXT PRIMARY KEY,
@@ -49,7 +43,6 @@ class AppDatabase {
       )
     ''');
 
-    // Customers created on this device while offline (or awaiting push).
     await db.execute('''
       CREATE TABLE local_customers (
         local_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,7 +54,6 @@ class AppDatabase {
       )
     ''');
 
-    // Complete order sessions parked by the cashier.
     await db.execute('''
       CREATE TABLE suspended_orders (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,7 +62,6 @@ class AppDatabase {
       )
     ''');
 
-    // Completed sales awaiting upload to the backend.
     await db.execute('''
       CREATE TABLE pending_sales (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -86,7 +77,6 @@ class AppDatabase {
     log('AppDatabase: schema v$version created');
   }
 
-  /// Closes the database (tests / teardown).
   static Future<void> close() async {
     await _database?.close();
     _database = null;

@@ -1,3 +1,4 @@
+import 'package:modfirstpos/core/utils/currency_utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -9,8 +10,8 @@ import 'package:modfirstpos/modules/product/model/product_model.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
 import 'package:modfirstpos/modules/customer/model/customer_model.dart';
 import 'package:modfirstpos/modules/customer/controller/customer_controller.dart';
-import 'package:modfirstpos/modules/customer/widgets/add_customer_dialog.dart';
 import 'package:modfirstpos/modules/home/widgets/cash_payment_panel.dart';
+import 'package:modfirstpos/modules/home/widgets/checkout_flow_panel.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/sync_button_widget.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 
@@ -22,10 +23,20 @@ class ProductListPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       final Widget panel;
-      if (controller.showCashPanel.value) {
+      if (controller.showCheckoutPanel.value) {
+        panel = KeyedSubtree(
+          key: const ValueKey('checkout'),
+          child: CheckoutFlowPanel(homeController: controller),
+        );
+      } else if (controller.showCashPanel.value) {
         panel = KeyedSubtree(
           key: const ValueKey('cash'),
           child: CashPaymentPanel(controller: controller),
+        );
+      } else if (controller.showPinnedPanel.value) {
+        panel = KeyedSubtree(
+          key: const ValueKey('pinned'),
+          child: _buildPinnedView(context),
         );
       } else if (controller.showCustomerPanel.value) {
         panel = KeyedSubtree(
@@ -40,8 +51,10 @@ class ProductListPanel extends StatelessWidget {
       } else if (controller.selectedProduct.value == null) {
         panel = KeyedSubtree(
           key: ValueKey('products-${controller.selectedCategory.value?.id}'),
-          child:
-              _buildProductsView(context, controller.selectedCategory.value!),
+          child: _buildProductsView(
+            context,
+            controller.selectedCategory.value!,
+          ),
         );
       } else {
         panel = KeyedSubtree(
@@ -66,7 +79,13 @@ class ProductListPanel extends StatelessWidget {
     final theme = Get.find<AppThemeService>();
     return Column(
       children: [
-        _CategorySearchField(controller: controller),
+        Row(
+          children: [
+            Expanded(child: _CategorySearchField(controller: controller)),
+            const SizedBox(width: 8),
+            _PinnedPanelButton(controller: controller),
+          ],
+        ),
         SizedBox(height: context.responsiveHeight(0.015)),
         Padding(
           padding: EdgeInsets.symmetric(
@@ -144,6 +163,170 @@ class ProductListPanel extends StatelessWidget {
     );
   }
 
+  /// Pinned (quick access) products list. Persisted locally so pins survive
+  /// app restarts; tapping a tile adds the product straight to the cart.
+  Widget _buildPinnedView(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
+    return Column(
+      children: [
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(
+                Icons.arrow_back_rounded,
+                color: ColorResources.blackColor,
+              ),
+              onPressed: controller.closePinnedPanel,
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                'PINNED PRODUCTS',
+                style: AppFonts.geistMono(
+                  fontSize: context.fontSM,
+                  fontWeight: FontWeight.w700,
+                  color: ColorResources.labelColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: context.responsiveHeight(0.008)),
+        Expanded(
+          child: Obx(() {
+            final pinned = controller.pinnedProducts;
+            if (pinned.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.push_pin_outlined,
+                      size: 40,
+                      color: ColorResources.blackColor.withOpacity(0.3),
+                    ),
+                    SizedBox(height: context.spacingSM),
+                    Text(
+                      'No pinned products yet\nPin products for one-tap access',
+                      textAlign: TextAlign.center,
+                      style: AppFonts.geistMono(
+                        fontSize: context.fontXS,
+                        color: ColorResources.blackColor.withOpacity(0.4),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return ListView.separated(
+              primary: false,
+              itemCount: pinned.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (_, i) {
+                final item = pinned[i];
+                return Material(
+                  color: theme.secondaryColor.value.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(10),
+                  child: InkWell(
+                    onTap: () => controller.addToCartFromItem(item),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: item.imageUrl != null
+                                ? CachedNetworkImage(
+                                    imageUrl: item.imageUrl!,
+                                    width: 40,
+                                    height: 40,
+                                    fit: BoxFit.contain,
+                                    errorWidget: (_, __, ___) => Container(
+                                      color: const Color(0xFFE5E7EB),
+                                      width: 40,
+                                      height: 40,
+                                      child: const Icon(
+                                        Icons.image_not_supported_outlined,
+                                        size: 18,
+                                      ),
+                                    ),
+                                  )
+                                : Container(
+                                    color: const Color(0xFFE5E7EB),
+                                    width: 40,
+                                    height: 40,
+                                    child: const Icon(
+                                      Icons.image_outlined,
+                                      size: 18,
+                                    ),
+                                  ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.displayName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppFonts.geistMono(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: ColorResources.labelColor,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  CurrencyUtils.format(
+                                    item.productPrice ?? 0,
+                                    decimals: 0,
+                                  ),
+                                  style: AppFonts.geistMono(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: theme.secondaryColor.value,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Add to cart',
+                            icon: Icon(
+                              Icons.add_shopping_cart_rounded,
+                              size: 18,
+                              color: theme.secondaryColor.value,
+                            ),
+                            onPressed: () => controller.addToCartFromItem(item),
+                          ),
+                          IconButton(
+                            tooltip: 'Unpin',
+                            icon: const Icon(
+                              Icons.close_rounded,
+                              size: 18,
+                              color: ColorResources.gradientRed,
+                            ),
+                            onPressed: () =>
+                                controller.removePinnedProduct(item),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
   Widget _buildCustomersView(BuildContext context) {
     final theme = Get.find<AppThemeService>();
     final customerController = Get.find<CustomerController>();
@@ -182,42 +365,42 @@ class ProductListPanel extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Obx(
-              () => TextButton.icon(
-                onPressed: () async {
-                  final customer = await AddCustomerDialog.show(context);
-                  if (customer != null) {
-                    // Auto-select the newly created customer on the cart.
-                    controller.selectedCartCustomer.value = customer;
-                    controller.showCustomerPanel.value = false;
-                  }
-                },
-                icon: Icon(
-                  Icons.person_add_alt_1_rounded,
-                  size: 16,
-                  color: theme.secondaryColor.value,
-                ),
-                label: Text(
-                  'Add New',
-                  style: AppFonts.geistMono(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: theme.secondaryColor.value,
-                  ),
-                ),
-                style: TextButton.styleFrom(
-                  backgroundColor:
-                      theme.secondaryColor.value.withOpacity(0.12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                ),
-              ),
-            ),
+            // Obx(
+            //   () => TextButton.icon(
+            //     onPressed: () async {
+            //       final customer = await AddCustomerDialog.show(context);
+            //       if (customer != null) {
+            //         // Auto-select the newly created customer on the cart.
+            //         controller.selectedCartCustomer.value = customer;
+            //         controller.showCustomerPanel.value = false;
+            //       }
+            //     },
+            //     icon: Icon(
+            //       Icons.person_add_alt_1_rounded,
+            //       size: 16,
+            //       color: theme.secondaryColor.value,
+            //     ),
+            //     label: Text(
+            //       'Add New',
+            //       style: AppFonts.geistMono(
+            //         fontSize: 11,
+            //         fontWeight: FontWeight.w700,
+            //         color: theme.secondaryColor.value,
+            //       ),
+            //     ),
+            //     style: TextButton.styleFrom(
+            //       backgroundColor:
+            //           theme.secondaryColor.value.withOpacity(0.12),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //       ),
+            //       padding: const EdgeInsets.symmetric(
+            //         horizontal: 12,
+            //         vertical: 8,
+            //       ),
+            //     ),
+            //   ),
+            // ),
           ],
         ),
         SizedBox(height: context.responsiveHeight(0.008)),
@@ -307,7 +490,9 @@ class ProductListPanel extends StatelessWidget {
           }),
         ),
         Obx(() {
-          if (customerController.customers.isEmpty) return const SizedBox.shrink();
+          if (customerController.customers.isEmpty) {
+            return const SizedBox.shrink();
+          }
           return Container(
             padding: const EdgeInsets.only(top: 8.0),
             child: Row(
@@ -324,8 +509,13 @@ class ProductListPanel extends StatelessWidget {
                 Row(
                   children: [
                     IconButton(
-                      onPressed: customerController.hasPrev.value ? customerController.prevPage : null,
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
+                      onPressed: customerController.hasPrev.value
+                          ? customerController.prevPage
+                          : null,
+                      icon: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        size: 14,
+                      ),
                       color: ColorResources.appAccentColor,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -341,8 +531,13 @@ class ProductListPanel extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     IconButton(
-                      onPressed: customerController.hasNext.value ? customerController.nextPage : null,
-                      icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                      onPressed: customerController.hasNext.value
+                          ? customerController.nextPage
+                          : null,
+                      icon: const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 14,
+                      ),
                       color: ColorResources.appAccentColor,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -385,6 +580,8 @@ class ProductListPanel extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            _PinnedPanelButton(controller: controller),
+            const SizedBox(width: 8),
             Obx(
               () => AppSyncButton(
                 onPressed: controller.syncCategoryProducts,
@@ -518,6 +715,20 @@ class ProductListPanel extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            Obx(
+              () => IconButton(
+                tooltip: 'Pin product',
+                icon: Icon(
+                  Icons.push_pin_outlined,
+                  size: 20,
+                  color: theme.secondaryColor.value,
+                ),
+                onPressed: () => controller.pinProduct(
+                  product,
+                  variant: controller.selectedInlineVariant.value,
+                ),
+              ),
+            ),
           ],
         ),
         SizedBox(height: context.responsiveHeight(0.008)),
@@ -567,7 +778,7 @@ class ProductListPanel extends StatelessWidget {
                                 .effectivePrice
                           : product.effectivePrice;
                       return Text(
-                        'Rs. ${price.toStringAsFixed(0)}',
+                        CurrencyUtils.format(price, decimals: 0),
                         style: AppFonts.geistMono(
                           fontSize: context.fontMD,
                           fontWeight: FontWeight.w800,
@@ -770,8 +981,11 @@ class _CategoryGridCard extends StatelessWidget {
               Expanded(
                 flex: 4,
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(9)),
-                  child: category.imageUrl != null && category.imageUrl!.isNotEmpty
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(9),
+                  ),
+                  child:
+                      category.imageUrl != null && category.imageUrl!.isNotEmpty
                       ? CachedNetworkImage(
                           imageUrl: category.imageUrl!,
                           fit: BoxFit.cover,
@@ -812,7 +1026,10 @@ class _CategoryGridCard extends StatelessWidget {
               Expanded(
                 flex: 2,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 4,
+                  ),
                   alignment: Alignment.center,
                   child: Text(
                     category.displayName,
@@ -847,7 +1064,8 @@ class _CustomerRowTile extends StatelessWidget {
         ? customer.fullName![0].toUpperCase()
         : '?';
 
-    final hasImage = customer.image != null &&
+    final hasImage =
+        customer.image != null &&
         customer.image!.isNotEmpty &&
         customer.image != 'default-user.png';
 
@@ -873,7 +1091,9 @@ class _CustomerRowTile extends StatelessWidget {
                   fit: BoxFit.cover,
                   errorWidget: (_, __, ___) => CircleAvatar(
                     radius: 18,
-                    backgroundColor: theme.secondaryColor.value.withOpacity(0.12),
+                    backgroundColor: theme.secondaryColor.value.withOpacity(
+                      0.12,
+                    ),
                     child: Text(
                       initials,
                       style: AppFonts.geistMono(
@@ -920,13 +1140,17 @@ class _CustomerRowTile extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 1,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.blueGrey[50],
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          customer.role?.replaceAll('_', ' ').toUpperCase() ?? 'CUSTOMER',
+                          customer.role?.replaceAll('_', ' ').toUpperCase() ??
+                              'CUSTOMER',
                           style: AppFonts.geistMono(
                             fontSize: 6,
                             fontWeight: FontWeight.bold,
@@ -977,6 +1201,35 @@ class _CustomerRowTile extends StatelessWidget {
   }
 }
 
+/// Opens the pinned (quick access) products panel.
+class _PinnedPanelButton extends StatelessWidget {
+  final HomeController controller;
+  const _PinnedPanelButton({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
+    return Obx(
+      () => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: IconButton(
+          tooltip: 'Pinned products',
+          icon: Icon(
+            Icons.push_pin_rounded,
+            size: 20,
+            color: theme.secondaryColor.value,
+          ),
+          onPressed: controller.openPinnedPanel,
+        ),
+      ),
+    );
+  }
+}
+
 class _InlineProductCard extends StatelessWidget {
   final ProductModel product;
   final VoidCallback onTap;
@@ -984,6 +1237,8 @@ class _InlineProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final homeController = Get.find<HomeController>();
+    final theme = Get.find<AppThemeService>();
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
@@ -993,7 +1248,35 @@ class _InlineProductCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
-        child: Column(
+        child: Stack(
+          children: [
+            Positioned.fill(child: _buildCardBody(context)),
+            Positioned(
+              top: 2,
+              right: 2,
+              child: Obx(
+                () => InkWell(
+                  onTap: () => homeController.pinProduct(product),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.push_pin_outlined,
+                      size: 14,
+                      color: theme.secondaryColor.value,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCardBody(BuildContext context) {
+    return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
@@ -1048,7 +1331,7 @@ class _InlineProductCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Rs. ${product.effectivePrice.toStringAsFixed(0)}',
+                      CurrencyUtils.format(product.effectivePrice, decimals: 0),
                       style: AppFonts.geistMono(
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
@@ -1068,9 +1351,7 @@ class _InlineProductCard extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
+        );
   }
 }
 

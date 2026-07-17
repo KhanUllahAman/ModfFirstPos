@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/services/website_settings_storage_service.dart';
+import 'package:modfirstpos/core/utils/currency_utils.dart';
 import 'package:modfirstpos/core/utils/hex_color_extension.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 
@@ -41,6 +42,7 @@ class AppThemeService extends GetxService {
 
   Future<void> _loadFromStorage() async {
     hasThemeData.value = await WebsiteSettingsStorageService.hasSettings();
+    await CurrencyUtils.load();
 
     final primaryHex = await WebsiteSettingsStorageService.getPrimaryColor();
     final secondaryHex =

@@ -5,7 +5,7 @@ import 'package:modfirstpos/modules/forgotPassword/controller/forgot_password_co
 class ForgotPasswordBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<ForgotPasswordController>(() => ForgotPasswordController());
-    Get.lazyPut<ForgotPasswordService>(() => ForgotPasswordService());
+    Get.lazyPut<ForgotPasswordController>(() => ForgotPasswordController(), fenix: true);
+    Get.lazyPut<ForgotPasswordService>(() => ForgotPasswordService(), fenix: true);
   }
 }

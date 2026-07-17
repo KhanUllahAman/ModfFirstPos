@@ -4,6 +4,6 @@ import 'package:modfirstpos/modules/categoryProducts/controller/category_product
 class CategoryProductsBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<CategoryProductsController>(() => CategoryProductsController());
+    Get.lazyPut<CategoryProductsController>(() => CategoryProductsController(), fenix: true);
   }
 }

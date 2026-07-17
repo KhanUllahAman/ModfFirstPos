@@ -1,3 +1,4 @@
+import 'package:modfirstpos/core/utils/currency_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
@@ -25,12 +26,12 @@ class SummarySection extends StatelessWidget {
               children: [
                 _SummaryRow(
                   'Discount:',
-                  'Rs. ${controller.discount.toStringAsFixed(2)}',
+                  CurrencyUtils.format(controller.discount, decimals: 2),
                 ),
-                _SummaryRow('GST:', 'Rs. 0.00'),
-                _SummaryRow('C.Voucher:', 'Rs. 0.00'),
-                _SummaryRow('G.Voucher:', 'Rs. 0.00'),
-                _SummaryRow('Service:', 'Rs. 0.00'),
+                _SummaryRow('GST:', CurrencyUtils.format(0)),
+                _SummaryRow('C.Voucher:', CurrencyUtils.format(0)),
+                _SummaryRow('G.Voucher:', CurrencyUtils.format(0)),
+                _SummaryRow('Service:', CurrencyUtils.format(0)),
               ],
             ),
           ),
@@ -41,17 +42,17 @@ class SummarySection extends StatelessWidget {
               children: [
                 _SummaryRow(
                   'Total Amount:',
-                  'Rs. ${controller.productTotal.toStringAsFixed(0)}',
+                  CurrencyUtils.format(controller.productTotal, decimals: 0),
                   isBold: true,
                 ),
                 _SummaryRow(
                   'Paid Amount:',
-                  'Rs. ${controller.subTotal.toStringAsFixed(2)}',
+                  CurrencyUtils.format(controller.subTotal, decimals: 2),
                   isBold: true,
                 ),
                 _SummaryRow(
                   'Balance:',
-                  'Rs. ${controller.balance.toStringAsFixed(0)}',
+                  CurrencyUtils.format(controller.balance, decimals: 0),
                   isBold: true,
                 ),
               ],

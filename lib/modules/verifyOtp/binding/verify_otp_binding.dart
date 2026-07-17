@@ -7,9 +7,9 @@ import 'package:modfirstpos/modules/verifyOtp/controller/verify_otp_controller.d
 class VerifyOtpBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<VerifyOtpController>(() => VerifyOtpController());
-    Get.lazyPut<VerifyOtpService>(() => VerifyOtpService());
-    Get.lazyPut<SendOtpService>(() => SendOtpService());
-    Get.lazyPut<GetProfileService>(() => GetProfileService());
+    Get.lazyPut<VerifyOtpController>(() => VerifyOtpController(), fenix: true);
+    Get.lazyPut<VerifyOtpService>(() => VerifyOtpService(), fenix: true);
+    Get.lazyPut<SendOtpService>(() => SendOtpService(), fenix: true);
+    Get.lazyPut<GetProfileService>(() => GetProfileService(), fenix: true);
   }
 }

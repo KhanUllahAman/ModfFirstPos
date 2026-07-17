@@ -4,6 +4,6 @@ import 'package:modfirstpos/modules/notification/controller/notification_control
 class NotificationBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<NotificationController>(() => NotificationController());
+    Get.lazyPut<NotificationController>(() => NotificationController(), fenix: true);
   }
 }

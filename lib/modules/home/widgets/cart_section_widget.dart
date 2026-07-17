@@ -1,3 +1,4 @@
+import 'package:modfirstpos/core/utils/currency_utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -267,7 +268,7 @@ class _CartItemTile extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Rs. ${item.product.unitPrice.toStringAsFixed(0)}',
+                      CurrencyUtils.format(item.product.unitPrice, decimals: 0),
                       style: AppFonts.geistMono(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,

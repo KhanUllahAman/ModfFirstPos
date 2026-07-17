@@ -1,3 +1,4 @@
+import 'package:modfirstpos/core/utils/currency_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/services/app_theme_service.dart';
@@ -63,7 +64,7 @@ class CashPaymentPanel extends StatelessWidget {
               children: [
                 _AmountRow(
                   label: 'Payable',
-                  value: 'Rs. ${controller.balance.toStringAsFixed(2)}',
+                  value: CurrencyUtils.format(controller.balance, decimals: 2),
                 ),
                 const SizedBox(height: 6),
                 Row(
@@ -89,7 +90,7 @@ class CashPaymentPanel extends StatelessWidget {
                 const SizedBox(height: 6),
                 _AmountRow(
                   label: 'Change',
-                  value: 'Rs. ${controller.changeDue.toStringAsFixed(2)}',
+                  value: CurrencyUtils.format(controller.changeDue, decimals: 2),
                   emphasized: controller.changeDue > 0,
                 ),
               ],

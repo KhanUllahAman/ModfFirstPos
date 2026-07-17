@@ -25,6 +25,8 @@ class CartProduct {
   final String? imageUrl;
   final double amount;
   final double unitPrice;
+  final int? productId;
+  final int? variantId;
 
   CartProduct({
     required this.name,
@@ -32,6 +34,8 @@ class CartProduct {
     this.imageUrl,
     required this.amount,
     required this.unitPrice,
+    this.productId,
+    this.variantId,
   });
 
   Map<String, dynamic> toJson() => {
@@ -40,6 +44,8 @@ class CartProduct {
         'image_url': imageUrl,
         'amount': amount,
         'unit_price': unitPrice,
+        'product_id': productId,
+        'variant_id': variantId,
       };
 
   factory CartProduct.fromJson(Map<String, dynamic> json) => CartProduct(
@@ -48,5 +54,7 @@ class CartProduct {
         imageUrl: JsonUtils.asStringOrNull(json['image_url']),
         amount: JsonUtils.asDouble(json['amount']),
         unitPrice: JsonUtils.asDouble(json['unit_price']),
+        productId: JsonUtils.asIntOrNull(json['product_id']),
+        variantId: JsonUtils.asIntOrNull(json['variant_id']),
       );
 }

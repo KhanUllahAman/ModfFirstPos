@@ -5,7 +5,7 @@ import 'package:modfirstpos/modules/profile/service/get_profile_service.dart';
 class UpdateProfileBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<GetProfileService>(() => GetProfileService());
-    Get.lazyPut<UpdateProfileController>(() => UpdateProfileController());
+    Get.lazyPut<GetProfileService>(() => GetProfileService(), fenix: true);
+    Get.lazyPut<UpdateProfileController>(() => UpdateProfileController(), fenix: true);
   }
 }

@@ -5,12 +5,11 @@ import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/notification/controller/notification_controller.dart';
 import 'package:modfirstpos/modules/notification/widgets/notification_narrow_layout.dart';
 import 'package:modfirstpos/modules/notification/widgets/notification_wide_layout.dart';
-import 'package:modfirstpos/routes/app_routes.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 import 'package:modfirstpos/shared/widgets/appBarWidget/app_bar_widget.dart';
 import 'package:modfirstpos/shared/widgets/backButtonWidgt/back_button_widget.dart';
 import 'package:modfirstpos/shared/widgets/noKeyboard/no_keyboard_extension.dart';
-import 'package:modfirstpos/shared/widgets/sideNav/pos_side_nav.dart';
+import 'package:modfirstpos/shared/widgets/sideNav/app_nav_drawer.dart';
 
 class NotificationView extends GetView<NotificationController> {
   const NotificationView({super.key});
@@ -23,13 +22,13 @@ class NotificationView extends GetView<NotificationController> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: ColorResources.backgroundColor,
-      appBar: AppTopBar(showMenuIcon: false),
+      appBar: AppTopBar(),
+      drawer: const AppNavDrawer(),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const PosSideNav(currentRouteOverride: Routes.notification),
             Expanded(
               child: Padding(
                 padding: EdgeInsets.all(context.responsiveWidth(0.02)),

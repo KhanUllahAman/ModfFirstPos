@@ -5,6 +5,6 @@ import 'package:modfirstpos/modules/pin/controller/pin_settings_controller.dart'
 class PinSettingsBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<PinSettingsController>(() => PinSettingsController());
+    Get.lazyPut<PinSettingsController>(() => PinSettingsController(), fenix: true);
   }
 }

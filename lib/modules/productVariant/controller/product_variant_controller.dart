@@ -65,6 +65,12 @@ class ProductVariantController extends GetxController {
     addedToCart.value = true;
   }
 
+  /// Pins the product (with the selected variant) for quick access on the
+  /// POS home screen. Pins are persisted locally.
+  void pinProduct() {
+    _home.pinProduct(product, variant: selectedVariant.value);
+  }
+
   void goToCart() {
     Get.until((route) => route.settings.name == Routes.home);
   }

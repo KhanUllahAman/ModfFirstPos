@@ -5,7 +5,7 @@ import 'package:modfirstpos/modules/changePassword/service/change_password_servi
 class ChangePasswordBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<ChangePasswordService>(() => ChangePasswordService());
-    Get.lazyPut<ChangePasswordController>(() => ChangePasswordController());
+    Get.lazyPut<ChangePasswordService>(() => ChangePasswordService(), fenix: true);
+    Get.lazyPut<ChangePasswordController>(() => ChangePasswordController(), fenix: true);
   }
 }

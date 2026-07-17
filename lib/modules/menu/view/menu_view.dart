@@ -15,7 +15,7 @@ import 'package:modfirstpos/shared/widgets/appBarWidget/app_bar_widget.dart';
 import 'package:modfirstpos/shared/widgets/helperFunction/get_device_id_function.dart';
 import 'package:modfirstpos/shared/widgets/noKeyboard/no_keyboard_extension.dart';
 
-import 'package:modfirstpos/shared/widgets/sideNav/pos_side_nav.dart';
+import 'package:modfirstpos/shared/widgets/sideNav/app_nav_drawer.dart';
 
 class MenuView extends StatelessWidget {
   const MenuView({super.key});
@@ -27,13 +27,13 @@ class MenuView extends StatelessWidget {
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         backgroundColor: ColorResources.backgroundColor,
-        appBar: AppTopBar(showMenuIcon: false, showBackIcon: true),
+        appBar: AppTopBar(showBackIcon: true),
+        drawer: const AppNavDrawer(),
         body: AnnotatedRegion<SystemUiOverlayStyle>(
           value: SystemUiOverlayStyle.light,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const PosSideNav(currentRouteOverride: Routes.menu),
               Expanded(
                 child: Column(
                   children: [
@@ -80,8 +80,8 @@ class _MainTab extends StatelessWidget {
       return;
     }
     try {
-      final response =
-          await WebsiteSettingsService().fetchAndSaveWebsiteSettings(storeSlug);
+      final response = await WebsiteSettingsService()
+          .fetchAndSaveWebsiteSettings(storeSlug);
       if (response.isSuccess) {
         // Apply theme, colors, branding and configuration immediately.
         await Get.find<AppThemeService>().refreshFromStorage();
@@ -134,13 +134,13 @@ class _MainTab extends StatelessWidget {
                 Get.toNamed(Routes.order);
               },
             ),
-            MenuList(
-              menuIcon: Icons.search_rounded,
-              menuTitle: 'Search',
-              menuTap: () {
-                // Get.toNamed(Routes.searchSku);
-              },
-            ),
+            // MenuList(
+            //   menuIcon: Icons.search_rounded,
+            //   menuTitle: 'Search',
+            //   menuTap: () {
+            //     // Get.toNamed(Routes.searchSku);
+            //   },
+            // ),
           ],
         ),
         SizedBox(height: context.spacingMD),
@@ -152,13 +152,13 @@ class _MainTab extends StatelessWidget {
               menuTitle: 'Item Return',
               menuTap: () {},
             ),
-            MenuList(
-              menuIcon: Icons.notifications_rounded,
-              menuTitle: 'Notification',
-              menuTap: () {
-                Get.toNamed(Routes.notification);
-              },
-            ),
+            // MenuList(
+            //   menuIcon: Icons.notifications_rounded,
+            //   menuTitle: 'Notification',
+            //   menuTap: () {
+            //     Get.toNamed(Routes.notification);
+            //   },
+            // ),
             MenuList(
               menuIcon: Icons.refresh_rounded,
               menuTitle: 'Refresh Website Settings',

@@ -6,8 +6,8 @@ import 'package:modfirstpos/modules/auth/service/send_otp_service.dart';
 class AuthBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<AuthService>(() => AuthService());
-    Get.lazyPut<AuthController>(() => AuthController());
-    Get.lazyPut<SendOtpService>(() => SendOtpService());
+    Get.lazyPut<AuthService>(() => AuthService(), fenix: true);
+    Get.lazyPut<AuthController>(() => AuthController(), fenix: true);
+    Get.lazyPut<SendOtpService>(() => SendOtpService(), fenix: true);
   }
 }

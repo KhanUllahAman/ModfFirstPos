@@ -1,3 +1,4 @@
+import 'package:modfirstpos/core/utils/currency_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
@@ -60,7 +61,7 @@ class PaymentMethodDialog extends StatelessWidget {
             ),
             Obx(
               () => Text(
-                'Payable: Rs. ${controller.balance.toStringAsFixed(2)}',
+                'Payable: ${CurrencyUtils.format(controller.balance, decimals: 2)}',
                 textAlign: TextAlign.center,
                 style: AppFonts.geistMono(
                   fontSize: 11,

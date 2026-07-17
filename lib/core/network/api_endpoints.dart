@@ -22,6 +22,11 @@ class ApiConstants {
   static final String orderListEndpoint = '${baseUrl}orders/list';
   static final String userListEndpoint = '${baseUrl}users/list';
   static final String userCreateEndpoint = '${baseUrl}users/create';
-  static final String orderCreateEndpoint = '${baseUrl}orders/create';
+  static final String orderCreateEndpoint = '${baseUrl}orders';
+  static final String addressListEndpoint = '${baseUrl}addresses/list';
+  static final String pickupLocationListEndpoint =
+      '${baseUrl}pickup-locations/list';
+  static final String checkoutEndpoint = '${baseUrl}payments/checkout-session';
+  static final String couponValidateEndpoint = '${baseUrl}coupons/validate';
   static String websiteSettingsEndpoint(String storeName) => '${baseUrl}website-settings/frontend/$storeName';
 }

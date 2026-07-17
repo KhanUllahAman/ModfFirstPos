@@ -61,8 +61,6 @@ class CustomerService {
       return CustomerListResponse.fromJson(data);
     } catch (e) {
       log("CustomerService fetchCustomers error: $e");
-      // Offline-first fallback: serve the cached list when the network is
-      // unavailable so the cashier is never blocked.
       final cachedData = await CustomerCacheStorage.getCustomers();
       if (cachedData != null) {
         log("CustomerService: network failed, serving cached customers.");

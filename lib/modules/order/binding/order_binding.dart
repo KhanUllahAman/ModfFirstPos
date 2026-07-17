@@ -5,7 +5,7 @@ import 'package:modfirstpos/modules/order/controller/order_controller.dart';
 class OrderBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<OrderController>(() => OrderController());
-    Get.lazyPut<HomeController>(() => HomeController());
+    Get.lazyPut<OrderController>(() => OrderController(), fenix: true);
+    Get.lazyPut<HomeController>(() => HomeController(), fenix: true);
   }
 }

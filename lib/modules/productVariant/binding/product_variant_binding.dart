@@ -11,6 +11,6 @@ class ProductVariantBinding extends Bindings {
     if (!Get.isRegistered<HomeController>()) {
       Get.lazyPut<HomeController>(() => HomeController(), fenix: true);
     }
-    Get.lazyPut<ProductVariantController>(() => ProductVariantController());
+    Get.lazyPut<ProductVariantController>(() => ProductVariantController(), fenix: true);
   }
 }

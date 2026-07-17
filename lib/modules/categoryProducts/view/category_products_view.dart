@@ -1,3 +1,4 @@
+import 'package:modfirstpos/core/utils/currency_utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -184,10 +185,6 @@ class _ProductCard extends StatelessWidget {
   final VoidCallback onTap;
   const _ProductCard({required this.product, required this.onTap});
 
-  String _fmt(double v) => v
-      .toStringAsFixed(0)
-      .replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
-
   @override
   Widget build(BuildContext context) {
     final theme = Get.find<AppThemeService>();
@@ -293,7 +290,7 @@ class _ProductCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Rs. ${_fmt(product.effectivePrice)}',
+                          CurrencyUtils.format(product.effectivePrice, decimals: 0),
                           style: AppFonts.geistMono(
                             fontSize: context.fontSM,
                             fontWeight: FontWeight.w800,

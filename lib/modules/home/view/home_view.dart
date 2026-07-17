@@ -7,8 +7,7 @@ import 'package:modfirstpos/modules/home/widgets/home_widget.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 import 'package:modfirstpos/shared/widgets/appBarWidget/app_bar_widget.dart';
 import 'package:modfirstpos/shared/widgets/noKeyboard/no_keyboard_extension.dart';
-import 'package:modfirstpos/shared/widgets/sideNav/pos_side_nav.dart';
-import '../../../routes/app_routes.dart';
+import 'package:modfirstpos/shared/widgets/sideNav/app_nav_drawer.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -22,7 +21,8 @@ class HomeView extends GetView<HomeController> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: ColorResources.backgroundColor,
-      appBar: AppTopBar(showMenuIcon: false),
+      appBar: AppTopBar(),
+      drawer: const AppNavDrawer(),
       body: Theme(
         data: Theme.of(context).copyWith(
           scrollbarTheme: ScrollbarThemeData(
@@ -47,7 +47,6 @@ class HomeView extends GetView<HomeController> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const PosSideNav(currentRouteOverride: Routes.home),
               Expanded(
                 child: Padding(
                   padding:

@@ -1,3 +1,4 @@
+import 'package:modfirstpos/core/utils/currency_utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -35,6 +36,18 @@ class ProductVariantView extends GetView<ProductVariantController> {
                   Expanded(
                     child: BackBar(title: controller.product.displayName),
                   ),
+                  Obx(
+                    () => IconButton(
+                      tooltip: 'Pin product',
+                      icon: Icon(
+                        Icons.push_pin_outlined,
+                        size: 20,
+                        color: theme.secondaryColor.value,
+                      ),
+                      onPressed: controller.pinProduct,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Obx(() {
                     if (!controller.addedToCart.value) return const SizedBox.shrink();
                     return GestureDetector(
@@ -170,7 +183,7 @@ class ProductVariantView extends GetView<ProductVariantController> {
                             ),
                             const SizedBox(height: 6),
                             Obx(() => Text(
-                              'Rs. ${controller.displayPrice.toStringAsFixed(0)}',
+                              CurrencyUtils.format(controller.displayPrice, decimals: 0),
                               style: AppFonts.geistMono(
                                 fontSize: context.fontXXL,
                                 fontWeight: FontWeight.w800,
@@ -222,7 +235,7 @@ class ProductVariantView extends GetView<ProductVariantController> {
                                               ),
                                             ),
                                             child: Text(
-                                              'SKU: ${variant.sku ?? '--'}  •  Rs. ${variant.effectivePrice.toStringAsFixed(0)}',
+                                              'SKU: ${variant.sku ?? '--'}  •  ${CurrencyUtils.format(variant.effectivePrice, decimals: 0)}',
                                               style: AppFonts.geistMono(
                                                 fontSize: context.fontXS,
                                                 fontWeight: FontWeight.w600,
