@@ -113,10 +113,6 @@ class CheckoutService {
         'items': items,
         if (notes != null && notes.isNotEmpty) 'notes': notes,
       };
-
-      // Send a saved address id whenever we have one — the backend links
-      // shipping_address_id even on store_pickup orders, and omitting it can
-      // trigger a foreign-key error server-side.
       if (shippingAddressId != null) {
         body['shipping_address_id'] = shippingAddressId;
         body['billing_address_id'] = billingAddressId ?? shippingAddressId;
