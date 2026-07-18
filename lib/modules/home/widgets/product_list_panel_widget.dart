@@ -12,7 +12,9 @@ import 'package:modfirstpos/modules/customer/model/customer_model.dart';
 import 'package:modfirstpos/modules/customer/controller/customer_controller.dart';
 import 'package:modfirstpos/modules/home/widgets/cash_payment_panel.dart';
 import 'package:modfirstpos/modules/home/widgets/checkout_flow_panel.dart';
+import 'package:modfirstpos/shared/widgets/AppWidgets/variant_selector.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/sync_button_widget.dart';
+import 'package:modfirstpos/shared/widgets/DynamicImage/product_image_carousel.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 
 class ProductListPanel extends StatelessWidget {
@@ -743,22 +745,18 @@ class ProductListPanel extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (product.images.isNotEmpty) ...[
-                      _ProductImageCarousel(images: product.images),
-                    ] else ...[
-                      Container(
-                        height: 160,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF3F4F6),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.image_outlined,
-                          color: Colors.grey,
-                          size: 40,
-                        ),
+                    // Product images; swaps to the selected variant's own
+                    // image when it has one.
+                    Obx(
+                      () => ProductImageCarousel(
+                        imageUrls: [
+                          for (final img in product.images)
+                            if (img.imageUrl != null) img.imageUrl!,
+                        ],
+                        overrideImageUrl:
+                            controller.selectedInlineVariant.value?.imageUrl,
                       ),
-                    ],
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'PRICE',
@@ -787,42 +785,14 @@ class ProductListPanel extends StatelessWidget {
                       );
                     }),
                     const SizedBox(height: 16),
-                    Text(
-                      'SELECT VARIANT',
-                      style: AppFonts.geistMono(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.grey[500],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
                     Obx(
-                      () => Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: product.variants.map((variant) {
-                          final isSelected =
-                              controller.selectedInlineVariant.value?.id ==
-                              variant.id;
-                          return ChoiceChip(
-                            label: Text(
-                              'SKU: ${variant.sku ?? '--'} (${variant.effectivePrice.toStringAsFixed(0)} Rs)',
-                              style: AppFonts.geistMono(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: isSelected
-                                    ? theme.onSecondaryColor
-                                    : ColorResources.labelColor,
-                              ),
-                            ),
-                            selected: isSelected,
-                            selectedColor: theme.secondaryColor.value,
-                            backgroundColor: Colors.grey[100],
-                            onSelected: (_) {
-                              controller.selectedInlineVariant.value = variant;
-                            },
-                          );
-                        }).toList(),
+                      () => VariantSelector(
+                        product: product,
+                        selectedVariant:
+                            controller.selectedInlineVariant.value,
+                        onVariantSelected: (variant) {
+                          controller.selectedInlineVariant.value = variant;
+                        },
                       ),
                     ),
                   ],
@@ -1404,91 +1374,6 @@ class _CategorySearchField extends StatelessWidget {
             borderRadius: 8,
           ),
         ),
-      ],
-    );
-  }
-}
-
-/// Product image carousel with page dots. Owns and disposes its
-/// [PageController] (previously created in a build method and leaked).
-class _ProductImageCarousel extends StatefulWidget {
-  final List<ProductImageModel> images;
-  const _ProductImageCarousel({required this.images});
-
-  @override
-  State<_ProductImageCarousel> createState() => _ProductImageCarouselState();
-}
-
-class _ProductImageCarouselState extends State<_ProductImageCarousel> {
-  late final PageController _pageController;
-  int _currentPage = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Get.find<AppThemeService>();
-    return Column(
-      children: [
-        SizedBox(
-          height: 160,
-          child: PageView.builder(
-            controller: _pageController,
-            onPageChanged: (idx) => setState(() => _currentPage = idx),
-            itemCount: widget.images.length,
-            itemBuilder: (context, index) {
-              final imgUrl = widget.images[index].imageUrl ?? '';
-              return ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: CachedNetworkImage(
-                  imageUrl: imgUrl,
-                  fit: BoxFit.contain,
-                  width: double.infinity,
-                  errorWidget: (_, __, ___) => Container(
-                    color: const Color(0xFFE5E7EB),
-                    child: const Icon(
-                      Icons.image_not_supported_outlined,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        if (widget.images.length > 1) ...[
-          const SizedBox(height: 8),
-          Obx(
-            () => Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(widget.images.length, (index) {
-                final isCurrent = _currentPage == index;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: isCurrent ? 12 : 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: isCurrent
-                        ? theme.secondaryColor.value
-                        : Colors.grey[300],
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                );
-              }),
-            ),
-          ),
-        ],
       ],
     );
   }

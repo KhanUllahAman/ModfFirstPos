@@ -3,6 +3,42 @@ import 'package:modfirstpos/core/utils/json_utils.dart';
 import 'package:modfirstpos/core/utils/url_utils.dart';
 import 'package:modfirstpos/modules/category/model/category_model.dart';
 
+class VariantColorModel {
+  final int? id;
+  final String? name;
+  final String? hexCode;
+
+  VariantColorModel({this.id, this.name, this.hexCode});
+
+  factory VariantColorModel.fromJson(Map<String, dynamic> json) {
+    return VariantColorModel(
+      id: JsonUtils.asIntOrNull(json['id']),
+      name: JsonUtils.asStringOrNull(json['name']),
+      hexCode: JsonUtils.asStringOrNull(json['hex_code']),
+    );
+  }
+
+  String get displayName => name ?? 'Color #$id';
+}
+
+class VariantSizeModel {
+  final int? id;
+  final String? name;
+  final String? displayName;
+
+  VariantSizeModel({this.id, this.name, this.displayName});
+
+  factory VariantSizeModel.fromJson(Map<String, dynamic> json) {
+    return VariantSizeModel(
+      id: JsonUtils.asIntOrNull(json['id']),
+      name: JsonUtils.asStringOrNull(json['name']),
+      displayName: JsonUtils.asStringOrNull(json['display_name']),
+    );
+  }
+
+  String get label => name ?? displayName ?? 'Size #$id';
+}
+
 class ProductVariantModel {
   final int? id;
   final int? productId;
@@ -13,6 +49,10 @@ class ProductVariantModel {
   final String? salePrice;
   final String? status;
   final bool? isActive;
+  final String? imageUrl;
+  final VariantColorModel? color;
+  final VariantSizeModel? size;
+  final int? stockQuantity;
 
   ProductVariantModel({
     this.id,
@@ -24,9 +64,16 @@ class ProductVariantModel {
     this.salePrice,
     this.status,
     this.isActive,
+    this.imageUrl,
+    this.color,
+    this.size,
+    this.stockQuantity,
   });
 
   factory ProductVariantModel.fromJson(Map<String, dynamic> json) {
+    final colorMap = JsonUtils.asMapOrNull(json['color']);
+    final sizeMap = JsonUtils.asMapOrNull(json['size']);
+    final inventoryMap = JsonUtils.asMapOrNull(json['inventory']);
     return ProductVariantModel(
       id: JsonUtils.asIntOrNull(json['id']),
       productId: JsonUtils.asIntOrNull(json['product_id']),
@@ -37,12 +84,26 @@ class ProductVariantModel {
       salePrice: JsonUtils.asStringOrNull(json['sale_price']),
       status: JsonUtils.asStringOrNull(json['status']),
       isActive: JsonUtils.asBoolOrNull(json['is_active']),
+      imageUrl: UrlUtils.resolveImageUrl(
+        JsonUtils.asStringOrNull(json['image_url']),
+      ),
+      color: colorMap != null ? VariantColorModel.fromJson(colorMap) : null,
+      size: sizeMap != null ? VariantSizeModel.fromJson(sizeMap) : null,
+      stockQuantity: inventoryMap != null
+          ? JsonUtils.asIntOrNull(inventoryMap['quantity'])
+          : null,
     );
   }
 
   double get priceValue => JsonUtils.asDouble(price);
   double? get salePriceValue => JsonUtils.asDoubleOrNull(salePrice);
   double get effectivePrice => salePriceValue ?? priceValue;
+
+  /// Unknown stock (null) is treated as in stock.
+  bool get inStock => stockQuantity == null || stockQuantity! > 0;
+
+  /// True when the API provided color/size dimensions for this variant.
+  bool get hasDimensions => color != null || size != null;
 }
 
 class ProductImageModel {
@@ -159,6 +220,42 @@ class ProductModel {
   String get displayName => name ?? 'Unnamed Product';
 
   bool get hasVariants => variants.isNotEmpty;
+
+  /// True when variants carry size/color dimensions (rich selector UI).
+  bool get hasVariantDimensions =>
+      variants.any((v) => v.hasDimensions);
+
+  /// Unique sizes across variants, in order of first appearance.
+  List<VariantSizeModel> get availableSizes {
+    final seen = <int>{};
+    final sizes = <VariantSizeModel>[];
+    for (final v in variants) {
+      final s = v.size;
+      if (s?.id != null && seen.add(s!.id!)) sizes.add(s);
+    }
+    return sizes;
+  }
+
+  /// Unique colors across variants, in order of first appearance.
+  List<VariantColorModel> get availableColors {
+    final seen = <int>{};
+    final colors = <VariantColorModel>[];
+    for (final v in variants) {
+      final c = v.color;
+      if (c?.id != null && seen.add(c!.id!)) colors.add(c);
+    }
+    return colors;
+  }
+
+  /// The variant matching a size/color pair (either may be null).
+  ProductVariantModel? findVariant({int? sizeId, int? colorId}) {
+    for (final v in variants) {
+      final sizeOk = sizeId == null || v.sizeId == sizeId;
+      final colorOk = colorId == null || v.colorId == colorId;
+      if (sizeOk && colorOk) return v;
+    }
+    return null;
+  }
 
   String? get primaryImageUrl {
     if (images.isEmpty) return null;

@@ -114,7 +114,7 @@ class ProfilePayload {
     if (imageUrl!.startsWith('http://') || imageUrl!.startsWith('https://')) {
       return imageUrl;
     }
-    return 'https://command.modfirst.com/uploads$imageUrl';
+    return 'https://command.modfirst.com$imageUrl';
   }
 }
 

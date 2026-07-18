@@ -1,5 +1,4 @@
 import 'package:modfirstpos/core/utils/currency_utils.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -11,6 +10,8 @@ import 'package:modfirstpos/modules/productVariant/controller/product_variant_co
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 import 'package:modfirstpos/shared/widgets/appBarWidget/app_bar_widget.dart';
+import 'package:modfirstpos/shared/widgets/AppWidgets/variant_selector.dart';
+import 'package:modfirstpos/shared/widgets/DynamicImage/product_image_carousel.dart';
 import 'package:modfirstpos/shared/widgets/backButtonWidgt/back_button_widget.dart';
 
 class ProductVariantView extends GetView<ProductVariantController> {
@@ -194,18 +195,8 @@ class ProductVariantView extends GetView<ProductVariantController> {
                             const Divider(),
                             const SizedBox(height: 12),
 
-                            // Variant Selector Wrap
+                            // Size / color variant selector
                             if (controller.product.hasVariants) ...[
-                              Text(
-                                'SELECT VARIANT',
-                                style: AppFonts.geistMono(
-                                  fontSize: context.fontXS,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.6,
-                                  color: Colors.grey[500],
-                                ),
-                              ),
-                              const SizedBox(height: 10),
                               Expanded(
                                 child: Scrollbar(
                                   controller:
@@ -214,38 +205,15 @@ class ProductVariantView extends GetView<ProductVariantController> {
                                     controller:
                                         controller.variantScrollController,
                                     primary: false,
-                                    child: Obx(() => Wrap(
-                                      spacing: 10,
-                                      runSpacing: 10,
-                                      children: controller.product.variants.map((variant) {
-                                        final selected = controller.selectedVariant.value == variant;
-                                        return GestureDetector(
-                                          onTap: () => controller.selectVariant(variant),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 12,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: selected ? theme.secondaryColor.value : Colors.grey[100],
-                                              borderRadius: BorderRadius.circular(10),
-                                              border: Border.all(
-                                                color: selected ? theme.secondaryColor.value : ColorResources.cardBorderColor.withOpacity(0.6),
-                                                width: selected ? 1.5 : 1.0,
-                                              ),
-                                            ),
-                                            child: Text(
-                                              'SKU: ${variant.sku ?? '--'}  •  ${CurrencyUtils.format(variant.effectivePrice, decimals: 0)}',
-                                              style: AppFonts.geistMono(
-                                                fontSize: context.fontXS,
-                                                fontWeight: FontWeight.w600,
-                                                color: selected ? theme.onSecondaryColor : ColorResources.labelColor,
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      }).toList(),
-                                    )),
+                                    child: Obx(
+                                      () => VariantSelector(
+                                        product: controller.product,
+                                        selectedVariant:
+                                            controller.selectedVariant.value,
+                                        onVariantSelected:
+                                            controller.selectVariant,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -327,29 +295,21 @@ class ProductVariantView extends GetView<ProductVariantController> {
   }
 }
 
+/// Image carousel that swaps to the selected variant's own image.
 class _ProductImage extends StatelessWidget {
   final ProductVariantController controller;
   const _ProductImage({required this.controller});
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: double.infinity,
+    return Obx(
+      () => ProductImageCarousel(
         height: context.responsiveHeight(0.3),
-        color: const Color(0xFFF3F4F6),
-        child: controller.product.primaryImageUrl != null
-            ? CachedNetworkImage(
-                imageUrl: controller.product.primaryImageUrl!,
-                fit: BoxFit.contain,
-                errorWidget: (_, __, ___) => const Icon(
-                  Icons.image_not_supported_outlined,
-                  color: Colors.grey,
-                  size: 40,
-                ),
-              )
-            : const Icon(Icons.image_outlined, color: Colors.grey, size: 40),
+        imageUrls: [
+          for (final img in controller.product.images)
+            if (img.imageUrl != null) img.imageUrl!,
+        ],
+        overrideImageUrl: controller.selectedVariant.value?.imageUrl,
       ),
     );
   }
