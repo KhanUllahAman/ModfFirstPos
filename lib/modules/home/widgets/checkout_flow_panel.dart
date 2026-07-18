@@ -10,6 +10,7 @@ import 'package:modfirstpos/modules/home/controller/home_controller.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 import 'package:modfirstpos/shared/widgets/TextFormFeild/custom_text_form_field.dart';
+import 'package:modfirstpos/shared/widgets/numpad/pos_numeric_keypad.dart';
 
 class CheckoutFlowPanel extends StatelessWidget {
   final HomeController homeController;
@@ -96,17 +97,27 @@ class CheckoutFlowPanel extends StatelessWidget {
               const Expanded(
                 child: Center(
                   child: CircularProgressIndicator(
-                    color: ColorResources.appAccentColor,
+                    color: ColorResources.blackColor,
+                    strokeWidth: 3.0,
                   ),
                 ),
               )
             else
               Expanded(
                 child: Scrollbar(
+                  controller: checkoutController.panelScrollController,
                   child: SingleChildScrollView(
+                    controller: checkoutController.panelScrollController,
                     primary: false,
                     child: Padding(
-                      padding: const EdgeInsets.only(right: 6.0),
+                      // Bottom inset keeps focused fields visible above the
+                      // on-screen keyboard (Scaffold uses
+                      // resizeToAvoidBottomInset: false).
+                      padding: EdgeInsets.only(
+                        right: 6.0,
+                        bottom:
+                            MediaQuery.of(context).viewInsets.bottom + 12,
+                      ),
                       child: body,
                     ),
                   ),
@@ -220,6 +231,10 @@ class CheckoutFlowPanel extends StatelessWidget {
     }
 
     final addressList = checkoutController.addresses;
+    // Read the selection here (inside the Obx build scope) so GetX tracks it.
+    // List item builders run during layout, outside Obx tracking — reading
+    // .value only there means taps never trigger a rebuild.
+    final selectedAddressId = checkoutController.selectedAddress.value?.id;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -291,7 +306,7 @@ class CheckoutFlowPanel extends StatelessWidget {
             separatorBuilder: (_, __) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
               final addr = addressList[index];
-              final isSelected = checkoutController.selectedAddress.value?.id == addr.id;
+              final isSelected = selectedAddressId == addr.id;
 
               return InkWell(
                 onTap: () {
@@ -311,7 +326,7 @@ class CheckoutFlowPanel extends StatelessWidget {
                     children: [
                       Radio<int>(
                         value: addr.id,
-                        groupValue: checkoutController.selectedAddress.value?.id,
+                        groupValue: selectedAddressId,
                         activeColor: theme.secondaryColor.value,
                         onChanged: (val) {
                           checkoutController.selectedAddress.value = addr;
@@ -374,7 +389,9 @@ class CheckoutFlowPanel extends StatelessWidget {
               );
             },
           ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 14),
+        _buildNotesField(),
+        const SizedBox(height: 14),
         AppButton(
           onPressed: () => checkoutController.createOrder(homeController),
           isLoading: checkoutController.isLoading.value,
@@ -398,6 +415,7 @@ class CheckoutFlowPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         CustomTextFormField(
+        
           controller: checkoutController.fullNameController,
           labelText: 'Full Name *',
           hintText: 'Enter receiver name',
@@ -477,7 +495,9 @@ class CheckoutFlowPanel extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 10),
+        _buildNotesField(),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
@@ -520,6 +540,8 @@ class CheckoutFlowPanel extends StatelessWidget {
   // --- Step 2 (B): Store Pickup Location Selection ---
   Widget _buildPickupLocationStep(BuildContext context, AppThemeService theme) {
     final locationList = checkoutController.pickupLocations;
+    // Track the selection inside the Obx build scope (see address step note).
+    final selectedPickupId = checkoutController.selectedPickupLocation.value?.id;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -555,7 +577,7 @@ class CheckoutFlowPanel extends StatelessWidget {
             separatorBuilder: (_, __) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
               final loc = locationList[index];
-              final isSelected = checkoutController.selectedPickupLocation.value?.id == loc.id;
+              final isSelected = selectedPickupId == loc.id;
 
               return InkWell(
                 onTap: () {
@@ -575,7 +597,7 @@ class CheckoutFlowPanel extends StatelessWidget {
                     children: [
                       Radio<int>(
                         value: loc.id,
-                        groupValue: checkoutController.selectedPickupLocation.value?.id,
+                        groupValue: selectedPickupId,
                         activeColor: theme.secondaryColor.value,
                         onChanged: (val) {
                           checkoutController.selectedPickupLocation.value = loc;
@@ -615,7 +637,9 @@ class CheckoutFlowPanel extends StatelessWidget {
               );
             },
           ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 14),
+        _buildNotesField(),
+        const SizedBox(height: 14),
         AppButton(
           onPressed: () => checkoutController.createOrder(homeController),
           isLoading: checkoutController.isLoading.value,
@@ -745,87 +769,102 @@ class CheckoutFlowPanel extends StatelessWidget {
         ],
         const SizedBox(height: 16),
 
-        // Payment Method Selector
+        // Payment Method Selector (themed tiles)
         Text(
           'Select Payment Method:',
           style: AppFonts.geistMono(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey[700]),
         ),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: ColorResources.cardBorderColor),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: checkoutController.paymentMethod.value,
-              isExpanded: true,
-              style: AppFonts.geistMono(fontSize: 11, color: Colors.black),
-              onChanged: (val) {
-                if (val != null) {
-                  checkoutController.paymentMethod.value = val;
-                  checkoutController.customOnlineAmount.value = checkoutController.payableAmount;
-                  checkoutController.customCashAmount.value = 0.0;
-                }
-              },
-              items: const [
-                DropdownMenuItem(value: 'without_payment', child: Text('Manual / Pay Later')),
-                DropdownMenuItem(value: 'stripe', child: Text('Stripe Card Payment')),
-                DropdownMenuItem(value: 'paypal', child: Text('PayPal Payment')),
-                DropdownMenuItem(value: 'stripe_and_cash', child: Text('Split (Stripe + Cash)')),
-                DropdownMenuItem(value: 'paypal_and_cash', child: Text('Split (PayPal + Cash)')),
-              ],
-            ),
-          ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final m in _paymentMethods)
+              _PaymentMethodChoiceTile(
+                icon: m.icon,
+                label: m.label,
+                subtitle: m.subtitle,
+                isSelected: checkoutController.paymentMethod.value == m.value,
+                onTap: () {
+                  checkoutController.paymentMethod.value = m.value;
+                  checkoutController.splitKeypadClear();
+                },
+                theme: theme,
+              ),
+          ],
         ),
         const SizedBox(height: 12),
 
-        // Split payment input section
-        if (checkoutController.paymentMethod.value.endsWith('_and_cash')) ...[
+        // Split payment: cash entered on the POS keypad, online auto-fills.
+        if (checkoutController.isSplitPayment) ...[
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.yellow[50]!.withOpacity(0.6),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.yellow[300]!),
+              color: theme.secondaryColor.value.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: ColorResources.cardBorderColor),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Split payment details:',
-                  style: AppFonts.geistMono(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.black87),
+                  'SPLIT PAYMENT — ENTER CASH PORTION',
+                  style: AppFonts.geistMono(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                    color: Colors.grey[700],
+                  ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      child: _buildSplitAmountField(
-                        label: 'Online Amount',
-                        value: checkoutController.customOnlineAmount.value,
-                        onChanged: (val) {
-                          final parsed = double.tryParse(val) ?? 0.0;
-                          checkoutController.customOnlineAmount.value = parsed;
-                          final remainder = checkoutController.payableAmount - parsed;
-                          checkoutController.customCashAmount.value = remainder > 0 ? remainder : 0.0;
-                        },
-                      ),
+                    Text(
+                      'Cash',
+                      style: AppFonts.geistMono(
+                          fontSize: 10, color: Colors.grey[600]),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildSplitAmountField(
-                        label: 'Cash Amount',
-                        value: checkoutController.customCashAmount.value,
-                        onChanged: (val) {
-                          final parsed = double.tryParse(val) ?? 0.0;
-                          checkoutController.customCashAmount.value = parsed;
-                          final remainder = checkoutController.payableAmount - parsed;
-                          checkoutController.customOnlineAmount.value = remainder > 0 ? remainder : 0.0;
-                        },
+                    Text(
+                      checkoutController.splitCashInput.value.isEmpty
+                          ? '0'
+                          : checkoutController.splitCashInput.value,
+                      style: AppFonts.geistMono(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: theme.secondaryColor.value,
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Online (auto)',
+                      style: AppFonts.geistMono(
+                          fontSize: 10, color: Colors.grey[600]),
+                    ),
+                    Text(
+                      CurrencyUtils.format(
+                        checkoutController.splitOnline,
+                        decimals: 2,
+                      ),
+                      style: AppFonts.geistMono(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: ColorResources.labelColor,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                PosNumericKeypad(
+                  onKeyTap: checkoutController.splitKeypadAppend,
+                  onBackspace: checkoutController.splitKeypadBackspace,
+                  onClear: checkoutController.splitKeypadClear,
+                  childAspectRatio: 2.6,
                 ),
               ],
             ),
@@ -876,22 +915,128 @@ class CheckoutFlowPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildSplitAmountField({
-    required String label,
-    required double value,
-    required ValueChanged<String> onChanged,
-  }) {
-    return TextFormField(
-      initialValue: value.toStringAsFixed(2),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      onChanged: onChanged,
-      style: AppFonts.geistMono(fontSize: 10),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: AppFonts.geistMono(fontSize: 8, color: Colors.black54),
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+  /// Optional order notes sent with orders/create (e.g. delivery timing).
+  Widget _buildNotesField() {
+    return CustomTextFormField(
+      controller: checkoutController.notesController,
+      labelText: 'Order Notes (Optional)',
+      hintText: 'e.g. Please deliver between 10 AM - 2 PM',
+      maxLines: 2,
+      borderRadius: 10,
+    );
+  }
+
+  static const List<_PaymentMethodOption> _paymentMethods = [
+    _PaymentMethodOption(
+      value: 'without_payment',
+      icon: Iconsax.money_3,
+      label: 'Manual / Pay Later',
+      subtitle: 'Complete without an online payment',
+    ),
+    _PaymentMethodOption(
+      value: 'stripe',
+      icon: Iconsax.card,
+      label: 'Stripe',
+      subtitle: 'Full card payment via Stripe',
+    ),
+    _PaymentMethodOption(
+      value: 'paypal',
+      icon: Iconsax.wallet_3,
+      label: 'PayPal',
+      subtitle: 'Full online payment via PayPal',
+    ),
+    _PaymentMethodOption(
+      value: 'stripe_and_cash',
+      icon: Iconsax.card_add,
+      label: 'Split — Stripe + Cash',
+      subtitle: 'Part card, part cash on the keypad',
+    ),
+    _PaymentMethodOption(
+      value: 'paypal_and_cash',
+      icon: Iconsax.wallet_add,
+      label: 'Split — PayPal + Cash',
+      subtitle: 'Part PayPal, part cash on the keypad',
+    ),
+  ];
+}
+
+class _PaymentMethodOption {
+  final String value;
+  final IconData icon;
+  final String label;
+  final String subtitle;
+
+  const _PaymentMethodOption({
+    required this.value,
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+  });
+}
+
+/// Themed selectable tile for payment methods (replaces the plain dropdown).
+class _PaymentMethodChoiceTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final AppThemeService theme;
+
+  const _PaymentMethodChoiceTile({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.isSelected,
+    required this.onTap,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = theme.secondaryColor.value;
+    // Compact chip so the methods flow in a row (wrapping when needed).
+    return Tooltip(
+      message: subtitle,
+      child: Material(
+        color: isSelected ? accent.withOpacity(0.10) : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isSelected ? accent : ColorResources.cardBorderColor,
+                width: isSelected ? 1.5 : 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 16, color: accent),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: AppFonts.geistMono(
+                    fontSize: 10,
+                    fontWeight:
+                        isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected
+                        ? accent
+                        : ColorResources.labelColor,
+                  ),
+                ),
+                if (isSelected) ...[
+                  const SizedBox(width: 6),
+                  Icon(Icons.check_circle_rounded, size: 14, color: accent),
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

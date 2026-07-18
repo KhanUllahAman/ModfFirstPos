@@ -7,11 +7,9 @@ import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
+import 'package:modfirstpos/shared/widgets/numpad/pos_numeric_keypad.dart';
 
-/// In-place cash payment terminal shown on the POS home screen.
-///
-/// A custom on-screen keypad (no device keyboard) with quick amounts,
-/// exact cash, live change calculation, confirm and cancel.
+
 class CashPaymentPanel extends StatelessWidget {
   final HomeController controller;
   const CashPaymentPanel({super.key, required this.controller});
@@ -121,9 +119,16 @@ class CashPaymentPanel extends StatelessWidget {
           ],
         ),
         SizedBox(height: context.responsiveHeight(0.012)),
-        // Keypad
+        // Keypad (shared POS keypad widget)
         Expanded(
-          child: _CashKeypad(controller: controller),
+          child: SingleChildScrollView(
+            primary: false,
+            child: PosNumericKeypad(
+              onKeyTap: controller.keypadAppend,
+              onBackspace: controller.keypadBackspace,
+              onClear: controller.keypadClear,
+            ),
+          ),
         ),
         SizedBox(height: context.responsiveHeight(0.012)),
         Obx(
@@ -251,101 +256,4 @@ class _QuickAmountChip extends StatelessWidget {
   }
 }
 
-class _CashKeypad extends StatelessWidget {
-  final HomeController controller;
-  const _CashKeypad({required this.controller});
-
-  static const _keys = [
-    '7', '8', '9',
-    '4', '5', '6',
-    '1', '2', '3',
-    '.', '0', '⌫',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: GridView.count(
-            primary: false,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 3,
-            mainAxisSpacing: 6,
-            crossAxisSpacing: 6,
-            childAspectRatio: 2.1,
-            children: [
-              for (final key in _keys)
-                _KeypadButton(
-                  label: key,
-                  onTap: () {
-                    if (key == '⌫') {
-                      controller.keypadBackspace();
-                    } else {
-                      controller.keypadAppend(key);
-                    }
-                  },
-                  onLongPress: key == '⌫' ? controller.keypadClear : null,
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 6),
-        SizedBox(
-          height: 36,
-          child: _KeypadButton(
-            label: 'CLEAR',
-            isAction: true,
-            onTap: controller.keypadClear,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _KeypadButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  final VoidCallback? onLongPress;
-  final bool isAction;
-
-  const _KeypadButton({
-    required this.label,
-    required this.onTap,
-    this.onLongPress,
-    this.isAction = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: isAction
-          ? ColorResources.gradientRed.withOpacity(0.08)
-          : ColorResources.whiteColor,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: ColorResources.cardBorderColor),
-          ),
-          child: Text(
-            label,
-            style: AppFonts.geistMono(
-              fontSize: context.fontMD,
-              fontWeight: FontWeight.w700,
-              color: isAction
-                  ? ColorResources.gradientRed
-                  : ColorResources.labelColor,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
+ 

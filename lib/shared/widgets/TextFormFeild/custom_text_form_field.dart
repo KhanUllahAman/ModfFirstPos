@@ -43,7 +43,7 @@ class CustomTextFormField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final focusColor = customFocusedBorderColor ?? ColorResources.appMainColor;
+    final focusColor = customFocusedBorderColor ?? ColorResources.labelColor;
     final textColor = ColorResources.labelColor;
     final labelColor = ColorResources.labelColor;
 

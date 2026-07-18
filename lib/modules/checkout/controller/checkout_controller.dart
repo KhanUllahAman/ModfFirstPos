@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:modfirstpos/core/database/key_value_store.dart';
 import 'package:modfirstpos/modules/checkout/service/checkout_service.dart';
 import 'package:modfirstpos/modules/checkout/model/checkout_models.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
@@ -27,6 +29,7 @@ class CheckoutController extends GetxController {
   final RxList<PickupLocationModel> pickupLocations = <PickupLocationModel>[].obs;
   final Rxn<PickupLocationModel> selectedPickupLocation = Rxn<PickupLocationModel>();
   final TextEditingController couponController = TextEditingController();
+  final TextEditingController notesController = TextEditingController();
   final Rxn<CouponValidationResponse> couponValidation = Rxn<CouponValidationResponse>();
   final RxString couponError = ''.obs;
   final Rxn<CreatedOrder> createdOrder = Rxn<CreatedOrder>();
@@ -34,8 +37,54 @@ class CheckoutController extends GetxController {
   final RxDouble customOnlineAmount = 0.0.obs;
   final RxDouble customCashAmount = 0.0.obs;
 
+  /// Cash portion of a split payment, typed on the POS keypad (kept as a
+  /// string for display control — no device keyboard involved).
+  final RxString splitCashInput = ''.obs;
+
+  double get splitCash => double.tryParse(splitCashInput.value) ?? 0.0;
+
+  /// Online portion = remainder of the payable amount after cash.
+  double get splitOnline {
+    final remainder = payableAmount - splitCash;
+    return remainder > 0 ? remainder : 0.0;
+  }
+
+  bool get isSplitPayment => paymentMethod.value.endsWith('_and_cash');
+
+  void splitKeypadAppend(String digit) {
+    final current = splitCashInput.value;
+    if (digit == '.' && current.contains('.')) return;
+    final dotIndex = current.indexOf('.');
+    if (dotIndex != -1 && digit != '.' && current.length - dotIndex > 2) return;
+    if (current.replaceAll('.', '').length >= 9) return;
+    splitCashInput.value =
+        (current == '0' && digit != '.') ? digit : current + digit;
+  }
+
+  void splitKeypadBackspace() {
+    final current = splitCashInput.value;
+    if (current.isEmpty) return;
+    splitCashInput.value = current.substring(0, current.length - 1);
+  }
+
+  void splitKeypadClear() => splitCashInput.value = '';
+
+  /// Dedicated controller for the checkout panel scrollbar (a Scrollbar
+  /// without its own controller crashes on this multi-scrollable layout).
+  late final ScrollController panelScrollController;
+
+  static const _pickupCacheKey = 'cache_pickup_locations';
+  static String _addressCacheKey(int userId) => 'cache_addresses_user_$userId';
+
+  @override
+  void onInit() {
+    super.onInit();
+    panelScrollController = ScrollController();
+  }
+
   @override
   void onClose() {
+    panelScrollController.dispose();
     fullNameController.dispose();
     phoneController.dispose();
     emailController.dispose();
@@ -46,6 +95,7 @@ class CheckoutController extends GetxController {
     postalCodeController.dispose();
     countryController.dispose();
     couponController.dispose();
+    notesController.dispose();
     super.onClose();
   }
 
@@ -66,12 +116,14 @@ class CheckoutController extends GetxController {
     pickupLocations.clear();
     selectedPickupLocation.value = null;
     couponController.clear();
+    notesController.clear();
     couponValidation.value = null;
     couponError.value = '';
     createdOrder.value = null;
     paymentMethod.value = 'without_payment';
     customOnlineAmount.value = 0.0;
     customCashAmount.value = 0.0;
+    splitCashInput.value = '';
   }
 
   Future<void> startCheckoutFlow(int userId) async {
@@ -86,8 +138,18 @@ class CheckoutController extends GetxController {
         phoneController.text = customer.phone ?? '';
       }
 
-      await loadAddresses(userId);
-      await loadPickupLocations();
+      // Instant, offline-first: hydrate from the local cache first so the
+      // cashier never waits, then refresh from the network in the background.
+      final hadCache = await _hydrateFromCache(userId);
+      if (hadCache) {
+        isLoading.value = false;
+        // Fire-and-forget background refresh; UI updates reactively.
+        unawaited(
+          Future.wait([loadAddresses(userId), loadPickupLocations()]),
+        );
+      } else {
+        await Future.wait([loadAddresses(userId), loadPickupLocations()]);
+      }
     } catch (e) {
       log("CheckoutController startCheckoutFlow error: $e");
     } finally {
@@ -95,18 +157,85 @@ class CheckoutController extends GetxController {
     }
   }
 
+  /// Loads cached addresses + pickup locations. Returns true when anything
+  /// usable was found in the cache.
+  Future<bool> _hydrateFromCache(int userId) async {
+    var found = false;
+    try {
+      final cachedAddresses =
+          await KeyValueStore.getJsonCache(_addressCacheKey(userId));
+      if (cachedAddresses != null) {
+        _applyAddresses(AddressListResponse.fromJson(cachedAddresses).payload);
+        found = true;
+      }
+      final cachedPickups = await KeyValueStore.getJsonCache(_pickupCacheKey);
+      if (cachedPickups != null) {
+        _applyPickupLocations(
+          PickupLocationListResponse.fromJson(cachedPickups).payload,
+        );
+        found = true;
+      }
+    } catch (e) {
+      log("CheckoutController _hydrateFromCache error: $e");
+    }
+    return found;
+  }
+
+  void _applyAddresses(List<AddressModel> list) {
+    addresses.assignAll(list);
+    if (addresses.isNotEmpty) {
+      final previous = selectedAddress.value?.id;
+      selectedAddress.value = addresses.firstWhere(
+        (a) => a.id == previous,
+        orElse: () => addresses.firstWhere(
+          (a) => a.isDefault,
+          orElse: () => addresses.first,
+        ),
+      );
+    } else {
+      selectedAddress.value = null;
+    }
+  }
+
+  void _applyPickupLocations(List<PickupLocationModel> list) {
+    pickupLocations.assignAll(list);
+    if (pickupLocations.isNotEmpty) {
+      final previous = selectedPickupLocation.value?.id;
+      selectedPickupLocation.value = pickupLocations.firstWhere(
+        (l) => l.id == previous,
+        orElse: () => pickupLocations.first,
+      );
+    } else {
+      selectedPickupLocation.value = null;
+    }
+  }
+
   Future<void> loadAddresses(int userId) async {
     final response = await _service.fetchAddresses(userId: userId);
     if (response.isSuccess) {
-      addresses.assignAll(response.payload);
-      if (addresses.isNotEmpty) {
-        selectedAddress.value = addresses.firstWhere(
-          (a) => a.isDefault,
-          orElse: () => addresses.first,
-        );
-      }
-    } else {
-      addresses.clear();
+      _applyAddresses(response.payload);
+      await KeyValueStore.setJsonCache(_addressCacheKey(userId), {
+        'success': true,
+        'payload': response.payload
+            .map((a) => {
+                  'id': a.id,
+                  'user_id': a.userId,
+                  'full_name': a.fullName,
+                  'phone': a.phone,
+                  'email': a.email,
+                  'address_line1': a.addressLine1,
+                  'address_line2': a.addressLine2,
+                  'city': a.city,
+                  'state': a.state,
+                  'postal_code': a.postalCode,
+                  'country': a.country,
+                  'is_default': a.isDefault,
+                  'type': a.type,
+                  'is_active': a.isActive,
+                })
+            .toList(),
+      });
+    } else if (addresses.isEmpty) {
       selectedAddress.value = null;
     }
   }
@@ -114,12 +243,21 @@ class CheckoutController extends GetxController {
   Future<void> loadPickupLocations() async {
     final response = await _service.fetchPickupLocations();
     if (response.isSuccess) {
-      pickupLocations.assignAll(response.payload);
-      if (pickupLocations.isNotEmpty) {
-        selectedPickupLocation.value = pickupLocations.first;
-      }
-    } else {
-      pickupLocations.clear();
+      _applyPickupLocations(response.payload);
+      await KeyValueStore.setJsonCache(_pickupCacheKey, {
+        'success': true,
+        'payload': response.payload
+            .map((l) => {
+                  'id': l.id,
+                  'name': l.name,
+                  'address': l.address,
+                  'city': l.city,
+                  'phone': l.phone,
+                  'is_active': l.isActive,
+                })
+            .toList(),
+      });
+    } else if (pickupLocations.isEmpty) {
       selectedPickupLocation.value = null;
     }
   }
@@ -176,6 +314,14 @@ class CheckoutController extends GetxController {
     }
     if (address1Controller.text.trim().isEmpty) {
       customSnackBar('Validation Error', 'Address Line 1 is required', snackBarType: SnackBarType.warning);
+      return false;
+    }
+    if (address1Controller.text.trim().length < 5) {
+      customSnackBar(
+        'Validation Error',
+        'Address Line 1 must be at least 5 characters',
+        snackBarType: SnackBarType.warning,
+      );
       return false;
     }
     if (cityController.text.trim().isEmpty) {
@@ -241,7 +387,12 @@ class CheckoutController extends GetxController {
           customSnackBar('Pickup Location Required', 'Please select a pickup location.', snackBarType: SnackBarType.warning);
           return false;
         }
+        // Backend links shipping_address_id even for pickup orders; send the
+        // customer's saved address when one exists to avoid FK errors.
+        addressId = selectedAddress.value?.id;
       }
+
+      final notes = notesController.text.trim();
 
       final response = await _service.createOrder(
         userId: customer.id,
@@ -254,7 +405,7 @@ class CheckoutController extends GetxController {
         shippingAddress: inlineAddress,
         pickupLocationId: selectedPickupLocation.value?.id,
         items: itemsPayload,
-        notes: 'POS Checkout order placed',
+        notes: notes.isEmpty ? 'POS Checkout order' : notes,
       );
 
       if (response.isSuccess && response.order != null) {
@@ -302,12 +453,13 @@ class CheckoutController extends GetxController {
       double? online;
       double? cash;
       if (method == 'stripe_and_cash' || method == 'paypal_and_cash') {
-        online = customOnlineAmount.value;
-        cash = customCashAmount.value;
-        if ((online + cash) < payableAmount) {
+        cash = splitCash;
+        online = splitOnline;
+        if (cash <= 0 || cash >= payableAmount) {
           customSnackBar(
-            'Insufficient Amount',
-            'Split payment amounts must total \$${payableAmount.toStringAsFixed(2)}',
+            'Invalid Split Amount',
+            'Cash must be more than 0 and less than the payable total '
+            '(${payableAmount.toStringAsFixed(2)})',
             snackBarType: SnackBarType.warning,
           );
           return;

@@ -114,17 +114,17 @@ class CheckoutService {
         if (notes != null && notes.isNotEmpty) 'notes': notes,
       };
 
-      if (deliveryType == 'home_delivery') {
-        if (shippingAddressId != null) {
-          body['shipping_address_id'] = shippingAddressId;
-          body['billing_address_id'] = billingAddressId ?? shippingAddressId;
-        } else if (shippingAddress != null) {
-          body['shipping_address'] = shippingAddress.toJson();
-        }
-      } else if (deliveryType == 'store_pickup') {
-        if (pickupLocationId != null) {
-          body['pickup_location_id'] = pickupLocationId;
-        }
+      // Send a saved address id whenever we have one — the backend links
+      // shipping_address_id even on store_pickup orders, and omitting it can
+      // trigger a foreign-key error server-side.
+      if (shippingAddressId != null) {
+        body['shipping_address_id'] = shippingAddressId;
+        body['billing_address_id'] = billingAddressId ?? shippingAddressId;
+      } else if (shippingAddress != null) {
+        body['shipping_address'] = shippingAddress.toJson();
+      }
+      if (deliveryType == 'store_pickup' && pickupLocationId != null) {
+        body['pickup_location_id'] = pickupLocationId;
       }
 
       final response = await _client.post(

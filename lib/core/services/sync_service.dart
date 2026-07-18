@@ -8,7 +8,6 @@ import 'package:modfirstpos/core/network/api_endpoints.dart';
 import 'package:modfirstpos/core/network/network_client.dart';
 import 'package:modfirstpos/core/utils/json_utils.dart';
 import 'package:modfirstpos/modules/customer/repository/customer_local_repository.dart';
-import 'package:modfirstpos/modules/home/repository/sales_local_repository.dart';
 
 /// Background synchronization engine.
 ///
@@ -57,7 +56,10 @@ class SyncService extends GetxService {
     isSyncing.value = true;
     try {
       await _pushLocalCustomers();
-      await _pushPendingSales();
+      // NOTE: pending_sales are NOT pushed anymore. Server orders are now
+      // created through the checkout flow (orders/create + checkout APIs);
+      // the local sales table is an offline ledger only. The old push used a
+      // legacy body the backend rejects with 400 on every retry.
     } catch (e) {
       log('SyncService syncNow error: $e');
     } finally {
@@ -98,32 +100,4 @@ class SyncService extends GetxService {
     }
   }
 
-  Future<void> _pushPendingSales() async {
-    final unsynced = await SalesLocalRepository.getUnsynced();
-    for (final row in unsynced) {
-      if (!_connectivity.isConnected) return;
-      final id = JsonUtils.asInt(row['id']);
-      try {
-        final data = jsonDecode(row['data'] as String? ?? '{}');
-        final response = await _client.post(
-          endpoint: ApiConstants.orderCreateEndpoint,
-          body: JsonUtils.asMap(data),
-          showErrorSnackbar: false,
-        );
-        final body = JsonUtils.asMap(response.data);
-        if (JsonUtils.asBool(body['success'])) {
-          await SalesLocalRepository.markSynced(id);
-          log('SyncService: sale $id synced');
-        } else {
-          await SalesLocalRepository.markFailed(
-            id,
-            JsonUtils.asString(body['message'], fallback: 'rejected'),
-          );
-        }
-      } catch (e) {
-        await SalesLocalRepository.markFailed(id, e.toString());
-        log('SyncService sale push failed ($id): $e');
-      }
-    }
-  }
 }
