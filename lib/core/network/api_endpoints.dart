@@ -21,7 +21,7 @@ class ApiConstants {
   static final String productListEndpoint = '${baseUrl}products/list';   
   static final String orderListEndpoint = '${baseUrl}orders/list';
   static final String userListEndpoint = '${baseUrl}users/list';
-  static final String userCreateEndpoint = '${baseUrl}users/create';
+  static final String userCreateEndpoint = '${baseUrl}users';
   static final String orderCreateEndpoint = '${baseUrl}orders';
   static final String addressListEndpoint = '${baseUrl}addresses/list';
   static final String pickupLocationListEndpoint =
@@ -29,4 +29,7 @@ class ApiConstants {
   static final String checkoutEndpoint = '${baseUrl}payments/checkout-session';
   static final String couponValidateEndpoint = '${baseUrl}coupons/validate';
   static String websiteSettingsEndpoint(String storeName) => '${baseUrl}website-settings/frontend/$storeName';
+  static final String posDeviceMyBranchEndpoint = '${baseUrl}pos-device/my-branch';
+  static String posDeviceUpdateEndpoint(int id) => '${baseUrl}pos-device/$id';
+  static final String printReceiptEndpoint = '${baseUrl}orders/print-receipt';
 }

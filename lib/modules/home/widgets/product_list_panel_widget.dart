@@ -6,6 +6,7 @@ import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/category/model/category_model.dart';
+import 'package:modfirstpos/modules/customer/widgets/add_customer_dialog.dart';
 import 'package:modfirstpos/modules/product/model/product_model.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
 import 'package:modfirstpos/modules/customer/model/customer_model.dart';
@@ -367,42 +368,41 @@ class ProductListPanel extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            // Obx(
-            //   () => TextButton.icon(
-            //     onPressed: () async {
-            //       final customer = await AddCustomerDialog.show(context);
-            //       if (customer != null) {
-            //         // Auto-select the newly created customer on the cart.
-            //         controller.selectedCartCustomer.value = customer;
-            //         controller.showCustomerPanel.value = false;
-            //       }
-            //     },
-            //     icon: Icon(
-            //       Icons.person_add_alt_1_rounded,
-            //       size: 16,
-            //       color: theme.secondaryColor.value,
-            //     ),
-            //     label: Text(
-            //       'Add New',
-            //       style: AppFonts.geistMono(
-            //         fontSize: 11,
-            //         fontWeight: FontWeight.w700,
-            //         color: theme.secondaryColor.value,
-            //       ),
-            //     ),
-            //     style: TextButton.styleFrom(
-            //       backgroundColor:
-            //           theme.secondaryColor.value.withOpacity(0.12),
-            //       shape: RoundedRectangleBorder(
-            //         borderRadius: BorderRadius.circular(8),
-            //       ),
-            //       padding: const EdgeInsets.symmetric(
-            //         horizontal: 12,
-            //         vertical: 8,
-            //       ),
-            //     ),
-            //   ),
-            // ),
+            Obx(
+              () => TextButton.icon(
+                onPressed: () async {
+                  final customer = await AddCustomerDialog.show(context);
+                  if (customer != null) {
+                    controller.selectedCartCustomer.value = customer;
+                    controller.showCustomerPanel.value = false;
+                  }
+                },
+                icon: Icon(
+                  Icons.person_add_alt_1_rounded,
+                  size: 16,
+                  color: theme.secondaryColor.value,
+                ),
+                label: Text(
+                  'Add New',
+                  style: AppFonts.geistMono(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: theme.secondaryColor.value,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  backgroundColor:
+                      theme.secondaryColor.value.withOpacity(0.12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
         SizedBox(height: context.responsiveHeight(0.008)),

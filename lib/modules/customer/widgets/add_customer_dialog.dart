@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:intl_phone_field/country_picker_dialog.dart';
 import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
@@ -35,39 +37,36 @@ class AddCustomerDialog extends StatefulWidget {
 class _AddCustomerDialogState extends State<AddCustomerDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
-  late final TextEditingController _phoneController;
   late final TextEditingController _emailController;
-  late final TextEditingController _addressController;
   bool _isSaving = false;
+
+  /// Full E.164 number (with country code) from IntlPhoneField.
+  String _fullPhoneNumber = '';
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController();
-    _phoneController = TextEditingController();
     _emailController = TextEditingController();
-    _addressController = TextEditingController();
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _phoneController.dispose();
     _emailController.dispose();
-    _addressController.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
-    if (_isSaving || !(_formKey.currentState?.validate() ?? false)) return;
+    final formValid = _formKey.currentState?.validate() ?? false;
+    if (_isSaving || !formValid || _fullPhoneNumber.trim().isEmpty) return;
     setState(() => _isSaving = true);
 
     final controller = Get.find<CustomerController>();
     final customer = await controller.addCustomer(
       fullName: _nameController.text.trim(),
-      phone: _phoneController.text.trim(),
+      phone: _fullPhoneNumber.trim(),
       email: _emailController.text.trim(),
-      address: _addressController.text.trim(),
     );
 
     if (!mounted) return;
@@ -88,17 +87,9 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
     return null;
   }
 
-  String? _validatePhone(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Phone number is required';
-    }
-    if (value.trim().length < 7) return 'Enter a valid phone number';
-    return null;
-  }
-
   String? _validateEmail(String? value) {
     final email = value?.trim() ?? '';
-    if (email.isEmpty) return null; // optional
+    if (email.isEmpty) return 'Email is required';
     final emailRegex = RegExp(r'^[\w\.\-\+]+@[\w\-]+(\.[\w\-]+)+$');
     if (!emailRegex.hasMatch(email)) return 'Enter a valid email address';
     return null;
@@ -146,25 +137,55 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
                   borderRadius: 10,
                 ),
                 SizedBox(height: context.responsiveHeight(0.018)),
-                CustomTextFormField(
-                  controller: _phoneController,
-                  labelText: 'Phone Number *',
-                  keyboardType: TextInputType.phone,
-                  validator: _validatePhone,
-                  borderRadius: 10,
+                IntlPhoneField(
+                  initialCountryCode: 'US',
+                  disableLengthCheck: false,
+                  style: AppFonts.geistMono(
+                    color: ColorResources.labelColor,
+                    fontSize: 14,
+                  ),
+                  dropdownTextStyle: AppFonts.geistMono(
+                    color: ColorResources.labelColor,
+                    fontSize: 14,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Phone Number *',
+                    labelStyle: AppFonts.geistMono(
+                      fontSize: 13,
+                      color: ColorResources.labelColor,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: ColorResources.labelBorderColor),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: ColorResources.labelBorderColor),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: ColorResources.labelColor, width: 2.0),
+                    ),
+                  ),
+                  pickerDialogStyle: PickerDialogStyle(
+                    backgroundColor: ColorResources.whiteColor,
+                  ),
+                  onChanged: (phone) {
+                    _fullPhoneNumber = phone.completeNumber;
+                  },
+                  validator: (phone) {
+                    if (phone == null || phone.number.trim().isEmpty) {
+                      return 'Phone number is required';
+                    }
+                    return null;
+                  },
                 ),
                 SizedBox(height: context.responsiveHeight(0.018)),
                 CustomTextFormField(
                   controller: _emailController,
-                  labelText: 'Email (Optional)',
+                  labelText: 'Email *',
                   keyboardType: TextInputType.emailAddress,
                   validator: _validateEmail,
-                  borderRadius: 10,
-                ),
-                SizedBox(height: context.responsiveHeight(0.018)),
-                CustomTextFormField(
-                  controller: _addressController,
-                  labelText: 'Address (Optional)',
                   borderRadius: 10,
                 ),
                 SizedBox(height: context.responsiveHeight(0.028)),

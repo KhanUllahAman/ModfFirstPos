@@ -8,6 +8,7 @@ import 'package:modfirstpos/core/utils/currency_utils.dart';
 import 'package:modfirstpos/modules/checkout/controller/checkout_controller.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
+import 'package:modfirstpos/shared/widgets/Buttons/sync_button_widget.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 import 'package:modfirstpos/shared/widgets/TextFormFeild/custom_text_form_field.dart';
 import 'package:modfirstpos/shared/widgets/numpad/pos_numeric_keypad.dart';
@@ -250,20 +251,34 @@ class CheckoutFlowPanel extends StatelessWidget {
                 color: Colors.grey[700],
               ),
             ),
-            TextButton.icon(
-              onPressed: () {
-                checkoutController.showNewAddressForm.value = true;
-              },
-              icon: Icon(Icons.add_location_alt_rounded, size: 14, color: theme.secondaryColor.value),
-              label: Text(
-                'Add New',
-                style: AppFonts.geistMono(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: theme.secondaryColor.value,
+            Row(
+              children: [
+                Obx(
+                  () => AppSyncButton(
+                    onPressed: checkoutController.syncAddresses,
+                    isLoading: checkoutController.isLoading.value,
+                    label: 'Sync Addresses',
+                    variant: SyncButtonVariant.iconOnly,
+                    borderRadius: 8,
+                  ),
                 ),
-              ),
-              style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: () {
+                    checkoutController.showNewAddressForm.value = true;
+                  },
+                  icon: Icon(Icons.add_location_alt_rounded, size: 14, color: theme.secondaryColor.value),
+                  label: Text(
+                    'Add New',
+                    style: AppFonts.geistMono(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: theme.secondaryColor.value,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
+                ),
+              ],
             ),
           ],
         ),
@@ -546,13 +561,27 @@ class CheckoutFlowPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Select a branch for pickup:',
-          style: AppFonts.geistMono(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: Colors.grey[700],
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Select a branch for pickup:',
+              style: AppFonts.geistMono(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: Colors.grey[700],
+              ),
+            ),
+            Obx(
+              () => AppSyncButton(
+                onPressed: checkoutController.syncPickupLocations,
+                isLoading: checkoutController.isLoading.value,
+                label: 'Sync Pickup Locations',
+                variant: SyncButtonVariant.iconOnly,
+                borderRadius: 8,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 10),
         if (locationList.isEmpty)

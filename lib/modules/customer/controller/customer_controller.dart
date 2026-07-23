@@ -110,32 +110,66 @@ class CustomerController extends GetxController {
     }
   }
 
-  /// Creates a customer locally (offline-first), selects it and refreshes
-  /// the visible list. Sync to the backend happens in the background.
+  /// Creates the customer on the server (POST users/create). Falls back to
+  /// an offline-local record only when there is no connectivity, so the
+  /// cashier is never blocked; a proper 409/validation error from the
+  /// server is surfaced as-is instead of silently going local.
   Future<CustomerModel?> addCustomer({
     required String fullName,
     required String phone,
-    String? email,
+    required String email,
     String? address,
   }) async {
     try {
-      final customer = await CustomerLocalRepository.addCustomer(
+      final response = await _service.createCustomer(
         fullName: fullName,
-        phone: phone,
         email: email,
-        address: address,
+        phone: phone,
       );
-      customers.insert(0, customer);
-      selectedCustomer.value = customer;
-      return customer;
-    } catch (e) {
-      log("CustomerController addCustomer error: $e");
+
+      if (response.isSuccess && response.payload != null) {
+        final customer = response.payload!.copyWith(address: address);
+        customers.insert(0, customer);
+        selectedCustomer.value = customer;
+        return customer;
+      }
+
       customSnackBar(
         'Could Not Save',
-        'The customer could not be saved locally. Please try again.',
+        response.message.isNotEmpty
+            ? response.message
+            : 'The customer could not be created.',
         snackBarType: SnackBarType.error,
       );
       return null;
+    } catch (e) {
+      log("CustomerController addCustomer error: $e");
+      // Likely offline — keep the cashier moving with a local-only record;
+      // SyncService will push it once connectivity returns.
+      try {
+        final customer = await CustomerLocalRepository.addCustomer(
+          fullName: fullName,
+          phone: phone,
+          email: email,
+          address: address,
+        );
+        customers.insert(0, customer);
+        selectedCustomer.value = customer;
+        customSnackBar(
+          'Saved Offline',
+          'No connection — customer saved locally and will sync later.',
+          snackBarType: SnackBarType.warning,
+        );
+        return customer;
+      } catch (localError) {
+        log("CustomerController addCustomer local fallback error: $localError");
+        customSnackBar(
+          'Could Not Save',
+          'The customer could not be saved. Please try again.',
+          snackBarType: SnackBarType.error,
+        );
+        return null;
+      }
     }
   }
 

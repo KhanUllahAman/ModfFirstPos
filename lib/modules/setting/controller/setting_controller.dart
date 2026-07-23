@@ -1,11 +1,28 @@
+import 'dart:developer';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/modules/setting/model/pos_device_model.dart';
+import 'package:modfirstpos/modules/setting/service/setting_service.dart';
+import 'package:modfirstpos/modules/setting/storage/pos_device_cache_storage.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
 class SettingController extends GetxController {
-  final TextEditingController printerIpController = TextEditingController();
-  final TextEditingController customerIpController = TextEditingController();
-  final TextEditingController customerPortController = TextEditingController();
+  final SettingService _service = SettingService();
+
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController deviceCodeController = TextEditingController();
+  final TextEditingController ipAddressController = TextEditingController();
+  final TextEditingController locationController = TextEditingController();
+
+  final RxString deviceType = 'tablet'.obs;
+  final RxString receiptType = 'thermal_80mm'.obs;
+  final RxBool isActive = true.obs;
+
+  final Rxn<PosDeviceModel> currentDevice = Rxn<PosDeviceModel>();
+
+  final RxBool isLoading = false.obs;
+  final RxBool isUpdating = false.obs;
 
   final RxBool isPrinterConnected = false.obs;
   final RxBool isCashierConnected = false.obs;
@@ -16,37 +33,80 @@ class SettingController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Default mock configurations
-    printerIpController.text = '192.168.1.200';
-    customerIpController.text = '192.168.1.201';
-    customerPortController.text = '8080';
+    _hydrateFromCache();
+  }
+
+  /// Instant, offline-first load from the last-known device. The cashier
+  /// taps "Get from Server" explicitly to hit the network — this avoids
+  /// firing a GET every time the Settings screen is opened.
+  Future<void> _hydrateFromCache() async {
+    final cached = await PosDeviceCacheStorage.getDevice();
+    if (cached != null) {
+      _applyDevice(cached);
+    } else {
+      // Nothing cached yet (first run on this terminal) — fetch once so the
+      // form isn't empty.
+      await getSettingsFromServer();
+    }
   }
 
   @override
   void onClose() {
-    printerIpController.dispose();
-    customerIpController.dispose();
-    customerPortController.dispose();
+    nameController.dispose();
+    deviceCodeController.dispose();
+    ipAddressController.dispose();
+    locationController.dispose();
     super.onClose();
+  }
+
+  void _applyDevice(PosDeviceModel device) {
+    currentDevice.value = device;
+    nameController.text = device.name;
+    deviceCodeController.text = device.deviceCode;
+    ipAddressController.text = device.ipAddress;
+    locationController.text = device.location;
+    deviceType.value = device.deviceType;
+    receiptType.value = device.receiptType;
+    isActive.value = device.isActive;
+  }
+
+  /// Attempts a real TCP handshake to [host]:[port] and reports whether the
+  /// device actually answered, instead of just checking the field is filled.
+  Future<bool> _pingHost(String host, {int port = 9100}) async {
+    if (host.trim().isEmpty) return false;
+    Socket? socket;
+    try {
+      socket = await Socket.connect(
+        host.trim(),
+        port,
+        timeout: const Duration(seconds: 3),
+      );
+      return true;
+    } catch (e) {
+      log('SettingController _pingHost error ($host:$port): $e');
+      return false;
+    } finally {
+      socket?.destroy();
+    }
   }
 
   Future<void> checkPrinterConnection() async {
     try {
       isCheckingPrinter.value = true;
-      // Mock network latency for printer check
-      await Future.delayed(const Duration(seconds: 2));
-      isPrinterConnected.value = printerIpController.text.isNotEmpty;
-      
+      isPrinterConnected.value = await _pingHost(ipAddressController.text);
+
       if (isPrinterConnected.value) {
         customSnackBar(
           'Printer Diagnostic',
-          'Successfully connected to printer at ${printerIpController.text}',
+          'Successfully connected to printer at ${ipAddressController.text}',
           snackBarType: SnackBarType.success,
         );
       } else {
         customSnackBar(
           'Printer Diagnostic',
-          'Connection failed. IP address is empty.',
+          ipAddressController.text.trim().isEmpty
+              ? 'Connection failed. IP address is empty.'
+              : 'Could not reach ${ipAddressController.text}. Check the printer is powered on and on the network.',
           snackBarType: SnackBarType.warning,
         );
       }
@@ -60,20 +120,20 @@ class SettingController extends GetxController {
   Future<void> checkCashierConnection() async {
     try {
       isCheckingCashier.value = true;
-      // Mock network latency for Cashier tab check
-      await Future.delayed(const Duration(seconds: 2));
-      isCashierConnected.value = customerIpController.text.isNotEmpty && customerPortController.text.isNotEmpty;
+      isCashierConnected.value = await _pingHost(ipAddressController.text);
 
       if (isCashierConnected.value) {
         customSnackBar(
           'Cashier Diagnostic',
-          'Successfully established connection to Cashier Tab at ${customerIpController.text}:${customerPortController.text}',
+          'Successfully established connection to Cashier Tab at ${ipAddressController.text}',
           snackBarType: SnackBarType.success,
         );
       } else {
         customSnackBar(
           'Cashier Diagnostic',
-          'Connection failed. Please provide a valid IP and Port.',
+          ipAddressController.text.trim().isEmpty
+              ? 'Connection failed. IP address is empty.'
+              : 'Could not reach ${ipAddressController.text}.',
           snackBarType: SnackBarType.warning,
         );
       }
@@ -84,19 +144,112 @@ class SettingController extends GetxController {
     }
   }
 
-  void getSettingsFromServer() {
-    customSnackBar(
-      'Server Settings',
-      'Settings retrieved successfully from server (mocked).',
-      snackBarType: SnackBarType.info,
-    );
+  Future<void> getSettingsFromServer() async {
+    try {
+      isLoading.value = true;
+      final response = await _service.getMyBranchDevices();
+      if (response.isSuccess && response.payload.isNotEmpty) {
+        final device = response.payload.first;
+        _applyDevice(device);
+        await PosDeviceCacheStorage.saveDevice(device);
+        customSnackBar(
+          'Server Settings',
+          'Settings retrieved successfully from server.',
+          snackBarType: SnackBarType.info,
+        );
+      } else if (response.isSuccess) {
+        customSnackBar(
+          'Server Settings',
+          'No POS device is registered for this branch.',
+          snackBarType: SnackBarType.warning,
+        );
+      } else {
+        // Fall back to the last-known cached device so the terminal stays
+        // usable offline.
+        final cached = await PosDeviceCacheStorage.getDevice();
+        if (cached != null) {
+          _applyDevice(cached);
+        }
+        customSnackBar(
+          'Server Settings',
+          response.message.isNotEmpty
+              ? response.message
+              : 'Could not retrieve settings from server.',
+          snackBarType: SnackBarType.error,
+        );
+      }
+    } catch (e) {
+      log("SettingController getSettingsFromServer error: $e");
+      customSnackBar(
+        'Server Settings',
+        'Something went wrong while retrieving settings.',
+        snackBarType: SnackBarType.error,
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  void updateSettingsToServer() {
-    customSnackBar(
-      'Server Settings',
-      'Settings updated successfully to server (mocked).',
-      snackBarType: SnackBarType.success,
+  Future<void> updateSettingsToServer() async {
+    final device = currentDevice.value;
+    if (device == null) {
+      customSnackBar(
+        'Server Settings',
+        'No device loaded yet. Tap "Get from Server" first.',
+        snackBarType: SnackBarType.warning,
+      );
+      return;
+    }
+    if (nameController.text.trim().isEmpty ||
+        deviceCodeController.text.trim().isEmpty ||
+        ipAddressController.text.trim().isEmpty) {
+      customSnackBar(
+        'Validation Error',
+        'Name, device code and IP address are required.',
+        snackBarType: SnackBarType.warning,
+      );
+      return;
+    }
+
+    final updated = device.copyWith(
+      name: nameController.text.trim(),
+      deviceCode: deviceCodeController.text.trim(),
+      deviceType: deviceType.value,
+      ipAddress: ipAddressController.text.trim(),
+      location: locationController.text.trim(),
+      receiptType: receiptType.value,
+      isActive: isActive.value,
     );
+
+    try {
+      isUpdating.value = true;
+      final response = await _service.updateDevice(id: device.id, device: updated);
+      if (response.isSuccess && response.payload != null) {
+        _applyDevice(response.payload!);
+        await PosDeviceCacheStorage.saveDevice(response.payload!);
+        customSnackBar(
+          'Server Settings',
+          'Settings updated successfully to server.',
+          snackBarType: SnackBarType.success,
+        );
+      } else {
+        customSnackBar(
+          'Server Settings',
+          response.message.isNotEmpty
+              ? response.message
+              : 'Could not update settings.',
+          snackBarType: SnackBarType.error,
+        );
+      }
+    } catch (e) {
+      log("SettingController updateSettingsToServer error: $e");
+      customSnackBar(
+        'Server Settings',
+        'Something went wrong while updating settings.',
+        snackBarType: SnackBarType.error,
+      );
+    } finally {
+      isUpdating.value = false;
+    }
   }
 }

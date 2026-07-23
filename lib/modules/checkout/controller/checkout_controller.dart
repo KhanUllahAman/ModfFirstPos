@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:modfirstpos/core/database/key_value_store.dart';
+import 'package:modfirstpos/core/services/print_receipt_helper.dart';
 import 'package:modfirstpos/modules/checkout/service/checkout_service.dart';
 import 'package:modfirstpos/modules/checkout/model/checkout_models.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
@@ -207,6 +208,38 @@ class CheckoutController extends GetxController {
       );
     } else {
       selectedPickupLocation.value = null;
+    }
+  }
+
+  /// Force-refreshes addresses from the server, bypassing the local cache.
+  Future<void> syncAddresses() async {
+    final customer = Get.find<HomeController>().selectedCartCustomer.value;
+    if (customer == null) return;
+    isLoading.value = true;
+    try {
+      await loadAddresses(customer.id);
+      customSnackBar(
+        'Synced Successfully',
+        'Fresh addresses loaded from server',
+        snackBarType: SnackBarType.success,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Force-refreshes pickup locations from the server, bypassing the cache.
+  Future<void> syncPickupLocations() async {
+    isLoading.value = true;
+    try {
+      await loadPickupLocations();
+      customSnackBar(
+        'Synced Successfully',
+        'Fresh pickup locations loaded from server',
+        snackBarType: SnackBarType.success,
+      );
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -491,6 +524,8 @@ class CheckoutController extends GetxController {
             );
           }
         }
+        // Fire-and-forget: printing must never block clearing the cart.
+        unawaited(PrintReceiptHelper.printOrderReceipt(orderId));
         homeController.clearCart();
         homeController.showCheckoutPanel.value = false;
         resetCheckoutState();

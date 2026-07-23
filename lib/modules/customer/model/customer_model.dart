@@ -111,6 +111,27 @@ class CustomerModel {
   }
 }
 
+class CreateCustomerResponse {
+  final bool isSuccess;
+  final String message;
+  final CustomerModel? payload;
+
+  CreateCustomerResponse({
+    required this.isSuccess,
+    required this.message,
+    this.payload,
+  });
+
+  factory CreateCustomerResponse.fromJson(Map<String, dynamic> json) {
+    final payload = JsonUtils.asMapOrNull(json['payload']);
+    return CreateCustomerResponse(
+      isSuccess: JsonUtils.asBool(json['success']),
+      message: JsonUtils.asString(json['message']),
+      payload: payload != null ? CustomerModel.fromJson(payload) : null,
+    );
+  }
+}
+
 class CustomerListResponse {
   final bool isSuccess;
   final int status;

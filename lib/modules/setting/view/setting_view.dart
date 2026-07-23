@@ -39,137 +39,17 @@ class SettingView extends GetView<SettingController> {
                   children: [
                     BackBar(title: "Settings"),
                     SizedBox(height: context.spacingSM),
-              Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Left Pane - Configuration Fields Form
                     Expanded(
-                      flex: 5,
-                      child: Container(
-                        padding: EdgeInsets.all(context.spacingMD),
-                        decoration: BoxDecoration(
-                          color: ColorResources.homeBackgroundColor,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: ColorResources.cardBorderColor,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.tune_rounded,
-                                  color: ColorResources.blackColor,
-                                  size: 22,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Connection Configurations',
-                                  style: AppFonts.geistMono(
-                                    fontSize: context.fontMD,
-                                    fontWeight: FontWeight.bold,
-                                    color: ColorResources.labelColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            Expanded(
-                              child: ListView(
-                                primary: false,
-                                children: [
-                                  // Printer IP Address
-                                  Text(
-                                    'Thermal Printer Configuration',
-                                    style: AppFonts.geistMono(
-                                      fontSize: context.fontXS,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.grey[700],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  CustomTextFormField(
-                                    controller: controller.printerIpController,
-                                    labelText: 'Printer IP Address',
-                                    hintText:
-                                        'Enter printer IP address (e.g. 192.168.1.100)',
-                                    borderRadius: 12,
-                                    customFocusedBorderColor:
-                                        theme.primaryColor.value,
-                                    customEnabledBorderColor:
-                                        ColorResources.cardBorderColor,
-                                  ),
-                                  SizedBox(height: context.spacingLG),
-
-                                  // Customer Display Configuration
-                                  Text(
-                                    'Customer Display Settings',
-                                    style: AppFonts.geistMono(
-                                      fontSize: context.fontXS,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.grey[700],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(
-                                        flex: 3,
-                                        child: CustomTextFormField(
-                                          controller:
-                                              controller.customerIpController,
-                                          labelText: 'Customer IP Address',
-                                          hintText: 'Enter customer Display IP',
-                                          borderRadius: 12,
-                                          customFocusedBorderColor:
-                                              theme.primaryColor.value,
-                                          customEnabledBorderColor:
-                                              ColorResources.cardBorderColor,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        flex: 2,
-                                        child: CustomTextFormField(
-                                          controller:
-                                              controller.customerPortController,
-                                          labelText: 'Port',
-                                          hintText: 'e.g. 8080',
-                                          keyboardType: TextInputType.number,
-                                          borderRadius: 12,
-                                          customFocusedBorderColor:
-                                              theme.primaryColor.value,
-                                          customEnabledBorderColor:
-                                              ColorResources.cardBorderColor,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: context.responsiveWidth(0.02)),
-
-                    // Right Pane - Status Indicators & Diagnostician
-                    Expanded(
-                      flex: 4,
-                      child: Column(
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          // Left Pane - Configuration Fields Form
                           Expanded(
+                            flex: 5,
                             child: Container(
                               padding: EdgeInsets.all(context.spacingMD),
                               decoration: BoxDecoration(
-                                color: ColorResources.whiteColor,
+                                color: ColorResources.homeBackgroundColor,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: ColorResources.cardBorderColor,
@@ -181,13 +61,13 @@ class SettingView extends GetView<SettingController> {
                                   Row(
                                     children: [
                                       const Icon(
-                                        Icons.assessment_rounded,
+                                        Icons.tune_rounded,
                                         color: ColorResources.blackColor,
                                         size: 22,
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        'Diagnostics & Status',
+                                        'Connection Configurations',
                                         style: AppFonts.geistMono(
                                           fontSize: context.fontMD,
                                           fontWeight: FontWeight.bold,
@@ -197,54 +77,367 @@ class SettingView extends GetView<SettingController> {
                                     ],
                                   ),
                                   const SizedBox(height: 20),
-                                  _buildPrinterDiagnosticRow(context),
-                                  SizedBox(height: context.spacingMD),
-                                  _buildCashierDiagnosticRow(context),
+                                  Expanded(
+                                    child: Obx(
+                                      () => ListView(
+                                        primary: false,
+                                        children: [
+                                          Text(
+                                            'POS Device Configuration',
+                                            style: AppFonts.geistMono(
+                                              fontSize: context.fontXS,
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          CustomTextFormField(
+                                            controller:
+                                                controller.nameController,
+                                            labelText: 'Device Name',
+                                            hintText: 'e.g. Counter 1 Tablet',
+                                            borderRadius: 12,
+                                            customFocusedBorderColor:
+                                                theme.primaryColor.value,
+                                            customEnabledBorderColor:
+                                                ColorResources.cardBorderColor,
+                                          ),
+                                          SizedBox(height: context.spacingMD),
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Expanded(
+                                                child: CustomTextFormField(
+                                                  controller: controller
+                                                      .deviceCodeController,
+                                                  labelText: 'Device Code',
+                                                  hintText: 'e.g. POS-TAB-001',
+                                                  borderRadius: 12,
+                                                  customFocusedBorderColor:
+                                                      theme.primaryColor.value,
+                                                  customEnabledBorderColor:
+                                                      ColorResources
+                                                          .cardBorderColor,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Theme(
+                                                  data: Theme.of(context).copyWith(
+                                                    colorScheme:
+                                                        Theme.of(
+                                                          context,
+                                                        ).colorScheme.copyWith(
+                                                          primary: theme
+                                                              .secondaryColor
+                                                              .value,
+                                                        ),
+                                                  ),
+                                                  child: DropdownButtonFormField<String>(
+                                                    dropdownColor:
+                                                        ColorResources
+                                                            .whiteColor,
+                                                    value: controller
+                                                        .deviceType
+                                                        .value,
+                                                    decoration: InputDecoration(
+                                                      labelText: 'Device Type',
+                                                      filled: true,
+                                                      fillColor: ColorResources
+                                                          .whiteColor,
+                                                      border: OutlineInputBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              12,
+                                                            ),
+                                                        borderSide: const BorderSide(
+                                                          color: ColorResources
+                                                              .cardBorderColor,
+                                                        ),
+                                                      ),
+                                                      focusedBorder: OutlineInputBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              12,
+                                                            ),
+                                                        borderSide: BorderSide(
+                                                          color: theme
+                                                              .secondaryColor
+                                                              .value,
+                                                          width: 2.0,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    items: const [
+                                                      DropdownMenuItem(
+                                                        value:
+                                                            'android_terminal',
+                                                        child: Text(
+                                                          'Android Terminal',
+                                                        ),
+                                                      ),
+                                                      DropdownMenuItem(
+                                                        value: 'ios_terminal',
+                                                        child: Text(
+                                                          'iOS Terminal',
+                                                        ),
+                                                      ),
+                                                      DropdownMenuItem(
+                                                        value: 'windows_pos',
+                                                        child: Text(
+                                                          'Windows POS',
+                                                        ),
+                                                      ),
+                                                      DropdownMenuItem(
+                                                        value: 'tablet',
+                                                        child: Text('Tablet'),
+                                                      ),
+                                                      DropdownMenuItem(
+                                                        value: 'desktop',
+                                                        child: Text('Desktop'),
+                                                      ),
+                                                      DropdownMenuItem(
+                                                        value: 'kiosk',
+                                                        child: Text('Kiosk'),
+                                                      ),
+                                                      DropdownMenuItem(
+                                                        value: 'mobile',
+                                                        child: Text('Mobile'),
+                                                      ),
+                                                    ],
+                                                    onChanged: (val) {
+                                                      if (val != null) {
+                                                        controller
+                                                                .deviceType
+                                                                .value =
+                                                            val;
+                                                      }
+                                                    },
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: context.spacingMD),
+                                          CustomTextFormField(
+                                            controller:
+                                                controller.ipAddressController,
+                                            labelText: 'IP Address',
+                                            hintText:
+                                                'Enter device / printer IP address (e.g. 192.168.1.45)',
+                                            borderRadius: 12,
+                                            customFocusedBorderColor:
+                                                theme.primaryColor.value,
+                                            customEnabledBorderColor:
+                                                ColorResources.cardBorderColor,
+                                          ),
+                                          SizedBox(height: context.spacingMD),
+                                          CustomTextFormField(
+                                            controller:
+                                                controller.locationController,
+                                            labelText: 'Location',
+                                            hintText: 'e.g. Main Counter',
+                                            borderRadius: 12,
+                                            customFocusedBorderColor:
+                                                theme.primaryColor.value,
+                                            customEnabledBorderColor:
+                                                ColorResources.cardBorderColor,
+                                          ),
+                                          SizedBox(height: context.spacingMD),
+                                          Theme(
+                                            data: Theme.of(context).copyWith(
+                                              colorScheme: Theme.of(context)
+                                                  .colorScheme
+                                                  .copyWith(
+                                                    primary: theme
+                                                        .secondaryColor
+                                                        .value,
+                                                  ),
+                                            ),
+                                            child: DropdownButtonFormField<String>(
+                                              dropdownColor:
+                                                  ColorResources.whiteColor,
+                                              value:
+                                                  controller.receiptType.value,
+                                              decoration: InputDecoration(
+                                                labelText: 'Receipt Type',
+                                                filled: true,
+                                                fillColor:
+                                                    ColorResources.whiteColor,
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  borderSide: const BorderSide(
+                                                    color: ColorResources
+                                                        .cardBorderColor,
+                                                  ),
+                                                ),
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
+                                                      borderSide: BorderSide(
+                                                        color: theme
+                                                            .secondaryColor
+                                                            .value,
+                                                        width: 2.0,
+                                                      ),
+                                                    ),
+                                              ),
+                                              items: const [
+                                                DropdownMenuItem(
+                                                  value: 'thermal_80mm',
+                                                  child: Text('Thermal 80mm'),
+                                                ),
+                                                DropdownMenuItem(
+                                                  value: 'thermal_58mm',
+                                                  child: Text('Thermal 58mm'),
+                                                ),
+                                                DropdownMenuItem(
+                                                  value: 'a4',
+                                                  child: Text('A4'),
+                                                ),
+                                                DropdownMenuItem(
+                                                  value: 'digital',
+                                                  child: Text('Digital'),
+                                                ),
+                                              ],
+                                              onChanged: (val) {
+                                                if (val != null) {
+                                                  controller.receiptType.value =
+                                                      val;
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                          // SizedBox(height: context.spacingMD),
+                                          // SwitchListTile.adaptive(
+                                          //   contentPadding: EdgeInsets.zero,
+                                          //   value: controller.isActive.value,
+                                          //   onChanged: (val) =>
+                                          //       controller.isActive.value = val,
+                                          //   activeThumbColor: theme.secondaryColor.value,
+                                          //   activeTrackColor:
+                                          //       theme.secondaryColor.value.withOpacity(0.4),
+                                          //   title: Text(
+                                          //     'Device Active',
+                                          //     style: AppFonts.geistMono(
+                                          //       fontSize: context.fontSM,
+                                          //       fontWeight: FontWeight.w600,
+                                          //       color: ColorResources.labelColor,
+                                          //     ),
+                                          //   ),
+                                          // ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
                           ),
-                          SizedBox(height: context.spacingSM),
-                          // Bottom Actions Row using AppButton
-                          Row(
-                            children: [
-                              Expanded(
-                                child: AppButton(
-                                  onPressed: controller.getSettingsFromServer,
-                                  isLoading: false,
-                                  backgroundColor: theme.primaryColor.value,
-                                  borderRadius: 12,
-                                  child: Text(
-                                    'Get from Server',
-                                    style: AppFonts.geistMono(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: context.fontXS,
-                                      color: theme.onPrimaryColor,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Obx(
-                                  () => AppButton(
-                                    onPressed:
-                                        controller.updateSettingsToServer,
-                                    isLoading: false,
-                                    backgroundColor: theme.secondaryColor.value,
-                                    borderRadius: 12,
-                                    child: Text(
-                                      'Update to Server',
-                                      style: AppFonts.geistMono(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: context.fontXS,
-                                        color: Colors.black,
+                          SizedBox(width: context.responsiveWidth(0.02)),
+
+                          // Right Pane - Status Indicators & Diagnostician
+                          Expanded(
+                            flex: 4,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: EdgeInsets.all(context.spacingMD),
+                                    decoration: BoxDecoration(
+                                      color: ColorResources.whiteColor,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: ColorResources.cardBorderColor,
                                       ),
                                     ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.assessment_rounded,
+                                              color: ColorResources.blackColor,
+                                              size: 22,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'Diagnostics & Status',
+                                              style: AppFonts.geistMono(
+                                                fontSize: context.fontMD,
+                                                fontWeight: FontWeight.bold,
+                                                color:
+                                                    ColorResources.labelColor,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 20),
+                                        _buildPrinterDiagnosticRow(context),
+                                        SizedBox(height: context.spacingMD),
+                                        _buildCashierDiagnosticRow(context),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                                SizedBox(height: context.spacingSM),
+                                // Bottom Actions Row using AppButton
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Obx(
+                                        () => AppButton(
+                                          onPressed:
+                                              controller.getSettingsFromServer,
+                                          isLoading: controller.isLoading.value,
+                                          backgroundColor:
+                                              theme.primaryColor.value,
+                                          borderRadius: 12,
+                                          child: Text(
+                                            'Get from Server',
+                                            style: AppFonts.geistMono(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: context.fontXS,
+                                              color: theme.onPrimaryColor,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Obx(
+                                        () => AppButton(
+                                          onPressed:
+                                              controller.updateSettingsToServer,
+                                          isLoading:
+                                              controller.isUpdating.value,
+                                          backgroundColor:
+                                              theme.secondaryColor.value,
+                                          borderRadius: 12,
+                                          child: Text(
+                                            'Update to Server',
+                                            style: AppFonts.geistMono(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: context.fontXS,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -252,13 +445,10 @@ class SettingView extends GetView<SettingController> {
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    ],
-  ),
-),
     ).noKeyboard();
   }
 

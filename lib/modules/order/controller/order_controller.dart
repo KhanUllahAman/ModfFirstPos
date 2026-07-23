@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/print_receipt_helper.dart';
 import 'package:modfirstpos/modules/order/model/order_model.dart';
 import 'package:modfirstpos/modules/order/service/order_service.dart';
 import 'package:modfirstpos/modules/customer/model/customer_model.dart';
@@ -14,6 +15,7 @@ class OrderController extends GetxController {
   final RxString searchQuery = ''.obs;
 
   final RxBool isLoading = false.obs;
+  final RxBool isPrintingReceipt = false.obs;
   final RxList<OrderModel> orders = <OrderModel>[].obs;
   final Rxn<OrderModel> selectedOrder = Rxn<OrderModel>();
 
@@ -188,6 +190,16 @@ class OrderController extends GetxController {
 
   void selectOrder(OrderModel order) {
     selectedOrder.value = order;
+  }
+
+  Future<void> printReceipt(int? orderId) async {
+    if (orderId == null || isPrintingReceipt.value) return;
+    isPrintingReceipt.value = true;
+    try {
+      await PrintReceiptHelper.printOrderReceipt(orderId);
+    } finally {
+      isPrintingReceipt.value = false;
+    }
   }
 
   void selectStatus(String status) {

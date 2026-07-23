@@ -529,18 +529,28 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
         Expanded(
           child: SizedBox(
             height: 44,
-            child: OutlinedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.print_rounded, size: 18),
-              label: Text('PRINT RECEIPT',
-                  style: AppFonts.geistMono(
-                      fontWeight: FontWeight.w700)),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(
-                    color: ColorResources.cardBorderColor),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
-                foregroundColor: ColorResources.labelColor,
+            child: Obx(
+              () => OutlinedButton.icon(
+                onPressed: controller.isPrintingReceipt.value
+                    ? null
+                    : () => controller.printReceipt(order.id),
+                icon: controller.isPrintingReceipt.value
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.print_rounded, size: 18),
+                label: Text('PRINT RECEIPT',
+                    style: AppFonts.geistMono(
+                        fontWeight: FontWeight.w700)),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(
+                      color: ColorResources.cardBorderColor),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                  foregroundColor: ColorResources.labelColor,
+                ),
               ),
             ),
           ),
