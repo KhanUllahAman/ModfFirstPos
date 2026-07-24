@@ -23,4 +23,5 @@ abstract class Routes {
   static const categoryProducts = '/category-products';
   static const productVariant = '/product-variant';
   static const customer = '/customer';
+  static const shift = '/shift';
 }

@@ -38,23 +38,85 @@ class StoreSelectionView extends GetView<StoreSelectionController> {
               ),
               SizedBox(height: context.spacingLG),
               Expanded(
-                child: ListView.separated(
-                  primary: false,
-                  itemCount: controller.stores.length,
-                  separatorBuilder: (_, __) => SizedBox(height: context.spacingSM),
-                  itemBuilder: (_, index) {
-                    final store = controller.stores[index];
-                    return _StoreTile(
-                      name: store.displayName,
-                      isLoading: controller.isLoading.value,
-                      onTap: () => controller.selectStore(store),
+                child: Obx(() {
+                  if (controller.isFetchingStores.value) {
+                    return const Center(
+                      child: CircularProgressIndicator(color: Colors.white),
                     );
-                  },
-                )
+                  }
+
+                  if (controller.errorMessage.value.isNotEmpty) {
+                    return _ErrorState(
+                      message: controller.errorMessage.value,
+                      onRetry: controller.fetchStores,
+                    );
+                  }
+
+                  if (controller.stores.isEmpty) {
+                    return _ErrorState(
+                      message: 'No stores are available right now.',
+                      onRetry: controller.fetchStores,
+                    );
+                  }
+
+                  return ListView.separated(
+                    primary: false,
+                    itemCount: controller.stores.length,
+                    separatorBuilder: (_, __) => SizedBox(height: context.spacingSM),
+                    itemBuilder: (_, index) {
+                      final store = controller.stores[index];
+                      return _StoreTile(
+                        name: store.siteName ?? 'Unnamed Store',
+                        isLoading: controller.isLoading.value,
+                        onTap: () => controller.selectStore(store),
+                      );
+                    },
+                  );
+                }),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _ErrorState({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.storefront_outlined, color: Colors.white.withOpacity(0.5), size: 40),
+          SizedBox(height: context.spacingSM),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.geistMono(
+              fontSize: context.fontSM,
+              color: Colors.white.withOpacity(0.7),
+            ),
+          ),
+          SizedBox(height: context.spacingMD),
+          TextButton(
+            onPressed: onRetry,
+            child: Text(
+              'Retry',
+              style: GoogleFonts.geistMono(
+                fontSize: context.fontSM,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

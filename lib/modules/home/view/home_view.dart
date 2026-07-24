@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
 import 'package:modfirstpos/modules/home/widgets/home_widget.dart';
+import 'package:modfirstpos/modules/shift/controller/shift_controller.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 import 'package:modfirstpos/shared/widgets/appBarWidget/app_bar_widget.dart';
 import 'package:modfirstpos/shared/widgets/noKeyboard/no_keyboard_extension.dart';
@@ -17,6 +18,10 @@ class HomeView extends GetView<HomeController> {
     final isLandscapeOrTablet =
         MediaQuery.of(context).size.width >= 600 ||
         MediaQuery.of(context).orientation == Orientation.landscape;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.find<ShiftController>().ensureShiftCheckedOnStartup(context);
+    });
 
     return Scaffold(
       resizeToAvoidBottomInset: false,

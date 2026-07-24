@@ -6,6 +6,8 @@ import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/core/utils/images_constant.dart';
+import 'package:modfirstpos/modules/shift/controller/shift_controller.dart';
+import 'package:modfirstpos/modules/shift/widgets/open_shift_dialog.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
 import 'package:modfirstpos/shared/widgets/AppWidgets/appinfo_dailog_widget.dart';
 import 'package:modfirstpos/shared/widgets/DynamicImage/dynamic_network_image.dart';
@@ -49,6 +51,7 @@ class AppNavDrawer extends StatelessWidget {
       label: 'Profile',
     ),
     PosNavItem(route: Routes.setting, icon: Iconsax.setting_2, label: 'Setting'),
+    PosNavItem(route: Routes.shift, icon: Iconsax.moneys, label: 'Shift'),
     PosNavItem(route: Routes.menu, icon: Iconsax.category_2, label: 'Menu'),
   ];
 
@@ -106,6 +109,7 @@ class AppNavDrawer extends StatelessWidget {
           : ColorResources.blackColor;
       final accent = theme.secondaryColor.value;
       final activeRoute = Get.currentRoute;
+      final hasActiveShift = Get.find<ShiftController>().currentShift.value != null;
 
       return Drawer(
         backgroundColor: navBgColor,
@@ -125,6 +129,44 @@ class AppNavDrawer extends StatelessWidget {
                 color: Colors.white24,
               ),
               const SizedBox(height: 12),
+              if (!hasActiveShift)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Material(
+                    color: accent.withOpacity(0.14),
+                    borderRadius: BorderRadius.circular(12),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        OpenShiftDialog.show(context);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Iconsax.moneys, size: 22, color: accent),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Text(
+                                'Open Shift',
+                                style: AppFonts.geistMono(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: accent,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              if (!hasActiveShift) const SizedBox(height: 12),
               Expanded(
                 child: ListView.separated(
                   primary: false,

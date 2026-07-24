@@ -26,10 +26,18 @@ class ApiConstants {
   static final String addressListEndpoint = '${baseUrl}addresses/list';
   static final String pickupLocationListEndpoint =
       '${baseUrl}pickup-locations/list';
+  static final String storeSelectionListEndPoint =
+      '${baseUrl}website-settings/public';
   static final String checkoutEndpoint = '${baseUrl}payments/checkout-session';
   static final String couponValidateEndpoint = '${baseUrl}coupons/validate';
   static String websiteSettingsEndpoint(String storeName) => '${baseUrl}website-settings/frontend/$storeName';
   static final String posDeviceMyBranchEndpoint = '${baseUrl}pos-device/my-branch';
   static String posDeviceUpdateEndpoint(int id) => '${baseUrl}pos-device/$id';
   static final String printReceiptEndpoint = '${baseUrl}orders/print-receipt';
+  static final String posShiftOpenEndpoint = '${baseUrl}pos-shifts/open';
+  static final String posShiftCurrentEndpoint = '${baseUrl}pos-shifts/current';
+  static String posShiftStatusEndpoint(int id) => '${baseUrl}pos-shifts/$id/status';
+  static String posShiftCloseEndpoint(int id) => '${baseUrl}pos-shifts/$id/close';
+  static String posShiftPrintReceiptEndpoint(int id) =>
+      '${baseUrl}pos-shifts/$id/print-receipt';
 }
