@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:modfirstpos/core/services/app_theme_service.dart';
+import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/images_constant.dart';
+import 'package:modfirstpos/modules/bootstrap/controller/bootstrap_controller.dart';
 import 'package:modfirstpos/modules/pin/controller/pin_controller.dart';
 import 'package:modfirstpos/shared/widgets/DynamicImage/dynamic_network_image.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
@@ -73,6 +76,24 @@ import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
                       ],
                     ),
                   ),
+                  if (Get.isRegistered<BootstrapController>())
+                    Obx(() {
+                      final syncedAt =
+                          Get.find<BootstrapController>().syncedAt.value;
+                      if (syncedAt == null) return const SizedBox.shrink();
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          right: context.responsiveWidth(0.02),
+                        ),
+                        child: Text(
+                          'Synced ${DateFormat('h:mm a').format(syncedAt)}',
+                          style: AppFonts.geistMono(
+                            fontSize: 9,
+                            color: iconColor.withOpacity(0.7),
+                          ),
+                        ),
+                      );
+                    }),
                   Obx(() {
                     final pinController = Get.find<PinController>();
                     if (!pinController.pinEnabled.value) {

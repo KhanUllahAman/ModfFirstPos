@@ -140,7 +140,7 @@ class _ProductGrid extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               ElevatedButton.icon(
-                onPressed: () => controller.fetchProducts(),
+                onPressed: () => controller.syncProducts(),
                 icon: const Icon(Icons.refresh_rounded, size: 16),
                 label: Text(
                   'Reload Products',

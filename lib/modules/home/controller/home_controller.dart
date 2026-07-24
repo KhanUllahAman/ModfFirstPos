@@ -2,10 +2,9 @@ import 'package:modfirstpos/core/utils/currency_utils.dart';
 import 'dart:developer';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/modules/bootstrap/controller/bootstrap_controller.dart';
 import 'package:modfirstpos/modules/category/model/category_model.dart';
-import 'package:modfirstpos/modules/category/service/category_service.dart';
 import 'package:modfirstpos/modules/product/model/product_model.dart';
-import 'package:modfirstpos/modules/product/service/product_service.dart';
 import 'package:modfirstpos/modules/home/model/cart_item_model.dart';
 import 'package:modfirstpos/modules/home/model/product_item.dart';
 import 'package:modfirstpos/modules/customer/model/customer_model.dart';
@@ -18,8 +17,7 @@ import 'package:modfirstpos/core/utils/json_utils.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
 class HomeController extends GetxController {
-  final CategoryService _categoryService = CategoryService();
-  final ProductService _productService = ProductService();
+  final BootstrapController _bootstrapController = Get.find<BootstrapController>();
 
   final Rxn<CustomerModel> selectedCartCustomer = Rxn<CustomerModel>();
   final RxBool showCustomerPanel = false.obs;
@@ -59,8 +57,19 @@ class HomeController extends GetxController {
     productScrollController = ScrollController();
     customerListScrollController = ScrollController();
     variantPanelScrollController = ScrollController();
-    loadCategories();
+    _bootstrapController.hydrateFromCache().then((_) => _refreshFromBootstrap());
+    ever(_bootstrapController.data, (_) => _refreshFromBootstrap());
     _loadPinnedProducts();
+  }
+
+  /// Categories/products come straight from the offline-first bootstrap
+  /// snapshot (synced on shift-open) — no network call, always instant.
+  void _refreshFromBootstrap() {
+    categories.assignAll(_bootstrapController.categories);
+    final categoryId = selectedCategory.value?.id;
+    if (categoryId != null) {
+      categoryProducts.assignAll(_bootstrapController.productsForCategory(categoryId));
+    }
   }
 
   @override
@@ -76,72 +85,13 @@ class HomeController extends GetxController {
   }
 
 
-  Future<void> loadCategories({bool forceSync = false}) async {
-    try {
-      isCategoriesLoading.value = true;
-      final response = await _categoryService.fetchCategories(
-        page: 1,
-        limit: 20,
-        isActive: true,
-        forceSync: forceSync,
-      );
-      if (response.isSuccess) {
-        categories.assignAll(response.payload);
-        if (forceSync) {
-          customSnackBar(
-            'Synced Successfully',
-            'Fresh categories loaded from server',
-            snackBarType: SnackBarType.success,
-          );
-        }
-      }
-    } catch (e) {
-      log("HomeController loadCategories error: $e");
-    } finally {
-      isCategoriesLoading.value = false;
-    }
-  }
+  /// Full re-sync of the offline bootstrap snapshot (categories, products,
+  /// variants, inventory, pickup locations, etc — one call refreshes all of
+  /// it). Kept under both names since existing UI wires "Sync Categories"
+  /// and "Sync Products" buttons to whichever one is in scope.
+  Future<void> syncCategories() => _bootstrapController.syncBootstrap();
 
-  Future<void> syncCategories() async {
-    await loadCategories(forceSync: true);
-  }
-
-  Future<void> loadCategoryProducts(int? categoryId, {bool forceSync = false}) async {
-    if (categoryId == null) return;
-    try {
-      isProductsLoading.value = true;
-      final response = await _productService.fetchProducts(
-        page: 1,
-        limit: 50, // fetch a batch of products to show inline
-        categoryId: categoryId,
-        status: 'published',
-        isActive: true,
-        forceSync: forceSync,
-      );
-      if (response.isSuccess) {
-        categoryProducts.assignAll(response.payload);
-        if (forceSync) {
-          customSnackBar(
-            'Synced Successfully',
-            'Fresh products loaded from server',
-            snackBarType: SnackBarType.success,
-          );
-        }
-      } else {
-        categoryProducts.clear();
-      }
-    } catch (e) {
-      log("HomeController loadCategoryProducts error: $e");
-    } finally {
-      isProductsLoading.value = false;
-    }
-  }
-
-  Future<void> syncCategoryProducts() async {
-    if (selectedCategory.value?.id != null) {
-      await loadCategoryProducts(selectedCategory.value!.id, forceSync: true);
-    }
-  }
+  Future<void> syncCategoryProducts() => _bootstrapController.syncBootstrap();
 
 
   List<CategoryModel> get filteredCategories {
@@ -169,7 +119,11 @@ class HomeController extends GetxController {
     selectedProduct.value = null;
     productSearchController.clear();
     productSearchQuery.value = '';
-    loadCategoryProducts(category.id);
+    categoryProducts.assignAll(
+      category.id != null
+          ? _bootstrapController.productsForCategory(category.id!)
+          : const [],
+    );
   }
 
   void onProductTap(ProductModel product) {
@@ -231,7 +185,7 @@ class HomeController extends GetxController {
       name: displayName,
       displayName: displayName,
       sku: sku,
-      imageUrl: product.primaryImageUrl,
+      imageUrl: variant?.imageUrl ?? product.primaryImageUrl,
       unitPrice: price,
       quantity: quantity,
       productId: product.id,
@@ -376,7 +330,7 @@ class HomeController extends GetxController {
             : (product.id?.toString() ?? name),
         name: name,
         skuCode: sku,
-        imageUrl: product.primaryImageUrl,
+        imageUrl: variant?.imageUrl ?? product.primaryImageUrl,
         productPrice: price,
         productId: product.id,
         variantId: variant?.id,

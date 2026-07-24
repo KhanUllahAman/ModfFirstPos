@@ -7,6 +7,7 @@ class ApiConstants {
   static final String loginEndpoint = '${baseUrl}auth/login';
   static final String sendOtpEndpoint = '${baseUrl}auth/send-otp';
   static final String verifyOtpEndpoint = '${baseUrl}auth/verify-otp';
+  static final String refreshTokenEndpoint = '${baseUrl}auth/refresh-token';
   static final String forgotPasswordEndpoint = '${baseUrl}auth/forgot-password';
   static final String getProfileEndpoint = '${baseUrl}auth/profile';
   static final String uploadImageEndpoint = '${baseUrl}upload/image?folder=user';
@@ -23,7 +24,7 @@ class ApiConstants {
   static final String userListEndpoint = '${baseUrl}users/list';
   static final String userCreateEndpoint = '${baseUrl}users';
   static final String orderCreateEndpoint = '${baseUrl}orders';
-  static final String addressListEndpoint = '${baseUrl}addresses/list';
+  static final String addressListEndpoint = '${baseUrl}addresses/admin/list';
   static final String pickupLocationListEndpoint =
       '${baseUrl}pickup-locations/list';
   static final String storeSelectionListEndPoint =
@@ -40,4 +41,8 @@ class ApiConstants {
   static String posShiftCloseEndpoint(int id) => '${baseUrl}pos-shifts/$id/close';
   static String posShiftPrintReceiptEndpoint(int id) =>
       '${baseUrl}pos-shifts/$id/print-receipt';
+  static final String posBootstrapEndpoint = '${baseUrl}pos/bootstrap';
+  static final String inventoryIncreaseEndpoint = '${baseUrl}inventory/increase';
+  static final String inventoryDecreaseEndpoint = '${baseUrl}inventory/decrease';
+  static final String inventoryAdjustEndpoint = '${baseUrl}inventory/adjust';
 }

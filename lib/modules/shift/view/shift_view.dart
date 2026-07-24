@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
+import 'package:modfirstpos/modules/bootstrap/controller/bootstrap_controller.dart';
 import 'package:modfirstpos/modules/shift/controller/shift_controller.dart';
 import 'package:modfirstpos/modules/shift/model/shift_model.dart';
 import 'package:modfirstpos/modules/shift/widgets/close_shift_dialog.dart';
@@ -37,11 +38,26 @@ class ShiftView extends GetView<ShiftController> {
                   Expanded(child: BackBar(title: 'Shift')),
                   Obx(
                     () => IconButton(
+                      onPressed: Get.find<BootstrapController>().isSyncing.value
+                          ? null
+                          : () => Get.find<BootstrapController>().syncBootstrap(),
+                      icon: Get.find<BootstrapController>().isSyncing.value
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.sync_rounded),
+                      tooltip: 'Sync store data',
+                    ),
+                  ),
+                  Obx(
+                    () => IconButton(
                       onPressed: controller.isLoading.value
                           ? null
                           : controller.checkCurrentShift,
                       icon: const Icon(Icons.refresh_rounded),
-                      tooltip: 'Refresh',
+                      tooltip: 'Refresh shift',
                     ),
                   ),
                 ],

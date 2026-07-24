@@ -147,11 +147,6 @@ class _MainTab extends StatelessWidget {
         MenuSectionCard(
           title: "Operations",
           children: [
-            MenuList(
-              menuIcon: Icons.assignment_return_rounded,
-              menuTitle: 'Item Return',
-              menuTap: () {},
-            ),
             // MenuList(
             //   menuIcon: Icons.notifications_rounded,
             //   menuTitle: 'Notification',
@@ -242,11 +237,6 @@ class _SystemTab extends StatelessWidget {
               menuIcon: Icons.info_outline_rounded,
               menuTitle: 'About',
               menuTap: () => Get.toNamed(Routes.about),
-            ),
-            MenuList(
-              menuIcon: Icons.access_time_filled_rounded,
-              menuTitle: 'Shift Close',
-              menuTap: () {},
             ),
           ],
         ),

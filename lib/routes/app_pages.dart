@@ -35,6 +35,8 @@ import 'package:modfirstpos/modules/setting/binding/setting_binding.dart';
 import 'package:modfirstpos/modules/setting/view/setting_view.dart';
 import 'package:modfirstpos/modules/shift/binding/shift_binding.dart';
 import 'package:modfirstpos/modules/shift/view/shift_view.dart';
+import 'package:modfirstpos/modules/inventory/binding/inventory_binding.dart';
+import 'package:modfirstpos/modules/inventory/view/inventory_view.dart';
 import '../modules/splash/binding/splash_binding.dart';
 import '../modules/splash/view/splash_screen.dart';
 import '../modules/auth/view/auth_view.dart';
@@ -187,6 +189,13 @@ class AppPages {
       name: Routes.shift,
       page: () => const ShiftView(),
       binding: ShiftBinding(),
+      transition: Transition.fadeIn,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage(
+      name: Routes.inventory,
+      page: () => const InventoryView(),
+      binding: InventoryBinding(),
       transition: Transition.fadeIn,
       transitionDuration: const Duration(milliseconds: 300),
     ),

@@ -53,13 +53,16 @@ class ProductVariantController extends GetxController {
   String get displaySku => selectedVariant.value?.sku ?? product.sku ?? '--';
 
   void addToCart() {
+    final variant = selectedVariant.value;
     final item = ProductItem(
       id: product.id?.toString() ?? '',
       name: product.displayName,
       skuCode: displaySku,
       oldSkuCode: null,
-      imageUrl: product.primaryImageUrl,
+      imageUrl: variant?.imageUrl ?? product.primaryImageUrl,
       productPrice: displayPrice,
+      productId: product.id,
+      variantId: variant?.id,
     );
     _home.addToCartFromItem(item, quantity: quantity.value);
     addedToCart.value = true;

@@ -24,6 +24,15 @@ class SecureStorageService {
   static Future<void> deleteAccessToken() =>
       _delete(StorageKeys.keyAccessToken);
 
+  static Future<void> saveRefreshToken(String token) =>
+      _write(StorageKeys.keyRefreshToken, token);
+
+  static Future<String?> getRefreshToken() =>
+      _read(StorageKeys.keyRefreshToken);
+
+  static Future<void> deleteRefreshToken() =>
+      _delete(StorageKeys.keyRefreshToken);
+
   static Future<void> saveLoginEmail(String email) =>
       _write(StorageKeys.keyLoginEmail, email);
 

@@ -52,6 +52,7 @@ class AppNavDrawer extends StatelessWidget {
     ),
     PosNavItem(route: Routes.setting, icon: Iconsax.setting_2, label: 'Setting'),
     PosNavItem(route: Routes.shift, icon: Iconsax.moneys, label: 'Shift'),
+    PosNavItem(route: Routes.inventory, icon: Iconsax.box_1, label: 'Inventory'),
     PosNavItem(route: Routes.menu, icon: Iconsax.category_2, label: 'Menu'),
   ];
 

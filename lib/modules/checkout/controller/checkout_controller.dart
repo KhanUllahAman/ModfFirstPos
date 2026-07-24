@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:modfirstpos/core/database/key_value_store.dart';
 import 'package:modfirstpos/core/services/print_receipt_helper.dart';
+import 'package:modfirstpos/modules/bootstrap/controller/bootstrap_controller.dart';
 import 'package:modfirstpos/modules/checkout/service/checkout_service.dart';
 import 'package:modfirstpos/modules/checkout/model/checkout_models.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
@@ -12,6 +13,7 @@ import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
 class CheckoutController extends GetxController {
   final CheckoutService _service = CheckoutService();
+  final BootstrapController _bootstrapController = Get.find<BootstrapController>();
   final RxBool isLoading = false.obs;
   final RxBool isCouponLoading = false.obs;
   final RxString deliveryType = ''.obs;
@@ -74,7 +76,6 @@ class CheckoutController extends GetxController {
   /// without its own controller crashes on this multi-scrollable layout).
   late final ScrollController panelScrollController;
 
-  static const _pickupCacheKey = 'cache_pickup_locations';
   static String _addressCacheKey(int userId) => 'cache_addresses_user_$userId';
 
   @override
@@ -139,17 +140,19 @@ class CheckoutController extends GetxController {
         phoneController.text = customer.phone ?? '';
       }
 
-      // Instant, offline-first: hydrate from the local cache first so the
-      // cashier never waits, then refresh from the network in the background.
-      final hadCache = await _hydrateFromCache(userId);
+      // Pickup locations are offline-first via the bootstrap snapshot —
+      // instant, no network call.
+      _applyPickupLocations(_bootstrapController.pickupLocations);
+
+      // Addresses are per-customer and not part of bootstrap — hydrate from
+      // the local cache first so the cashier never waits, then refresh from
+      // the network in the background.
+      final hadCache = await _hydrateAddressesFromCache(userId);
       if (hadCache) {
         isLoading.value = false;
-        // Fire-and-forget background refresh; UI updates reactively.
-        unawaited(
-          Future.wait([loadAddresses(userId), loadPickupLocations()]),
-        );
+        unawaited(loadAddresses(userId));
       } else {
-        await Future.wait([loadAddresses(userId), loadPickupLocations()]);
+        await loadAddresses(userId);
       }
     } catch (e) {
       log("CheckoutController startCheckoutFlow error: $e");
@@ -158,28 +161,19 @@ class CheckoutController extends GetxController {
     }
   }
 
-  /// Loads cached addresses + pickup locations. Returns true when anything
-  /// usable was found in the cache.
-  Future<bool> _hydrateFromCache(int userId) async {
-    var found = false;
+  /// Loads cached addresses. Returns true when anything usable was found.
+  Future<bool> _hydrateAddressesFromCache(int userId) async {
     try {
       final cachedAddresses =
           await KeyValueStore.getJsonCache(_addressCacheKey(userId));
       if (cachedAddresses != null) {
         _applyAddresses(AddressListResponse.fromJson(cachedAddresses).payload);
-        found = true;
-      }
-      final cachedPickups = await KeyValueStore.getJsonCache(_pickupCacheKey);
-      if (cachedPickups != null) {
-        _applyPickupLocations(
-          PickupLocationListResponse.fromJson(cachedPickups).payload,
-        );
-        found = true;
+        return true;
       }
     } catch (e) {
-      log("CheckoutController _hydrateFromCache error: $e");
+      log("CheckoutController _hydrateAddressesFromCache error: $e");
     }
-    return found;
+    return false;
   }
 
   void _applyAddresses(List<AddressModel> list) {
@@ -228,16 +222,15 @@ class CheckoutController extends GetxController {
     }
   }
 
-  /// Force-refreshes pickup locations from the server, bypassing the cache.
+  /// Re-syncs the full offline bootstrap snapshot (pickup locations are
+  /// part of it), then re-applies the refreshed list.
   Future<void> syncPickupLocations() async {
     isLoading.value = true;
     try {
-      await loadPickupLocations();
-      customSnackBar(
-        'Synced Successfully',
-        'Fresh pickup locations loaded from server',
-        snackBarType: SnackBarType.success,
-      );
+      final success = await _bootstrapController.syncBootstrap();
+      if (success) {
+        _applyPickupLocations(_bootstrapController.pickupLocations);
+      }
     } finally {
       isLoading.value = false;
     }
@@ -270,28 +263,6 @@ class CheckoutController extends GetxController {
       });
     } else if (addresses.isEmpty) {
       selectedAddress.value = null;
-    }
-  }
-
-  Future<void> loadPickupLocations() async {
-    final response = await _service.fetchPickupLocations();
-    if (response.isSuccess) {
-      _applyPickupLocations(response.payload);
-      await KeyValueStore.setJsonCache(_pickupCacheKey, {
-        'success': true,
-        'payload': response.payload
-            .map((l) => {
-                  'id': l.id,
-                  'name': l.name,
-                  'address': l.address,
-                  'city': l.city,
-                  'phone': l.phone,
-                  'is_active': l.isActive,
-                })
-            .toList(),
-      });
-    } else if (pickupLocations.isEmpty) {
-      selectedPickupLocation.value = null;
     }
   }
 

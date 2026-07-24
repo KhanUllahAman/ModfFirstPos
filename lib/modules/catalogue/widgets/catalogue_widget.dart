@@ -93,7 +93,7 @@ class ProductGrid extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               AppSyncButton(
-                onPressed: () => controller.loadCategories(),
+                onPressed: () => controller.syncCategories(),
                 label: 'Reload Categories',
                 icon: Icons.refresh_rounded,
               ),

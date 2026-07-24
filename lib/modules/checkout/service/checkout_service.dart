@@ -23,6 +23,7 @@ class CheckoutService {
         body: body,
         showErrorSnackbar: true,
       );
+      log("Address Body $body");
       final Map<String, dynamic> data = response.data is Map<String, dynamic>
           ? response.data as Map<String, dynamic>
           : jsonDecode(response.data?.toString() ?? '{}')
@@ -35,32 +36,6 @@ class CheckoutService {
         message: e.toString(),
         payload: [],
         pagination: AddressListResponse.fromJson({}).pagination,
-      );
-    }
-  }
-
-  Future<PickupLocationListResponse> fetchPickupLocations({
-    int page = 1,
-    int limit = 20,
-  }) async {
-    try {
-      final body = {'page': page, 'limit': limit};
-      final response = await _client.post(
-        endpoint: ApiConstants.pickupLocationListEndpoint,
-        body: body,
-        showErrorSnackbar: true,
-      );
-      final Map<String, dynamic> data = response.data is Map<String, dynamic>
-          ? response.data as Map<String, dynamic>
-          : jsonDecode(response.data?.toString() ?? '{}')
-                as Map<String, dynamic>;
-      return PickupLocationListResponse.fromJson(data);
-    } catch (e) {
-      log("CheckoutService fetchPickupLocations error: $e");
-      return PickupLocationListResponse(
-        isSuccess: false,
-        message: e.toString(),
-        payload: [],
       );
     }
   }

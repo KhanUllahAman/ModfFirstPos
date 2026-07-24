@@ -161,6 +161,10 @@ class ProductModel {
   final List<ProductImageModel> images;
   final CategoryModel? category;
 
+  /// Product-level stock (variant-less products only) — present on the
+  /// pos/bootstrap payload, not the paginated products/list endpoint.
+  final int? stock;
+
   ProductModel({
     this.id,
     this.name,
@@ -179,6 +183,7 @@ class ProductModel {
     this.descriptions = const [],
     this.images = const [],
     this.category,
+    this.stock,
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
@@ -210,6 +215,7 @@ class ProductModel {
         ProductImageModel.fromJson,
       ),
       category: categoryMap != null ? CategoryModel.fromJson(categoryMap) : null,
+      stock: JsonUtils.asIntOrNull(json['stock']),
     );
   }
 

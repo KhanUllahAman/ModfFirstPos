@@ -36,12 +36,19 @@ class VerifyOtpModel {
 
 class VerifyOtpPayload {
   final String accessToken;
+  final String? refreshToken;
 
-  VerifyOtpPayload({required this.accessToken});
+  VerifyOtpPayload({required this.accessToken, this.refreshToken});
 
   factory VerifyOtpPayload.fromJson(Map<String, dynamic> json) {
+    // Tokens may arrive flat (accessToken/refreshToken) or nested under
+    // "tokens" (matching the shape auth/refresh-token returns).
+    final tokens = json['tokens'] is Map<String, dynamic>
+        ? json['tokens'] as Map<String, dynamic>
+        : json;
     return VerifyOtpPayload(
-      accessToken: json['accessToken']?.toString() ?? '',
+      accessToken: tokens['accessToken']?.toString() ?? '',
+      refreshToken: tokens['refreshToken']?.toString(),
     );
   }
 }

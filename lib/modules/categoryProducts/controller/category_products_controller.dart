@@ -1,27 +1,24 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/modules/bootstrap/controller/bootstrap_controller.dart';
 import 'package:modfirstpos/modules/category/model/category_model.dart';
 import 'package:modfirstpos/modules/product/model/product_model.dart';
-import 'package:modfirstpos/modules/product/service/product_service.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
 
-import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
-
 class CategoryProductsController extends GetxController {
-  final ProductService _service = ProductService();
+  final BootstrapController _bootstrapController = Get.find<BootstrapController>();
   late final CategoryModel category;
 
   final TextEditingController searchController = TextEditingController();
   final RxString searchQuery = ''.obs;
-  final RxBool isLoading = false.obs;
   final RxList<ProductModel> products = <ProductModel>[].obs;
 
   @override
   void onInit() {
     super.onInit();
     category = Get.arguments as CategoryModel;
-    fetchProducts();
+    _refreshFromBootstrap();
+    ever(_bootstrapController.data, (_) => _refreshFromBootstrap());
   }
 
   @override
@@ -30,38 +27,19 @@ class CategoryProductsController extends GetxController {
     super.onClose();
   }
 
-  Future<void> fetchProducts({bool forceSync = false}) async {
-    try {
-      isLoading.value = true;
-      final response = await _service.fetchProducts(
-        page: 1,
-        limit: 20,
-        categoryId: category.id,
-        status: 'published',
-        isActive: true,
-        forceSync: forceSync,
-      );
-      if (response.isSuccess) {
-        products.assignAll(response.payload);
-        if (forceSync) {
-          customSnackBar(
-            'Synced Successfully',
-            'Fresh products for ${category.displayName} loaded from server',
-            snackBarType: SnackBarType.success,
-          );
-        }
-      }
-    } catch (e) {
-      log("CategoryProductsController fetch error: $e");
-    } finally {
-      isLoading.value = false;
-    }
+  void _refreshFromBootstrap() {
+    final categoryId = category.id;
+    products.assignAll(
+      categoryId != null
+          ? _bootstrapController.productsForCategory(categoryId)
+          : const [],
+    );
   }
 
-  Future<void> syncProducts() async {
-    await fetchProducts(forceSync: true);
-  }
+  /// Only true while a manual sync is in flight — normal loads are instant.
+  RxBool get isLoading => _bootstrapController.isSyncing;
 
+  Future<void> syncProducts() => _bootstrapController.syncBootstrap();
 
   void onSearchChanged(String val) => searchQuery.value = val;
 

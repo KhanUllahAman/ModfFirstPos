@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
+import 'package:modfirstpos/modules/bootstrap/controller/bootstrap_controller.dart';
 import 'package:modfirstpos/modules/shift/controller/shift_controller.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
@@ -32,6 +33,7 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _openingFloatController;
   late final TextEditingController _openingNotesController;
+  bool _isSyncingStoreData = false;
 
   @override
   void initState() {
@@ -67,9 +69,13 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
       openingNotes: _openingNotesController.text.trim(),
     );
 
-    if (success && mounted) {
-      Navigator.of(context).pop();
-    }
+    if (!success || !mounted) return;
+
+    setState(() => _isSyncingStoreData = true);
+    await Get.find<BootstrapController>().syncBootstrap(showSnackbar: false);
+    if (!mounted) return;
+
+    Navigator.of(context).pop();
   }
 
   @override
@@ -136,11 +142,24 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
                     maxLines: 2,
                     borderRadius: 10,
                   ),
+                  if (_isSyncingStoreData) ...[
+                    SizedBox(height: context.responsiveHeight(0.018)),
+                    Text(
+                      'Setting up store data...',
+                      textAlign: TextAlign.center,
+                      style: AppFonts.geistMono(
+                        fontSize: 11,
+                        color: theme.secondaryColor.value,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                   SizedBox(height: context.responsiveHeight(0.028)),
                   Obx(
                     () => AppButton(
                       backgroundColor: theme.secondaryColor.value,
-                      isLoading: controller.isOpeningShift.value,
+                      isLoading:
+                          controller.isOpeningShift.value || _isSyncingStoreData,
                       borderRadius: 10,
                       onPressed: _save,
                       child: Text(

@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:modfirstpos/core/network/token_refresh_manager.dart';
 
 class ApiInterceptor extends Interceptor {
   @override
@@ -24,12 +25,35 @@ class ApiInterceptor extends Interceptor {
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
+  Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
     if (kDebugMode) {
       log('ERROR[${err.response?.statusCode}] => PATH: ${err.requestOptions.path}');
       log('MESSAGE: ${err.message}');
       log('DATA: ${err.response?.data}');
     }
+
+    final statusCode = err.response?.statusCode;
+    final isRefreshCall =
+        err.requestOptions.path.contains('auth/refresh-token');
+    final alreadyRetried = err.requestOptions.extra['retriedAfterRefresh'] == true;
+
+    if (statusCode == 403 && !isRefreshCall && !alreadyRetried) {
+      final newToken = await TokenRefreshManager.instance.refreshAccessToken();
+      if (newToken != null && newToken.isNotEmpty) {
+        try {
+          final options = err.requestOptions;
+          options.headers['Authorization'] = 'Bearer $newToken';
+          options.extra['retriedAfterRefresh'] = true;
+          final retryResponse = await Dio().fetch(options);
+          return handler.resolve(retryResponse);
+        } catch (e) {
+          log('ApiInterceptor retry-after-refresh failed: $e');
+        }
+      }
+      // No refresh token available or the refresh call failed — fall
+      // through and let the original 403 surface normally.
+    }
+
     super.onError(err, handler);
   }
 }

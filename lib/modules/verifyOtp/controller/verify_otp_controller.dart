@@ -98,6 +98,10 @@ class VerifyOtpController extends GetxController {
       final accessToken = response.payload?.accessToken.toString();
       if (accessToken != null && accessToken.isNotEmpty) {
         await SecureStorageService.saveAccessToken(accessToken);
+        final refreshToken = response.payload?.refreshToken;
+        if (refreshToken != null && refreshToken.isNotEmpty) {
+          await SecureStorageService.saveRefreshToken(refreshToken);
+        }
         try {
           final profileResponse = await Get.find<GetProfileService>()
               .getProfile();
