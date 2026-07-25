@@ -33,6 +33,15 @@ class ShiftController extends GetxController {
     if (context.mounted) maybeShowOpenShiftPrompt(context);
   }
 
+  /// Resets the one-shot startup flags so the "open shift" prompt can fire
+  /// again on the next login — the controller instance (fenix: true)
+  /// otherwise survives logout and skips the check forever.
+  void resetForLogout() {
+    _startupCheckDone = false;
+    _openPromptShown = false;
+    currentShift.value = null;
+  }
+
   Future<void> checkCurrentShift() async {
     try {
       isLoading.value = true;

@@ -25,4 +25,5 @@ abstract class Routes {
   static const customer = '/customer';
   static const shift = '/shift';
   static const inventory = '/inventory';
+  static const reporting = '/reporting';
 }

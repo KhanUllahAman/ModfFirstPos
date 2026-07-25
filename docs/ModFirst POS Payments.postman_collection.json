@@ -1,0 +1,512 @@
+{
+  "info": {
+    "_postman_id": "109d936b-d21b-4404-8bd5-7d898764d2d3",
+    "name": "ModFirst POS Payments",
+    "description": "One generic POS payment API (POST /payments/pos/pay) covering every POS payment type: cash, bank transfer, Stripe Terminal (card-present), and the two splits (cash + bank, cash + terminal). Plus the Stripe Terminal action endpoints the app polls/captures for card-present. Admin JWT (authenticate).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "28574662",
+    "_collection_link": "https://go.postman.co/collection/28574662-109d936b-d21b-4404-8bd5-7d898764d2d3?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "POS Payment (generic)",
+      "item": [
+        {
+          "name": "Pay (all types — read the comments)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  // ============================================================================\n  //  POST /payments/pos/pay  — ONE endpoint for every POS payment type.\n  //  Send ONLY the fields for the payment_type you pick. Amounts must equal the\n  //  order total. The chosen payment_type is stored on the order (Order.pos_payment_type).\n  // ============================================================================\n\n  \"order_code\": \"{{order_code}}\",          // Required - the order to pay\n  \"payment_type\": \"bank_transfer\",                  // Required - see the 5 options below\n\n  // --- payment_type: \"cash\" -------------------------------------------------\n  //   \"cash_amount\": 31.79                 // Optional (defaults to order total). Instant paid.\n\n  // --- payment_type: \"bank_transfer\" ----------------------------------------\n    \"bank_amount\": 64.78,                // Optional (defaults to order total). Instant paid.\n    \"bank_reference\": \"TXN-12345\"        // Optional - stored on the payment\n\n  // --- payment_type: \"stripe_terminal\" (card present) -----------------------\n  //   \"reader_id\": {{reader_id}},          // Required - your registered reader\n  //   \"terminal_amount\": 31.79             // Optional (defaults to order total)\n  //   >>> response.requires_action=true. Then poll /terminal/payment-status/:ref\n  //       and POST /terminal/capture to finish. Order paid on capture.\n\n  // --- payment_type: \"cash_bank_transfer\" (split) ---------------------------\n  //   \"cash_amount\": 15.90,                // Required\n  //   \"bank_amount\": 15.89,                // Required (cash + bank = total)\n  //   \"bank_reference\": \"TXN-12345\"        // Optional\n\n  // --- payment_type: \"cash_stripe_terminal\" (split) -------------------------\n  //   \"cash_amount\": 15.90,                // Required (instant paid)\n  //   \"terminal_amount\": 15.89,            // Required (cash + terminal = total)\n  //   \"reader_id\": {{reader_id}}           // Required\n  //   >>> cash part paid now; terminal part = poll + capture.\n\n  // ============================================================================\n  //  RESPONSE (same shape for all):\n  //  {\n  //    order_code, payment_type, pos_payment_type, total_amount,\n  //    paid_amount,            // sum of parts already paid\n  //    fully_paid,            // true once everything is captured\n  //    requires_action,       // true = a terminal part still needs poll + capture\n  //    parts: [ { method, amount, status, payment_reference, ... } ],\n  //    terminal: { payment_reference, payment_intent_id, reader_id, next_steps } | null\n  //  }\n  // ============================================================================\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}payments/pos/pay",
+              "host": [
+                "{{BASE_URL}}payments"
+              ],
+              "path": [
+                "pos",
+                "pay"
+              ]
+            },
+            "description": "THE single POS payment endpoint. All five payment_type options are documented inline. Pick one and send only its fields. The type is stored on the order as pos_payment_type."
+          },
+          "response": []
+        },
+        {
+          "name": "Pay — Cash",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_code\": \"{{order_code}}\",       // Required\n  \"payment_type\": \"cash\",               // Required\n  \"cash_amount\": 31.79                  // Optional - defaults to the order total\n}\n\n// Instant: order becomes paid + accepted. requires_action = false.",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}payments/pos/pay",
+              "host": [
+                "{{BASE_URL}}payments"
+              ],
+              "path": [
+                "pos",
+                "pay"
+              ]
+            },
+            "description": "Full cash payment. Recorded as paid immediately."
+          },
+          "response": []
+        },
+        {
+          "name": "Pay — Bank Transfer",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_code\": \"{{order_code}}\",       // Required\n  \"payment_type\": \"bank_transfer\",      // Required\n  \"bank_amount\": 31.79,                 // Optional - defaults to the order total\n  \"bank_reference\": \"TXN-12345\"         // Optional - stored on the payment\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}payments/pos/pay",
+              "host": [
+                "{{BASE_URL}}payments"
+              ],
+              "path": [
+                "pos",
+                "pay"
+              ]
+            },
+            "description": "Full bank transfer. Recorded as paid immediately."
+          },
+          "response": []
+        },
+        {
+          "name": "Pay — Stripe Terminal (card present)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_code\": \"{{order_code}}\",       // Required\n  \"payment_type\": \"stripe_terminal\",    // Required\n  \"reader_id\": {{reader_id}},           // Required - your registered reader id\n  \"terminal_amount\": 31.79              // Optional - defaults to the order total\n}\n\n// requires_action = true. Response.terminal has the payment_reference.\n// Then: poll GET /terminal/payment-status/:ref until action_required=false,\n// then POST /terminal/capture to finalise. Order becomes paid on capture.",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}payments/pos/pay",
+              "host": [
+                "{{BASE_URL}}payments"
+              ],
+              "path": [
+                "pos",
+                "pay"
+              ]
+            },
+            "description": "Card-present via a Stripe Terminal reader. Returns a payment_reference to poll + capture."
+          },
+          "response": []
+        },
+        {
+          "name": "Pay — Split: Cash + Bank Transfer",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_code\": \"{{order_code}}\",       // Required\n  \"payment_type\": \"cash_bank_transfer\", // Required\n  \"cash_amount\": 15.90,                 // Required - must sum with bank_amount to the total\n  \"bank_amount\": 15.89,                 // Required\n  \"bank_reference\": \"TXN-12345\"         // Optional\n}\n\n// Both parts recorded paid; order becomes paid + accepted immediately.",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}payments/pos/pay",
+              "host": [
+                "{{BASE_URL}}payments"
+              ],
+              "path": [
+                "pos",
+                "pay"
+              ]
+            },
+            "description": "Split payment: part cash, part bank transfer. Amounts must equal the order total."
+          },
+          "response": []
+        },
+        {
+          "name": "Pay — Split: Cash + Stripe Terminal",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_code\": \"{{order_code}}\",         // Required\n  \"payment_type\": \"cash_stripe_terminal\", // Required\n  \"cash_amount\": 15.90,                   // Required\n  \"terminal_amount\": 15.89,               // Required - must sum with cash to the total\n  \"reader_id\": {{reader_id}}              // Required\n}\n\n// Cash part is paid immediately; the terminal part is pending.\n// requires_action = true -> poll payment-status then capture. Order becomes\n// fully paid once the terminal part is captured (paid_amount is summed).",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}payments/pos/pay",
+              "host": [
+                "{{BASE_URL}}payments"
+              ],
+              "path": [
+                "pos",
+                "pay"
+              ]
+            },
+            "description": "Split payment: part cash, part card-present. Terminal part must be polled + captured."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Stripe Terminal (poll + capture)",
+      "item": [
+        {
+          "name": "Payment Status (poll)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}terminal/payment-status/{{payment_reference}}",
+              "host": [
+                "{{BASE_URL}}terminal"
+              ],
+              "path": [
+                "payment-status",
+                "{{payment_reference}}"
+              ]
+            },
+            "description": "Poll this every ~2s after a terminal payment. Tells you whether the card has been presented and if the payment can be captured yet."
+          },
+          "response": []
+        },
+        {
+          "name": "Capture Payment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_reference\": \"{{payment_reference}}\"   // Required - from the pay response / poll\n}\n\n// Call once the poll says it is ready. Finalises the charge and marks the\n// order paid (paid_amount is the sum of all paid parts, so splits work).",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}terminal/capture",
+              "host": [
+                "{{BASE_URL}}terminal"
+              ],
+              "path": [
+                "capture"
+              ]
+            },
+            "description": "Capture the card-present payment after the customer has tapped/inserted their card."
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Reader Action",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reader_id\": {{reader_id}}             // Required\n}\n\n// Cancel the in-progress collection on the reader (e.g. customer walked away).",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}terminal/cancel-action",
+              "host": [
+                "{{BASE_URL}}terminal"
+              ],
+              "path": [
+                "cancel-action"
+              ]
+            },
+            "description": "Cancel the current action on the reader."
+          },
+          "response": []
+        },
+        {
+          "name": "Connection Token (SDK init)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}\n\n// The Flutter/JS Stripe Terminal SDK calls this to authenticate the reader.",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}terminal/connection-token",
+              "host": [
+                "{{BASE_URL}}terminal"
+              ],
+              "path": [
+                "connection-token"
+              ]
+            },
+            "description": "Returns a Stripe Terminal connection token for the client SDK."
+          },
+          "response": []
+        },
+        {
+          "name": "Readers List",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"page\": 1,\n  \"limit\": 20,\n  \"filters\": { \"branch_id\": {{branch_id}} }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}terminal/readers/list",
+              "host": [
+                "{{BASE_URL}}terminal"
+              ],
+              "path": [
+                "readers",
+                "list"
+              ]
+            },
+            "description": "List registered readers (get the reader_id to pass to a terminal payment)."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": ""
+    },
+    {
+      "key": "TOKEN",
+      "value": ""
+    },
+    {
+      "key": "X_API_KEY",
+      "value": ""
+    },
+    {
+      "key": "X_API_PASSWORD",
+      "value": ""
+    },
+    {
+      "key": "order_code",
+      "value": ""
+    },
+    {
+      "key": "reader_id",
+      "value": "1"
+    },
+    {
+      "key": "payment_reference",
+      "value": ""
+    },
+    {
+      "key": "branch_id",
+      "value": "1"
+    }
+  ]
+}

@@ -54,6 +54,11 @@ class AppNavDrawer extends StatelessWidget {
     PosNavItem(route: Routes.shift, icon: Iconsax.moneys, label: 'Shift'),
     PosNavItem(route: Routes.inventory, icon: Iconsax.box_1, label: 'Inventory'),
     PosNavItem(route: Routes.menu, icon: Iconsax.category_2, label: 'Menu'),
+    PosNavItem(
+      route: Routes.reporting,
+      icon: Iconsax.document_download,
+      label: 'Reporting',
+    ),
   ];
 
   void _onItemTap(BuildContext context, String route) {
@@ -83,6 +88,20 @@ class AppNavDrawer extends StatelessWidget {
 
   void _onLogoutTap(BuildContext context) {
     Navigator.of(context).pop();
+
+    final hasActiveShift =
+        Get.find<ShiftController>().currentShift.value != null;
+    if (hasActiveShift) {
+      AppDialog.showInfo(
+        context,
+        title: "Shift Still Open",
+        content:
+            "You have an active shift. Please close your shift before logging out.",
+        buttonText: "OK",
+      );
+      return;
+    }
+
     AppDialog.showConfirm(
       context,
       title: "Log Out",
@@ -95,6 +114,7 @@ class AppNavDrawer extends StatelessWidget {
       ),
       onYes: () async {
         await SecureStorageService.clearAll();
+        Get.find<ShiftController>().resetForLogout();
         Get.offAllNamed(Routes.storeSelection);
       },
     );

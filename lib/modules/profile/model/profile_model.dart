@@ -154,18 +154,35 @@ class ImageUploadModel {
 
 class ImageUploadPayload {
   final String? url;
+  final String? absoluteUrl;
   final String? filename;
   final int? size;
   final String? originalName;
 
-  ImageUploadPayload({this.url, this.filename, this.size, this.originalName});
+  ImageUploadPayload({
+    this.url,
+    this.absoluteUrl,
+    this.filename,
+    this.size,
+    this.originalName,
+  });
 
   factory ImageUploadPayload.fromJson(Map<String, dynamic> json) {
     return ImageUploadPayload(
       url: json['url']?.toString(),
+      absoluteUrl: json['absolute_url']?.toString(),
       filename: json['filename']?.toString(),
       size: json['size'] is num ? (json['size'] as num).toInt() : null,
       originalName: json['originalName']?.toString(),
     );
+  }
+
+  /// Prefer the server-provided absolute URL; fall back to prefixing the
+  /// relative [url] the same way [ProfilePayload.fullImageUrl] does.
+  String? get displayUrl {
+    if (absoluteUrl != null && absoluteUrl!.isNotEmpty) return absoluteUrl;
+    if (url == null || url!.isEmpty) return null;
+    if (url!.startsWith('http://') || url!.startsWith('https://')) return url;
+    return 'https://command.modfirst.com$url';
   }
 }

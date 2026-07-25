@@ -87,6 +87,7 @@ class PinController extends GetxController with WidgetsBindingObserver {
     if (!pinEnabled.value) return;
     isLocked.value = true;
     verifyError.value = '';
+    enteredPin.value = '';
     _stopIdleWatcher();
     SecureStorageService.saveWasLocked(true);
   }
@@ -98,6 +99,7 @@ class PinController extends GetxController with WidgetsBindingObserver {
       final response = await _pinService.verifyPin(pin: pin);
       if (response.isSuccess) {
         isLocked.value = false;
+        enteredPin.value = '';
         _lastActiveAt = DateTime.now();
         _startIdleWatcher();
         SecureStorageService.saveWasLocked(false);

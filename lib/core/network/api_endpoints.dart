@@ -45,4 +45,9 @@ class ApiConstants {
   static final String inventoryIncreaseEndpoint = '${baseUrl}inventory/increase';
   static final String inventoryDecreaseEndpoint = '${baseUrl}inventory/decrease';
   static final String inventoryAdjustEndpoint = '${baseUrl}inventory/adjust';
+  static final String orderCommentCreateEndpoint = '${baseUrl}order-comments';
+  static String orderCommentsByOrderEndpoint(int orderId) =>
+      '${baseUrl}order-comments/order/$orderId';
+  static final String orderCommentListEndpoint = '${baseUrl}order-comments/list';
+  static final String reportsDurationExcelEndpoint = '${baseUrl}reports/duration/excel';
 }

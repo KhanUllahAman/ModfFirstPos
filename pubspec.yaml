@@ -64,7 +64,9 @@ dependencies:
   esc_pos_utils: ^1.1.0
   intl_phone_field: ^3.2.0
   collection: ^1.19.1
-  
+  file_picker: ^8.1.6
+  excel: ^4.0.6
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

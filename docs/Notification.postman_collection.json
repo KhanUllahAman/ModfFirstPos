@@ -1,0 +1,378 @@
+{
+  "info": {
+    "_postman_id": "433a0770-3c81-40da-bec8-ed80fbbde605",
+    "name": "Notification",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "28574662",
+    "_collection_link": "https://go.postman.co/collection/28574662-433a0770-3c81-40da-bec8-ed80fbbde605?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Create / Send Notification",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"System maintenance\",       // Required\n  \"body\": \"POS will restart at 2am\",   // Required\n  \"event\": \"custom\",                   // Optional - defaults to \"custom\"\n  \"roles\": [\"admin\", \"pos_user\"],      // Provide roles AND/OR user_ids (at least one)\n  \"user_ids\": [],                      // Optional - specific staff user ids\n  \"data\": { \"screen\": \"dashboard\" }    // Optional - string map sent in the push data\n}\n\n// Customers are never targeted. Response: { id, recipients }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}notifications",
+              "host": [
+                "{{BASE_URL}}notifications"
+              ]
+            },
+            "description": "Manually create and send a notification to internal staff by role and/or specific user ids. Persists to the in-app feed and pushes via FCM. Customers are always excluded."
+          },
+          "response": []
+        },
+        {
+          "name": "Register Device Token",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{fcm_token}}\",     // Required - FCM device token\n  \"platform\": \"android\"        // Optional - android | ios | web\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}notifications/device-tokens",
+              "host": [
+                "{{BASE_URL}}notifications"
+              ],
+              "path": [
+                "device-tokens"
+              ]
+            },
+            "description": "Register (or move) an FCM device token to the current staff user. Call on login / app open. Customers cannot use this."
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Device Token (logout)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{fcm_token}}\"     // Required - only removes it if it belongs to the caller\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}notifications/device-tokens",
+              "host": [
+                "{{BASE_URL}}notifications"
+              ],
+              "path": [
+                "device-tokens"
+              ]
+            },
+            "description": "Remove one device's token so it stops receiving push. Call on logout."
+          },
+          "response": []
+        },
+        {
+          "name": "List Notifications (All + filters)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"page\": 1,                                   // Optional (default: 1)\n  \"limit\": 15,                                 // Optional (default: 10)\n  \"startDate\": \"2026-01-01\",                   // Optional (requires endDate)\n  \"endDate\": \"2026-12-31\",                     // Optional (requires startDate)\n  \"sort\": \"newest\",                            // Optional - newest | oldest\n  \"filters\": {\n    \"id\": 1,                                   // Optional - number | number[]\n    \"event\": \"order.created\",                  // Optional - string | string[]\n    \"entity_type\": \"order\",                    // Optional - product | order | inventory | coupon | user | pos_shift\n    \"is_read\": false,                          // Optional - boolean\n    \"search\": \"shipped\",                       // Optional - matches title/body\n    \"user_id\": 42,                             // Optional - number | number[] (recipient)\n    \"role\": \"pos_user\",                        // Optional - filter by recipient role\n    \"actor_id\": 1                              // Optional - who triggered it\n  }\n}\n\n// Admin view of ALL notifications. Each row includes recipient { id, full_name, role }.\n// summary: { unread_count, total }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}notifications/list",
+              "host": [
+                "{{BASE_URL}}notifications"
+              ],
+              "path": [
+                "list"
+              ]
+            },
+            "description": "Admin view of every notification with the standard filter body (event, entity_type, is_read, user_id, role, actor_id, search, date range)."
+          },
+          "response": []
+        },
+        {
+          "name": "My Notifications",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"page\": 1,                                   // Optional\n  \"limit\": 15,                                 // Optional\n  \"startDate\": \"2026-01-01\",                   // Optional (requires endDate)\n  \"endDate\": \"2026-12-31\",                     // Optional (requires startDate)\n  \"sort\": \"newest\",                            // Optional - newest | oldest\n  \"filters\": {\n    \"id\": 1,                                   // Optional - number | number[]\n    \"event\": \"order.created\",                  // Optional - string | string[]\n    \"entity_type\": \"order\",                    // Optional\n    \"is_read\": false,                          // Optional - boolean\n    \"search\": \"shipped\"                        // Optional - matches title/body\n  }\n}\n\n// Only the token holder's own notifications. user_id / role are NOT accepted here.\n// summary: { unread_count, total }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}notifications/my",
+              "host": [
+                "{{BASE_URL}}notifications"
+              ],
+              "path": [
+                "my"
+              ]
+            },
+            "description": "The logged-in staff user's own notifications (derived from the token). Same filter format minus user_id/role."
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification Read",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}notifications/{{notification_id}}/read",
+              "host": [
+                "{{BASE_URL}}notifications"
+              ],
+              "path": [
+                "{{notification_id}}",
+                "read"
+              ]
+            },
+            "description": "Mark one notification read (only the caller's own)."
+          },
+          "response": []
+        },
+        {
+          "name": "Mark All Read",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}notifications/read-all",
+              "host": [
+                "{{BASE_URL}}notifications"
+              ],
+              "path": [
+                "read-all"
+              ]
+            },
+            "description": "Mark all of the caller's notifications read."
+          },
+          "response": []
+        },
+        {
+          "name": "Unread Count",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}notifications/unread-count",
+              "host": [
+                "{{BASE_URL}}notifications"
+              ],
+              "path": [
+                "unread-count"
+              ]
+            },
+            "description": "Just the caller's unread notification count (for a badge)."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Notification",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}notifications/{{notification_id}}",
+              "host": [
+                "{{BASE_URL}}notifications"
+              ],
+              "path": [
+                "{{notification_id}}"
+              ]
+            },
+            "description": "Remove one notification from the caller's own feed."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": ""
+    },
+    {
+      "key": "TOKEN",
+      "value": ""
+    },
+    {
+      "key": "CUSTOMER_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "X_API_KEY",
+      "value": ""
+    },
+    {
+      "key": "X_API_PASSWORD",
+      "value": ""
+    },
+    {
+      "key": "order_code",
+      "value": ""
+    },
+    {
+      "key": "product_id",
+      "value": "1"
+    },
+    {
+      "key": "review_id",
+      "value": "1"
+    },
+    {
+      "key": "fcm_token",
+      "value": ""
+    },
+    {
+      "key": "notification_id",
+      "value": "1"
+    }
+  ]
+}

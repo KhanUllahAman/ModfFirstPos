@@ -146,6 +146,7 @@ class OrderDropdownFilters extends StatelessWidget {
             child: Obx(
               () => DropdownButtonFormField<String>(
                 value: controller.selectedPaymentStatus.value,
+                dropdownColor: ColorResources.whiteColor,
                 decoration: InputDecoration(
                   labelText: 'Payment Status',
                   labelStyle: AppFonts.geistMono(
@@ -192,6 +193,7 @@ class OrderDropdownFilters extends StatelessWidget {
             child: Obx(
               () => DropdownButtonFormField<String>(
                 value: controller.selectedDeliveryType.value,
+                dropdownColor: ColorResources.whiteColor,
                 decoration: InputDecoration(
                   labelText: 'Delivery Type',
                   labelStyle: AppFonts.geistMono(

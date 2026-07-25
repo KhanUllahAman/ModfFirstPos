@@ -1,15 +1,27 @@
 import 'dart:developer';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:modfirstpos/core/services/print_receipt_helper.dart';
+import 'package:modfirstpos/modules/order/model/order_comment_model.dart';
 import 'package:modfirstpos/modules/order/model/order_model.dart';
 import 'package:modfirstpos/modules/order/service/order_service.dart';
 import 'package:modfirstpos/modules/customer/model/customer_model.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
+import 'package:modfirstpos/modules/profile/service/get_profile_service.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
 class OrderController extends GetxController {
   final OrderService _service = OrderService();
+  final GetProfileService _profileService = GetProfileService();
+  final ImagePicker _imagePicker = ImagePicker();
+
+  // Order comments state
+  final RxList<OrderCommentModel> orderComments = <OrderCommentModel>[].obs;
+  final RxBool isLoadingComments = false.obs;
+  final RxBool isPostingComment = false.obs;
+  final Rx<File?> pendingCommentAttachment = Rx<File?>(null);
 
   final TextEditingController searchController = TextEditingController();
   final RxString searchQuery = ''.obs;
@@ -151,7 +163,10 @@ class OrderController extends GetxController {
         // Auto select first order if details is empty and we have items
         if (orders.isNotEmpty) {
           if (selectedOrder.value == null || !orders.any((o) => o.id == selectedOrder.value?.id)) {
-            selectedOrder.value = orders.first;
+            final firstOrder = orders.first;
+            selectedOrder.value = firstOrder;
+            orderComments.clear();
+            if (firstOrder.id != null) loadOrderComments(firstOrder.id!);
           } else {
             // update existing selected order if present
             final currentId = selectedOrder.value?.id;
@@ -159,6 +174,7 @@ class OrderController extends GetxController {
           }
         } else {
           selectedOrder.value = null;
+          orderComments.clear();
         }
 
         if (forceSync) {
@@ -189,7 +205,111 @@ class OrderController extends GetxController {
   }
 
   void selectOrder(OrderModel order) {
+    if (selectedOrder.value?.id == order.id) return;
     selectedOrder.value = order;
+    orderComments.clear();
+    pendingCommentAttachment.value = null;
+    if (order.id != null) loadOrderComments(order.id!);
+  }
+
+  Future<void> loadOrderComments(int orderId) async {
+    try {
+      isLoadingComments.value = true;
+      final response = await _service.fetchOrderComments(orderId);
+      if (response.isSuccess) {
+        orderComments.assignAll(response.payload);
+      }
+    } catch (e) {
+      log("OrderController loadOrderComments error: $e");
+    } finally {
+      isLoadingComments.value = false;
+    }
+  }
+
+  Future<void> pickCommentAttachment(ImageSource source) async {
+    try {
+      final pickedFile = await _imagePicker.pickImage(
+        source: source,
+        imageQuality: 80,
+        maxWidth: 1024,
+      );
+      if (pickedFile != null) {
+        pendingCommentAttachment.value = File(pickedFile.path);
+      }
+    } catch (e) {
+      log("OrderController pickCommentAttachment error: $e");
+      customSnackBar(
+        'Error',
+        'Unable to pick image',
+        snackBarType: SnackBarType.error,
+      );
+    }
+  }
+
+  void removeCommentAttachment() {
+    pendingCommentAttachment.value = null;
+  }
+
+  Future<bool> postOrderComment({
+    required String comment,
+    String commentType = 'customer_message',
+  }) async {
+    final order = selectedOrder.value;
+    if (order?.id == null || comment.trim().isEmpty || isPostingComment.value) {
+      return false;
+    }
+
+    isPostingComment.value = true;
+    try {
+      String? attachmentUrl;
+      final attachment = pendingCommentAttachment.value;
+      if (attachment != null) {
+        final uploadResponse = await _profileService.uploadImage(attachment);
+        if (!uploadResponse.isSuccess || uploadResponse.payload == null) {
+          customSnackBar(
+            'Error',
+            uploadResponse.message.isNotEmpty
+                ? uploadResponse.message
+                : 'Attachment upload failed',
+            snackBarType: SnackBarType.error,
+          );
+          return false;
+        }
+        attachmentUrl = uploadResponse.payload!.displayUrl;
+      }
+
+      final response = await _service.addOrderComment(
+        orderId: order!.id!,
+        comment: comment.trim(),
+        commentType: commentType,
+        attachmentUrl: attachmentUrl,
+      );
+
+      if (!response.isSuccess) {
+        customSnackBar(
+          'Error',
+          response.message.isNotEmpty
+              ? response.message
+              : 'Failed to post comment',
+          snackBarType: SnackBarType.error,
+        );
+        return false;
+      }
+
+      pendingCommentAttachment.value = null;
+      await loadOrderComments(order.id!);
+      return true;
+    } catch (e) {
+      log("OrderController postOrderComment error: $e");
+      customSnackBar(
+        'Error',
+        'Something went wrong while posting comment',
+        snackBarType: SnackBarType.error,
+      );
+      return false;
+    } finally {
+      isPostingComment.value = false;
+    }
   }
 
   Future<void> printReceipt(int? orderId) async {

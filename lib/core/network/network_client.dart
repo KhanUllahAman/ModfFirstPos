@@ -141,6 +141,33 @@ class NetworkClient {
     }
   }
 
+  /// Use for endpoints that return raw binary data (e.g. exported files)
+  /// instead of JSON.
+  Future<Response<List<int>>> postBytes({
+    required String endpoint,
+    Map<String, dynamic>? body,
+    Map<String, dynamic>? headers,
+    bool showErrorSnackbar = true,
+  }) async {
+    try {
+      if (!_connectivityService.isConnected) throw NoInternetException();
+      final options = Options(
+        headers: await _buildHeaders(headers),
+        responseType: ResponseType.bytes,
+      );
+      final response = await _dio.post<List<int>>(
+        endpoint,
+        data: body,
+        options: options,
+      );
+      log("POST Bytes Response [$endpoint]: ${response.statusCode}");
+      return response;
+    } catch (e) {
+      log("POST Bytes Error [$endpoint]: $e");
+      throw ExceptionHandler.handleError(e, showSnackbar: showErrorSnackbar);
+    }
+  }
+
   Future<Response> delete({
     required String endpoint,
     Map<String, dynamic>? body,

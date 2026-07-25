@@ -35,6 +35,8 @@ import 'package:modfirstpos/modules/setting/binding/setting_binding.dart';
 import 'package:modfirstpos/modules/setting/view/setting_view.dart';
 import 'package:modfirstpos/modules/shift/binding/shift_binding.dart';
 import 'package:modfirstpos/modules/shift/view/shift_view.dart';
+import 'package:modfirstpos/modules/reporting/binding/reporting_binding.dart';
+import 'package:modfirstpos/modules/reporting/view/reporting_view.dart';
 import 'package:modfirstpos/modules/inventory/binding/inventory_binding.dart';
 import 'package:modfirstpos/modules/inventory/view/inventory_view.dart';
 import '../modules/splash/binding/splash_binding.dart';
@@ -203,6 +205,13 @@ class AppPages {
       name: Routes.notification,
       page: () => const NotificationView(),
       binding: NotificationBinding(),
+      transition: Transition.fadeIn,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage(
+      name: Routes.reporting,
+      page: () => const ReportingView(),
+      binding: ReportingBinding(),
       transition: Transition.fadeIn,
       transitionDuration: const Duration(milliseconds: 300),
     ),

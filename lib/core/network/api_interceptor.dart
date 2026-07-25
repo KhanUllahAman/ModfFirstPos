@@ -37,7 +37,9 @@ class ApiInterceptor extends Interceptor {
         err.requestOptions.path.contains('auth/refresh-token');
     final alreadyRetried = err.requestOptions.extra['retriedAfterRefresh'] == true;
 
-    if (statusCode == 403 && !isRefreshCall && !alreadyRetried) {
+    if ((statusCode == 401 || statusCode == 403) &&
+        !isRefreshCall &&
+        !alreadyRetried) {
       final newToken = await TokenRefreshManager.instance.refreshAccessToken();
       if (newToken != null && newToken.isNotEmpty) {
         try {

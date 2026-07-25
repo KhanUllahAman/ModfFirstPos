@@ -6,6 +6,7 @@ import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/order/controller/order_controller.dart';
 import 'package:modfirstpos/modules/order/model/order_model.dart';
+import 'package:modfirstpos/modules/order/widgets/order_comments_dialog.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 
 class OrderDetailsPaneWidget extends GetView<OrderController> {
@@ -559,15 +560,19 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
         Expanded(
           child: SizedBox(
             height: 44,
-            child: Obx(() => ElevatedButton(
-                  onPressed: () {},
+            child: Obx(() => ElevatedButton.icon(
+                  onPressed: () => OrderCommentsDialog.show(context),
+                  icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.secondaryColor.value,
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
                   ),
-                  child: Text('ORDER ACTIONS',
+                  label: Text(
+                      controller.orderComments.isEmpty
+                          ? 'COMMENTS'
+                          : 'COMMENTS (${controller.orderComments.length})',
                       style: AppFonts.geistMono(
                           fontWeight: FontWeight.w700)),
                 )),
