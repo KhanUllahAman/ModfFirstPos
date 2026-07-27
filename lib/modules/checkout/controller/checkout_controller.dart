@@ -2,12 +2,15 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:modfirstpos/core/database/key_value_store.dart';
 import 'package:modfirstpos/core/services/local_receipt_builder.dart';
 import 'package:modfirstpos/core/services/print_receipt_helper.dart';
+import 'package:modfirstpos/core/services/stripe_terminal_service.dart';
+import 'package:modfirstpos/core/services/stripe_test_helper_service.dart';
 import 'package:modfirstpos/core/services/sync_service.dart';
 import 'package:modfirstpos/core/services/thermal_printer_service.dart';
+import 'package:modfirstpos/core/storage/secure_storage_service.dart';
+import 'package:modfirstpos/core/storage/stripe_terminal_settings_storage.dart';
 import 'package:modfirstpos/core/utils/client_reference_generator.dart';
 import 'package:modfirstpos/modules/bootstrap/controller/bootstrap_controller.dart';
 import 'package:modfirstpos/modules/bootstrap/model/bootstrap_model.dart';
@@ -54,6 +57,11 @@ class CheckoutController extends GetxController {
   final RxDouble customOnlineAmount = 0.0.obs;
   final RxDouble customCashAmount = 0.0.obs;
 
+  /// Live status text shown while a Stripe Terminal payment is in flight
+  /// (connecting reader / waiting for card / capturing), so the "Confirm &
+  /// Pay" spinner isn't a silent black box.
+  final RxString terminalStatusMessage = ''.obs;
+
   // Resolved delivery details captured by createOrder(), reused by
   // submitCheckout() — for offline payment methods there's no server order
   // yet to carry these, so they're held here until final submit.
@@ -74,7 +82,9 @@ class CheckoutController extends GetxController {
     return remainder > 0 ? remainder : 0.0;
   }
 
-  bool get isSplitPayment => paymentMethod.value.endsWith('_and_cash');
+  bool get isSplitPayment =>
+      paymentMethod.value == 'cash_bank_transfer' ||
+      paymentMethod.value == 'cash_stripe_terminal';
 
   void splitKeypadAppend(String digit) {
     final current = splitCashInput.value;
@@ -359,7 +369,7 @@ class CheckoutController extends GetxController {
 
   /// Resolves delivery details + cart items and moves to the payment step.
   /// Entirely local/instant — no network call. The real online order (for
-  /// Stripe/PayPal/split methods) or the offline queue entry (for
+  /// Stripe Terminal / split methods) or the offline queue entry (for
   /// cash/bank_transfer/without_payment) is only created at
   /// [submitCheckout] once the payment method is actually known.
   Future<bool> createOrder(HomeController homeController) async {
@@ -471,7 +481,7 @@ class CheckoutController extends GetxController {
     if (_offlinePaymentMethods.contains(method)) {
       await _submitOfflineSale(homeController, method);
     } else {
-      await _submitOnlineCheckout(homeController, method);
+      await _submitPosPayment(homeController, method);
     }
   }
 
@@ -634,14 +644,25 @@ class CheckoutController extends GetxController {
     }
   }
 
-  /// Stripe / PayPal / split methods — real online order create + checkout,
-  /// exactly as before (unchanged online flow).
-  Future<void> _submitOnlineCheckout(
+  /// `stripe_terminal` / `cash_bank_transfer` / `cash_stripe_terminal` — real
+  /// online order create, then the single POS payment API
+  /// (`POST /payments/pos/pay`, docs/POS_PAYMENT_FLUTTER.md). Card-present
+  /// parts continue through [_runTerminalCaptureFlow]; everything else
+  /// settles instantly.
+  Future<void> _submitPosPayment(
     HomeController homeController,
     String method,
   ) async {
     final customer = homeController.selectedCartCustomer.value;
     if (customer == null) return;
+
+    // The cash amount the cashier typed on the split keypad is fixed and
+    // must be preserved exactly; only the "other" part is derived — and it
+    // must be derived from the REAL server-side total (which includes
+    // shipping/tax the local pre-order estimate doesn't have), not from
+    // [payableAmount], which still reflects that stale local estimate until
+    // the real order below is created.
+    final splitCashAmount = isSplitPayment ? splitCash : null;
 
     isLoading.value = true;
     try {
@@ -666,65 +687,211 @@ class CheckoutController extends GetxController {
       }
       createdOrder.value = createResponse.order;
 
-      final orderId = createdOrder.value!.id;
-      double? online;
-      double? cash;
-      if (method == 'stripe_and_cash' || method == 'paypal_and_cash') {
-        cash = splitCash;
-        online = splitOnline;
-        if (cash <= 0 || cash >= payableAmount) {
+      final orderCode = createdOrder.value!.orderCode;
+      if (orderCode == null || orderCode.isEmpty) {
+        customSnackBar(
+          'Error',
+          'Order was created but no order code was returned by the server.',
+          snackBarType: SnackBarType.error,
+        );
+        return;
+      }
+
+      // Real, server-computed total (includes shipping fee) — the amounts
+      // sent to /payments/pos/pay must sum to exactly this.
+      final realTotal =
+          double.parse(createdOrder.value!.totalAmount.toStringAsFixed(2));
+
+      double? cashAmount;
+      double? bankAmount;
+      double? terminalAmount;
+
+      if (splitCashAmount != null) {
+        cashAmount = double.parse(splitCashAmount.toStringAsFixed(2));
+        if (cashAmount <= 0 || cashAmount >= realTotal) {
           customSnackBar(
             'Invalid Split Amount',
-            'Cash must be more than 0 and less than the payable total '
-            '(${payableAmount.toStringAsFixed(2)})',
+            'Cash must be more than 0 and less than the order total '
+            '(${realTotal.toStringAsFixed(2)})',
             snackBarType: SnackBarType.warning,
           );
           return;
         }
+        // Computed as the remainder so the two parts always sum to exactly
+        // realTotal, even with floating-point rounding.
+        final otherPart = double.parse((realTotal - cashAmount).toStringAsFixed(2));
+        if (method == 'cash_bank_transfer') {
+          bankAmount = otherPart;
+        } else {
+          terminalAmount = otherPart;
+        }
+      } else if (method == 'stripe_terminal') {
+        terminalAmount = realTotal;
       }
 
-      final response = await _service.checkoutOrder(
-        orderId: orderId,
-        paymentMethod: method,
-        onlineAmount: online,
-        cashAmount: cash,
+      int? readerId;
+      if (method == 'stripe_terminal' || method == 'cash_stripe_terminal') {
+        readerId = await _ensureTerminalReady();
+        if (readerId == null) return;
+      }
+
+      final payResponse = await _service.payPos(
+        orderCode: orderCode,
+        paymentType: method,
+        cashAmount: cashAmount,
+        bankAmount: bankAmount,
+        terminalAmount: terminalAmount,
+        readerId: readerId,
       );
 
-      if (response.isSuccess) {
-        customSnackBar(
-          'Checkout Success',
-          'Order checked out successfully.',
-          snackBarType: SnackBarType.success,
+      if (!payResponse.isSuccess) {
+        customSnackBar('Payment Failed', payResponse.message, snackBarType: SnackBarType.error);
+        return;
+      }
+
+      if (payResponse.requiresAction && payResponse.terminal != null) {
+        await _runTerminalCaptureFlow(
+          homeController,
+          createdOrder.value!.id,
+          payResponse.terminal!.paymentReference,
         );
-        if (response.sessionUrl != null && response.sessionUrl!.isNotEmpty) {
-          final uri = Uri.tryParse(response.sessionUrl!);
-          if (uri != null && await canLaunchUrl(uri)) {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-          } else {
-            customSnackBar(
-              'Checkout Redirect',
-              'Please open this link to pay: ${response.sessionUrl}',
-              durationSeconds: 10,
-            );
-          }
-        }
-        // Fire-and-forget: printing must never block clearing the cart.
-        unawaited(PrintReceiptHelper.printOrderReceipt(orderId));
-        homeController.clearCart();
-        homeController.showCheckoutPanel.value = false;
-        resetCheckoutState();
       } else {
-        customSnackBar(
-          'Checkout Error',
-          response.message,
-          snackBarType: SnackBarType.error,
-        );
+        await _completeCheckout(homeController, createdOrder.value!.id);
       }
     } catch (e) {
-      log("CheckoutController _submitOnlineCheckout error: $e");
+      log("CheckoutController _submitPosPayment error: $e");
       customSnackBar('Error', 'An error occurred during checkout: $e', snackBarType: SnackBarType.error);
     } finally {
       isLoading.value = false;
+      terminalStatusMessage.value = '';
     }
+  }
+
+  /// Reads the manually-configured reader (Settings > Stripe Terminal) and
+  /// makes sure it's connected before the backend tries to push a
+  /// PaymentIntent to it. Returns the reader id, or null (with a snackbar
+  /// already shown) if it isn't ready.
+  Future<int?> _ensureTerminalReady() async {
+    final readerIdText = await StripeTerminalSettingsStorage.getReaderId();
+    final readerId = int.tryParse(readerIdText ?? '');
+    if (readerId == null) {
+      customSnackBar(
+        'Reader Not Configured',
+        'Set the Stripe Terminal Reader ID in Settings first.',
+        snackBarType: SnackBarType.warning,
+      );
+      return null;
+    }
+
+    if (!Get.isRegistered<StripeTerminalService>()) return readerId;
+    final terminal = Get.find<StripeTerminalService>();
+    if (terminal.isConnected.value) return readerId;
+
+    terminalStatusMessage.value = 'Connecting to card reader...';
+    final simulated = await StripeTerminalSettingsStorage.getUseSimulated();
+    final connected = await terminal.connect(simulated: simulated);
+    if (!connected) {
+      customSnackBar(
+        'Reader Not Connected',
+        terminal.lastError.value.isNotEmpty
+            ? terminal.lastError.value
+            : 'Could not connect to the card reader. Check Settings > Stripe Terminal.',
+        snackBarType: SnackBarType.error,
+      );
+      return null;
+    }
+    return readerId;
+  }
+
+  /// TEST ONLY (see Settings > Stripe Terminal): if a Stripe test secret key
+  /// and the reader's Stripe id (tmr_...) are configured, calls Stripe's
+  /// Terminal test helper directly so a simulated reader's "waiting for
+  /// card" state actually progresses. No-ops silently if not configured —
+  /// this only exists to unblock testing without a backend endpoint or
+  /// physical reader.
+  Future<void> _maybeSimulateCardPresent() async {
+    final secretKey = await SecureStorageService.getStripeTestSecretKey();
+    final tmrId = await StripeTerminalSettingsStorage.getStripeReaderTmrId();
+    if (secretKey == null || secretKey.isEmpty || tmrId == null || tmrId.isEmpty) {
+      return;
+    }
+    final ok = await StripeTestHelperService().simulateCardPresent(
+      stripeReaderId: tmrId,
+      secretKey: secretKey,
+    );
+    if (!ok) {
+      log('CheckoutController _maybeSimulateCardPresent: simulate call failed');
+    }
+  }
+
+  /// Polls the card-present part until Stripe has the card, then captures.
+  /// See docs/POS_PAYMENT_FLUTTER.md section 3.4-3.5.
+  Future<void> _runTerminalCaptureFlow(
+    HomeController homeController,
+    int orderId,
+    String paymentReference,
+  ) async {
+    const pollInterval = Duration(seconds: 2);
+    const maxAttempts = 60; // ~2 minutes before giving up
+
+    terminalStatusMessage.value = 'Present the card on the reader now...';
+    await _maybeSimulateCardPresent();
+
+    for (var attempt = 0; attempt < maxAttempts; attempt++) {
+      await Future.delayed(pollInterval);
+      final status = await _service.pollTerminalPaymentStatus(paymentReference);
+      if (!status.isSuccess) continue;
+
+      terminalStatusMessage.value = switch (status.state) {
+        'waiting_for_card' => 'Waiting for card... (present it on the reader)',
+        _ => 'Card status: ${status.state ?? 'checking'}...',
+      };
+
+      if (status.isDeclinedOrFailed) {
+        customSnackBar(
+          'Card Declined',
+          status.failureMessage ?? 'The card payment was declined.',
+          snackBarType: SnackBarType.error,
+        );
+        return;
+      }
+
+      if (status.isCaptured) {
+        // Already fully settled by the backend — no separate /capture call
+        // needed (some readers, especially simulated ones, skip straight
+        // to this state).
+        await _completeCheckout(homeController, orderId);
+        return;
+      }
+
+      if (status.canCapture || status.isSucceeded) {
+        final capture = await _service.captureTerminalPayment(paymentReference);
+        if (!capture.isSuccess) {
+          customSnackBar('Capture Failed', capture.message, snackBarType: SnackBarType.error);
+          return;
+        }
+        await _completeCheckout(homeController, orderId);
+        return;
+      }
+    }
+
+    customSnackBar(
+      'Card Payment Timed Out',
+      'No card was presented in time. You can retry payment for this order.',
+      snackBarType: SnackBarType.warning,
+    );
+  }
+
+  Future<void> _completeCheckout(HomeController homeController, int orderId) async {
+    customSnackBar(
+      'Checkout Success',
+      'Order paid successfully.',
+      snackBarType: SnackBarType.success,
+    );
+    // Fire-and-forget: printing must never block clearing the cart.
+    unawaited(PrintReceiptHelper.printOrderReceipt(orderId));
+    homeController.clearCart();
+    homeController.showCheckoutPanel.value = false;
+    resetCheckoutState();
   }
 }

@@ -871,7 +871,7 @@ class CheckoutFlowPanel extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Online (auto)',
+                      'Other (auto)',
                       style: AppFonts.geistMono(
                           fontSize: 10, color: Colors.grey[600]),
                     ),
@@ -901,6 +901,27 @@ class CheckoutFlowPanel extends StatelessWidget {
           const SizedBox(height: 16),
         ],
 
+        if (checkoutController.isLoading.value &&
+            checkoutController.terminalStatusMessage.value.isNotEmpty) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: theme.secondaryColor.value.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              checkoutController.terminalStatusMessage.value,
+              textAlign: TextAlign.center,
+              style: AppFonts.geistMono(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: theme.secondaryColor.value,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         AppButton(
           onPressed: () => checkoutController.submitCheckout(homeController),
           isLoading: checkoutController.isLoading.value,
@@ -975,28 +996,22 @@ class CheckoutFlowPanel extends StatelessWidget {
       subtitle: 'Complete without an online payment',
     ),
     _PaymentMethodOption(
-      value: 'stripe',
+      value: 'stripe_terminal',
       icon: Iconsax.card,
-      label: 'Stripe',
-      subtitle: 'Full card payment via Stripe',
+      label: 'Card (Stripe Terminal)',
+      subtitle: 'Tap/insert card on the reader',
     ),
     _PaymentMethodOption(
-      value: 'paypal',
-      icon: Iconsax.wallet_3,
-      label: 'PayPal',
-      subtitle: 'Full online payment via PayPal',
+      value: 'cash_bank_transfer',
+      icon: Iconsax.money_recive,
+      label: 'Split — Cash + Bank',
+      subtitle: 'Part cash, part bank transfer',
     ),
     _PaymentMethodOption(
-      value: 'stripe_and_cash',
+      value: 'cash_stripe_terminal',
       icon: Iconsax.card_add,
-      label: 'Split — Stripe + Cash',
-      subtitle: 'Part card, part cash on the keypad',
-    ),
-    _PaymentMethodOption(
-      value: 'paypal_and_cash',
-      icon: Iconsax.wallet_add,
-      label: 'Split — PayPal + Cash',
-      subtitle: 'Part PayPal, part cash on the keypad',
+      label: 'Split — Cash + Card',
+      subtitle: 'Part cash, part card on the reader',
     ),
   ];
 }

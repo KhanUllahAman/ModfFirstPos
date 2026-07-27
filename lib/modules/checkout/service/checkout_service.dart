@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:dio/dio.dart' show Response;
 import 'package:modfirstpos/core/network/api_endpoints.dart';
 import 'package:modfirstpos/core/network/network_client.dart';
+import 'package:modfirstpos/core/utils/json_utils.dart';
 import 'package:modfirstpos/modules/checkout/model/checkout_models.dart';
 
 class CheckoutService {
@@ -156,6 +158,112 @@ class CheckoutService {
         sessionUrl: null,
         paymentReference: null,
       );
+    }
+  }
+
+  // --------------------------------------------------------------------
+  // POS payments — one endpoint for cash / bank transfer / Stripe Terminal
+  // (card-present) + splits. See docs/POS_PAYMENT_FLUTTER.md.
+  // --------------------------------------------------------------------
+
+  Map<String, dynamic> _asMap(Response response) {
+    return response.data is Map<String, dynamic>
+        ? response.data as Map<String, dynamic>
+        : jsonDecode(response.data?.toString() ?? '{}') as Map<String, dynamic>;
+  }
+
+  Future<PosPaymentResponse> payPos({
+    required String orderCode,
+    required String paymentType,
+    double? cashAmount,
+    double? bankAmount,
+    String? bankReference,
+    double? terminalAmount,
+    int? readerId,
+  }) async {
+    try {
+      final body = <String, dynamic>{
+        'order_code': orderCode,
+        'payment_type': paymentType,
+        if (cashAmount != null) 'cash_amount': cashAmount,
+        if (bankAmount != null) 'bank_amount': bankAmount,
+        if (bankReference != null && bankReference.isNotEmpty)
+          'bank_reference': bankReference,
+        if (terminalAmount != null) 'terminal_amount': terminalAmount,
+        if (readerId != null) 'reader_id': readerId,
+      };
+
+      final response = await _client.post(
+        endpoint: ApiConstants.posPaymentPayEndpoint,
+        body: body,
+        showErrorSnackbar: true,
+      );
+
+      return PosPaymentResponse.fromJson(_asMap(response));
+    } catch (e) {
+      log("CheckoutService payPos error: $e");
+      return PosPaymentResponse(isSuccess: false, message: e.toString());
+    }
+  }
+
+  Future<TerminalPaymentStatusResponse> pollTerminalPaymentStatus(
+    String paymentReference,
+  ) async {
+    try {
+      final response = await _client.get(
+        endpoint: ApiConstants.terminalPaymentStatusEndpoint(paymentReference),
+        showErrorSnackbar: false,
+      );
+      return TerminalPaymentStatusResponse.fromJson(_asMap(response));
+    } catch (e) {
+      log("CheckoutService pollTerminalPaymentStatus error: $e");
+      return TerminalPaymentStatusResponse(isSuccess: false, message: e.toString());
+    }
+  }
+
+  Future<TerminalCaptureResponse> captureTerminalPayment(
+    String paymentReference,
+  ) async {
+    try {
+      final response = await _client.post(
+        endpoint: ApiConstants.terminalCaptureEndpoint,
+        body: {'payment_reference': paymentReference},
+        showErrorSnackbar: true,
+      );
+      return TerminalCaptureResponse.fromJson(_asMap(response));
+    } catch (e) {
+      log("CheckoutService captureTerminalPayment error: $e");
+      return TerminalCaptureResponse(isSuccess: false, message: e.toString());
+    }
+  }
+
+  Future<bool> cancelTerminalAction(int readerId) async {
+    try {
+      final response = await _client.post(
+        endpoint: ApiConstants.terminalCancelActionEndpoint,
+        body: {'reader_id': readerId},
+        showErrorSnackbar: false,
+      );
+      return JsonUtils.asBool(_asMap(response)['success']);
+    } catch (e) {
+      log("CheckoutService cancelTerminalAction error: $e");
+      return false;
+    }
+  }
+
+  Future<String?> fetchTerminalConnectionToken() async {
+    try {
+      final response = await _client.post(
+        endpoint: ApiConstants.terminalConnectionTokenEndpoint,
+        body: const {},
+        showErrorSnackbar: true,
+      );
+      final data = _asMap(response);
+      final payload = JsonUtils.asMap(data['payload']);
+      return JsonUtils.asStringOrNull(payload['secret']);
+    } catch (e) {
+      log("CheckoutService fetchTerminalConnectionToken error: $e");
+      return null;
     }
   }
 }

@@ -4,6 +4,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/services/customer_display_service.dart';
+import 'package:modfirstpos/core/services/stripe_terminal_service.dart';
+import 'package:modfirstpos/core/storage/secure_storage_service.dart';
+import 'package:modfirstpos/core/storage/stripe_terminal_settings_storage.dart';
 import 'package:modfirstpos/modules/setting/model/pos_device_model.dart';
 import 'package:modfirstpos/modules/setting/service/setting_service.dart';
 import 'package:modfirstpos/modules/setting/storage/pos_device_cache_storage.dart';
@@ -33,10 +36,90 @@ class SettingController extends GetxController {
   final RxBool isCheckingPrinter = false.obs;
   final RxBool isCheckingCashier = false.obs;
 
+  // -- Stripe Terminal (card-present) — see docs/POS_PAYMENT_FLUTTER.md --
+  final StripeTerminalService _terminal = Get.find<StripeTerminalService>();
+  final TextEditingController readerIdController = TextEditingController();
+  final RxBool useSimulatedReader = true.obs;
+
+  // Test-only: simulate a card being presented on a simulated reader,
+  // bypassing the need for a real physical reader or a backend endpoint.
+  // See docs/POS_PAYMENT_FLUTTER.md.
+  final TextEditingController stripeReaderTmrIdController = TextEditingController();
+  final TextEditingController stripeTestSecretKeyController = TextEditingController();
+
+  RxBool get isTerminalConnecting => _terminal.isConnecting;
+  RxBool get isTerminalConnected => _terminal.isConnected;
+  RxString get terminalError => _terminal.lastError;
+
   @override
   void onInit() {
     super.onInit();
     _hydrateFromCache();
+    _hydrateTerminalSettings();
+  }
+
+  // Test-only defaults so a fresh install/testing device is ready to go
+  // without the cashier having to type these in manually. Only used when
+  // nothing has been saved yet.
+  static const _defaultReaderId = '1';
+  static const _defaultStripeReaderTmrId = 'tmr_Gl78pgX7MSyoIw';
+  static const _defaultStripeTestSecretKey =
+      'sk_test_51Tng6EBuoZOYjaKmiMqwAdBth27RHZI05dEJ7SGhGDKbZJ8OwXGzb9VYz2h4rMIUp23WiSQ0Gr3iodlXbgRdjaDc008KKrJF9R';
+
+  Future<void> _hydrateTerminalSettings() async {
+    final readerId = await StripeTerminalSettingsStorage.getReaderId();
+    readerIdController.text = readerId ?? _defaultReaderId;
+    useSimulatedReader.value = await StripeTerminalSettingsStorage.getUseSimulated();
+
+    final tmrId = await StripeTerminalSettingsStorage.getStripeReaderTmrId();
+    stripeReaderTmrIdController.text = tmrId ?? _defaultStripeReaderTmrId;
+    final secretKey = await SecureStorageService.getStripeTestSecretKey();
+    stripeTestSecretKeyController.text = secretKey ?? _defaultStripeTestSecretKey;
+
+    // Persist the defaults immediately so testing works without an extra
+    // manual "Save" tap.
+    if (readerId == null || tmrId == null || secretKey == null) {
+      await saveTerminalSettings(showSnackbar: false);
+    }
+  }
+
+  Future<void> saveTerminalSettings({bool showSnackbar = true}) async {
+    await StripeTerminalSettingsStorage.saveReaderId(readerIdController.text.trim());
+    await StripeTerminalSettingsStorage.saveUseSimulated(useSimulatedReader.value);
+    await StripeTerminalSettingsStorage.saveStripeReaderTmrId(
+      stripeReaderTmrIdController.text.trim(),
+    );
+    await SecureStorageService.saveStripeTestSecretKey(
+      stripeTestSecretKeyController.text.trim(),
+    );
+    if (!showSnackbar) return;
+    customSnackBar(
+      'Stripe Terminal',
+      'Reader settings saved.',
+      snackBarType: SnackBarType.success,
+    );
+  }
+
+  /// Connects to the reader now (simulated or real, per the toggle) so the
+  /// cashier can confirm the setup works before a live sale.
+  Future<void> testTerminalConnection() async {
+    await saveTerminalSettings();
+    final connected = await _terminal.connect(simulated: useSimulatedReader.value);
+    if (connected) {
+      customSnackBar(
+        'Stripe Terminal',
+        'Reader connected${useSimulatedReader.value ? ' (simulated)' : ''}.',
+        snackBarType: SnackBarType.success,
+      );
+    } else {
+      customSnackBar(
+        'Stripe Terminal',
+        _terminal.lastError.value.isNotEmpty
+            ? _terminal.lastError.value
+            : 'Could not connect to the reader.',
+        snackBarType: SnackBarType.error,
+      );
+    }
   }
 
   /// Instant, offline-first load from the last-known device. The cashier
@@ -59,6 +142,9 @@ class SettingController extends GetxController {
     deviceCodeController.dispose();
     ipAddressController.dispose();
     customerIpController.dispose();
+    readerIdController.dispose();
+    stripeReaderTmrIdController.dispose();
+    stripeTestSecretKeyController.dispose();
     locationController.dispose();
     super.onClose();
   }

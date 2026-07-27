@@ -99,4 +99,15 @@ class SecureStorageService {
   static Future<String?> getPinHash() => _read(StorageKeys.keyPinHash);
 
   static Future<void> deletePinHash() => _delete(StorageKeys.keyPinHash);
+
+  /// Test-only Stripe secret key (see StorageKeys.keyStripeTestSecretKey) —
+  /// entered once in Settings, kept only in the device's secure storage.
+  static Future<void> saveStripeTestSecretKey(String key) =>
+      _write(StorageKeys.keyStripeTestSecretKey, key);
+
+  static Future<String?> getStripeTestSecretKey() =>
+      _read(StorageKeys.keyStripeTestSecretKey);
+
+  static Future<void> deleteStripeTestSecretKey() =>
+      _delete(StorageKeys.keyStripeTestSecretKey);
 }

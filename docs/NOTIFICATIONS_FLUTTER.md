@@ -61,6 +61,43 @@ extra: `old_price`, `new_price`
 ```
 
 ### Variants
+### variant.price_increased
+
+Extra fields:
+
+- product_id
+- old_price
+- new_price
+
+```json
+{
+  "event": "variant.price_increased",
+  "entity_type": "variant",
+  "entity_id": "55",
+  "sync": "catalogue",
+  "notification_id": "809",
+  "product_id": "12",
+  "old_price": "19.99",
+  "new_price": "24.99"
+}
+```
+
+---
+
+### variant.price_decreased
+
+```json
+{
+  "event": "variant.price_decreased",
+  "entity_type": "variant",
+  "entity_id": "55",
+  "sync": "catalogue",
+  "notification_id": "810",
+  "product_id": "12",
+  "old_price": "24.99",
+  "new_price": "19.99"
+}
+```
 
 ### Inventory / Stock  (extra: `product_id`, `quantity` = new stock)
 

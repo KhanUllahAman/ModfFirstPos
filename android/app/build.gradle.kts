@@ -21,7 +21,8 @@ android {
 
     defaultConfig {
         applicationId = "com.app.modfirstpos"
-        minSdk = flutter.minSdkVersion
+        // Stripe Terminal SDK requires 26+.
+        minSdk = maxOf(26, flutter.minSdkVersion)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

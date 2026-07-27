@@ -189,6 +189,7 @@ class PickupLocationListResponse {
 class CreatedOrder {
   final int id;
   final String? orderNumber;
+  final String? orderCode;
   final double totalAmount;
   final double subtotal;
   final double taxAmount;
@@ -198,6 +199,7 @@ class CreatedOrder {
   CreatedOrder({
     required this.id,
     this.orderNumber,
+    this.orderCode,
     required this.totalAmount,
     this.subtotal = 0,
     this.taxAmount = 0,
@@ -209,6 +211,10 @@ class CreatedOrder {
     return CreatedOrder(
       id: JsonUtils.asInt(json['id']),
       orderNumber: JsonUtils.asStringOrNull(json['order_number']),
+      // Backend field naming has varied between `order_code` and
+      // `order_number` across endpoints — accept either.
+      orderCode: JsonUtils.asStringOrNull(json['order_code']) ??
+          JsonUtils.asStringOrNull(json['order_number']),
       totalAmount: JsonUtils.asDouble(json['total_amount']),
       subtotal: JsonUtils.asDouble(json['subtotal']),
       taxAmount: JsonUtils.asDouble(json['tax_amount']),
@@ -292,6 +298,173 @@ class CouponValidationResponse {
       type: JsonUtils.asStringOrNull(payload['type']),
       discount: JsonUtils.asDouble(payload['discount']),
       finalAmount: JsonUtils.asDouble(payload['final_amount']),
+    );
+  }
+}
+
+/// One entry in a POS payment's `parts` array (a split has one per method).
+class PosPaymentPart {
+  final String method;
+  final double amount;
+  final String status;
+  final String? paymentReference;
+  final String? paymentIntentId;
+  final int? readerId;
+
+  PosPaymentPart({
+    required this.method,
+    required this.amount,
+    required this.status,
+    this.paymentReference,
+    this.paymentIntentId,
+    this.readerId,
+  });
+
+  factory PosPaymentPart.fromJson(Map<String, dynamic> json) => PosPaymentPart(
+        method: JsonUtils.asString(json['method']),
+        amount: JsonUtils.asDouble(json['amount']),
+        status: JsonUtils.asString(json['status']),
+        paymentReference: JsonUtils.asStringOrNull(json['payment_reference']),
+        paymentIntentId: JsonUtils.asStringOrNull(json['payment_intent_id']),
+        readerId: JsonUtils.asIntOrNull(json['reader_id']),
+      );
+}
+
+/// The `terminal` block of a POS payment response — only present when the
+/// payment has a card-present (Stripe Terminal) part.
+class PosPaymentTerminalInfo {
+  final String paymentReference;
+  final String? paymentIntentId;
+  final int? readerId;
+  final String? readerStatus;
+
+  PosPaymentTerminalInfo({
+    required this.paymentReference,
+    this.paymentIntentId,
+    this.readerId,
+    this.readerStatus,
+  });
+
+  factory PosPaymentTerminalInfo.fromJson(Map<String, dynamic> json) =>
+      PosPaymentTerminalInfo(
+        paymentReference: JsonUtils.asString(json['payment_reference']),
+        paymentIntentId: JsonUtils.asStringOrNull(json['payment_intent_id']),
+        readerId: JsonUtils.asIntOrNull(json['reader_id']),
+        readerStatus: JsonUtils.asStringOrNull(json['reader_status']),
+      );
+}
+
+/// Response of `POST /payments/pos/pay` — same shape for every payment type.
+class PosPaymentResponse {
+  final bool isSuccess;
+  final String message;
+  final String? orderCode;
+  final String? paymentType;
+  final double totalAmount;
+  final double paidAmount;
+  final bool fullyPaid;
+  final bool requiresAction;
+  final List<PosPaymentPart> parts;
+  final PosPaymentTerminalInfo? terminal;
+
+  PosPaymentResponse({
+    required this.isSuccess,
+    required this.message,
+    this.orderCode,
+    this.paymentType,
+    this.totalAmount = 0,
+    this.paidAmount = 0,
+    this.fullyPaid = false,
+    this.requiresAction = false,
+    this.parts = const [],
+    this.terminal,
+  });
+
+  factory PosPaymentResponse.fromJson(Map<String, dynamic> json) {
+    final payload = JsonUtils.asMap(json['payload']);
+    final terminalJson = JsonUtils.asMapOrNull(payload['terminal']);
+    return PosPaymentResponse(
+      isSuccess: JsonUtils.asBool(json['success']),
+      message: JsonUtils.asString(json['message']),
+      orderCode: JsonUtils.asStringOrNull(payload['order_code']),
+      paymentType: JsonUtils.asStringOrNull(payload['payment_type']),
+      totalAmount: JsonUtils.asDouble(payload['total_amount']),
+      paidAmount: JsonUtils.asDouble(payload['paid_amount']),
+      fullyPaid: JsonUtils.asBool(payload['fully_paid']),
+      requiresAction: JsonUtils.asBool(payload['requires_action']),
+      parts: JsonUtils.asModelList(payload['parts'], PosPaymentPart.fromJson),
+      terminal:
+          terminalJson != null ? PosPaymentTerminalInfo.fromJson(terminalJson) : null,
+    );
+  }
+}
+
+/// Response of `GET /terminal/payment-status/:payment_reference`.
+class TerminalPaymentStatusResponse {
+  final bool isSuccess;
+  final String message;
+  final String? state;
+  final bool canCapture;
+  final String? failureMessage;
+  final String? declineCode;
+
+  TerminalPaymentStatusResponse({
+    required this.isSuccess,
+    required this.message,
+    this.state,
+    this.canCapture = false,
+    this.failureMessage,
+    this.declineCode,
+  });
+
+  bool get isDeclinedOrFailed => state == 'declined' || state == 'failed';
+  bool get isSucceeded => state == 'succeeded';
+  // Some payments (notably simulated readers) complete without ever
+  // reporting can_capture — they jump straight to "captured", meaning the
+  // backend already finished the whole payment. No separate /capture call
+  // is needed (or allowed) in that case.
+  bool get isCaptured => state == 'captured';
+
+  factory TerminalPaymentStatusResponse.fromJson(Map<String, dynamic> json) {
+    final payload = JsonUtils.asMap(json['payload']);
+    return TerminalPaymentStatusResponse(
+      isSuccess: JsonUtils.asBool(json['success']),
+      message: JsonUtils.asString(json['message']),
+      state: JsonUtils.asStringOrNull(payload['state']),
+      canCapture: JsonUtils.asBool(payload['can_capture']),
+      failureMessage: JsonUtils.asStringOrNull(payload['failure_message']),
+      declineCode: JsonUtils.asStringOrNull(payload['decline_code']),
+    );
+  }
+}
+
+/// Response of `POST /terminal/capture`.
+class TerminalCaptureResponse {
+  final bool isSuccess;
+  final String message;
+  final String? status;
+  final String? receiptUrl;
+  final double orderPaidAmount;
+  final bool orderFullyPaid;
+
+  TerminalCaptureResponse({
+    required this.isSuccess,
+    required this.message,
+    this.status,
+    this.receiptUrl,
+    this.orderPaidAmount = 0,
+    this.orderFullyPaid = false,
+  });
+
+  factory TerminalCaptureResponse.fromJson(Map<String, dynamic> json) {
+    final payload = JsonUtils.asMap(json['payload']);
+    return TerminalCaptureResponse(
+      isSuccess: JsonUtils.asBool(json['success']),
+      message: JsonUtils.asString(json['message']),
+      status: JsonUtils.asStringOrNull(payload['status']),
+      receiptUrl: JsonUtils.asStringOrNull(payload['receipt_url']),
+      orderPaidAmount: JsonUtils.asDouble(payload['order_paid_amount']),
+      orderFullyPaid: JsonUtils.asBool(payload['order_fully_paid']),
     );
   }
 }

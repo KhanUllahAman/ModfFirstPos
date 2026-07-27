@@ -52,4 +52,14 @@ class ApiConstants {
   static final String reportsDurationExcelEndpoint = '${baseUrl}reports/duration/excel';
   static final String posShiftSyncEndpoint = '${baseUrl}pos-shifts/sync';
   static final String orderPosSyncEndpoint = '${baseUrl}orders/pos/sync';
+
+  // -- POS payments (cash / bank transfer / Stripe Terminal card-present) --
+  static final String posPaymentPayEndpoint = '${baseUrl}payments/pos/pay';
+  static final String terminalConnectionTokenEndpoint =
+      '${baseUrl}terminal/connection-token';
+  static String terminalPaymentStatusEndpoint(String paymentReference) =>
+      '${baseUrl}terminal/payment-status/$paymentReference';
+  static final String terminalCaptureEndpoint = '${baseUrl}terminal/capture';
+  static final String terminalCancelActionEndpoint =
+      '${baseUrl}terminal/cancel-action';
 }
