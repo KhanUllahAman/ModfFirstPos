@@ -37,151 +37,162 @@ class GetProfileView extends GetView<GetProfileController> {
                   children: [
                     const BackBar(title: "Profile"),
                     SizedBox(height: context.spacingMD),
-              Expanded(
-                child: Obx(() {
-                  final profile = controller.profile.value;
+                    Expanded(
+                      child: Obx(() {
+                        final profile = controller.profile.value;
 
-                  if (controller.isLoading.value && profile == null) {
-                    return Center(
-                      child: CircularProgressIndicator(
-                        color: theme.primaryColor.value,
-                      ),
-                    );
-                  }
-
-                  if (profile == null) {
-                    return Center(
-                      child: Text(
-                        'Profile Load Error',
-                        style: AppFonts.geistMono(
-                          fontSize: context.fontSM,
-                          fontWeight: FontWeight.w500,
-                          color: theme.onPrimaryColor.withOpacity(0.85),
-                        ),
-                      ),
-                    );
-                  }
-
-                  return SingleChildScrollView(
-                    primary: false,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 420),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.all(context.spacingMD),
-                            decoration: BoxDecoration(
-                              color: ColorResources.whiteColor,
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(
-                                color: const Color(0xFFE7E9F0),
-                                width: 1,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.06),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
+                        if (controller.isLoading.value && profile == null) {
+                          return Center(
+                            child: CircularProgressIndicator(
+                              color: theme.primaryColor.value,
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Avatar + Name row
-                                Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: context.responsiveWidth(0.07),
-                                      backgroundColor: theme.primaryColor.value.withOpacity(0.1),
-                                      backgroundImage:
-                                          (profile.imageUrl != null &&
-                                              profile.imageUrl!.isNotEmpty)
-                                          ? NetworkImage(profile.fullImageUrl!)
-                                          : null,
-                                      child:
-                                          (profile.imageUrl == null ||
-                                              profile.imageUrl!.isEmpty)
-                                          ? Icon(
-                                              Icons.person,
-                                              size: context.responsiveWidth(
-                                                0.07,
-                                              ),
-                                              color:
-                                                  theme.primaryColor.value,
-                                            )
-                                          : null,
-                                    ),
-                                    SizedBox(width: context.spacingSM),
-                                    Expanded(
-                                      child: Text(
-                                        profile.fullName ?? '-',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: AppFonts.geistMono(
-                                          fontSize: context.fontMD,
-                                          fontWeight: FontWeight.w600,
-                                          color: ColorResources.blackColor,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: context.spacingSM),
-                                Divider(
-                                  height: 1,
-                                  color: const Color(0xFFE7E9F0),
-                                ),
-                                SizedBox(height: context.spacingXS),
-                                _ProfileInfoRow(
-                                  icon: Icons.person_outline,
-                                  label: 'Full Name',
-                                  value: profile.fullName ?? '-',
-                                ),
-                                _ProfileInfoRow(
-                                  icon: Icons.email_outlined,
-                                  label: 'Email',
-                                  value: profile.email ?? '-',
-                                ),
-                                _ProfileInfoRow(
-                                  icon: Icons.phone_outlined,
-                                  label: 'Phone',
-                                  value: profile.phone ?? '-',
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: context.spacingMD),
-                          AppButton(
-                            backgroundColor: theme.secondaryColor.value,
-                            onPressed: controller.goToUpdateProfile,
-                            isLoading: false,
-                            borderRadius: 12,
+                          );
+                        }
+
+                        if (profile == null) {
+                          return Center(
                             child: Text(
-                              'Update Your Profile',
+                              'Profile Load Error',
                               style: AppFonts.geistMono(
                                 fontSize: context.fontSM,
                                 fontWeight: FontWeight.w500,
-                                color: theme.onSecondaryColor,
-                                letterSpacing: 0.5,
+                                color: theme.onPrimaryColor.withOpacity(0.85),
                               ),
                             ),
+                          );
+                        }
+
+                        return SingleChildScrollView(
+                          primary: false,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 420),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Container(
+                                  width: double.infinity,
+                                  padding: EdgeInsets.all(context.spacingMD),
+                                  decoration: BoxDecoration(
+                                    color: ColorResources.whiteColor,
+                                    borderRadius: BorderRadius.circular(18),
+                                    border: Border.all(
+                                      color: const Color(0xFFE7E9F0),
+                                      width: 1,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.06),
+                                        blurRadius: 16,
+                                        offset: const Offset(0, 6),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // Avatar + Name row
+                                      Row(
+                                        children: [
+                                          CircleAvatar(
+                                            radius: context.responsiveWidth(
+                                              0.07,
+                                            ),
+                                            backgroundColor: theme
+                                                .primaryColor
+                                                .value
+                                                .withOpacity(0.1),
+                                            backgroundImage:
+                                                (profile.imageUrl != null &&
+                                                    profile
+                                                        .imageUrl!
+                                                        .isNotEmpty)
+                                                ? NetworkImage(
+                                                    profile.fullImageUrl!,
+                                                  )
+                                                : null,
+                                            child:
+                                                (profile.imageUrl == null ||
+                                                    profile.imageUrl!.isEmpty)
+                                                ? Icon(
+                                                    Icons.person,
+                                                    size: context
+                                                        .responsiveWidth(0.07),
+                                                    color: theme
+                                                        .primaryColor
+                                                        .value,
+                                                  )
+                                                : null,
+                                          ),
+                                          SizedBox(width: context.spacingSM),
+                                          Expanded(
+                                            child: Text(
+                                              profile.fullName ?? '-',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: AppFonts.geistMono(
+                                                fontSize: context.fontMD,
+                                                fontWeight: FontWeight.w600,
+                                                color:
+                                                    ColorResources.blackColor,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: context.spacingSM),
+                                      Divider(
+                                        height: 1,
+                                        color: const Color(0xFFE7E9F0),
+                                      ),
+                                      SizedBox(height: context.spacingXS),
+                                      _ProfileInfoRow(
+                                        icon: Icons.person_outline,
+                                        label: 'Full Name',
+                                        value: profile.fullName ?? '-',
+                                      ),
+                                      _ProfileInfoRow(
+                                        icon: Icons.email_outlined,
+                                        label: 'Email',
+                                        value: profile.email ?? '-',
+                                      ),
+                                      _ProfileInfoRow(
+                                        icon: Icons.phone_outlined,
+                                        label: 'Phone',
+                                        value: profile.phone ?? '-',
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(height: context.spacingMD),
+                                AppButton(
+                                  backgroundColor: theme.primaryColor.value,
+                                  onPressed: controller.goToUpdateProfile,
+                                  isLoading: false,
+                                  borderRadius: 12,
+                                  child: Text(
+                                    'Update Your Profile',
+                                    style: AppFonts.geistMono(
+                                      fontSize: context.fontSM,
+                                      fontWeight: FontWeight.w500,
+                                      color: theme.onPrimaryColor,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
+                        );
+                      }),
                     ),
-                  );
-                }),
+                  ],
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    ],
-  ),
-),
     ).noKeyboard();
   }
 }

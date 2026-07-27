@@ -16,7 +16,8 @@ class NotificationView extends GetView<NotificationController> {
 
   @override
   Widget build(BuildContext context) {
-    final isWide = MediaQuery.of(context).size.width >= 600 ||
+    final isWide =
+        MediaQuery.of(context).size.width >= 600 ||
         MediaQuery.of(context).orientation == Orientation.landscape;
 
     return Scaffold(

@@ -4,6 +4,7 @@ import 'package:modfirstpos/modules/home/controller/home_controller.dart';
 import 'package:modfirstpos/modules/home/model/product_item.dart';
 import 'package:modfirstpos/modules/product/model/product_model.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
+import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
 class ProductVariantController extends GetxController {
   late final ProductModel product;
@@ -36,12 +37,17 @@ class ProductVariantController extends GetxController {
 
   void selectVariant(ProductVariantModel variant) {
     selectedVariant.value = variant;
+    addedToCart.value = false;
   }
 
-  void incrementQty() => quantity.value++;
+  void incrementQty() {
+    quantity.value++;
+    addedToCart.value = false;
+  }
 
   void decrementQty() {
     if (quantity.value > 1) quantity.value--;
+    addedToCart.value = false;
   }
 
   double get displayPrice {
@@ -52,7 +58,25 @@ class ProductVariantController extends GetxController {
 
   String get displaySku => selectedVariant.value?.sku ?? product.sku ?? '--';
 
+  /// Current stock for the selected variant, or the product itself when it
+  /// has no variants; null means untracked (never blocks the add).
+  int? get availableStock {
+    final variant = selectedVariant.value;
+    return variant != null ? variant.stockQuantity : product.stock;
+  }
+
   void addToCart() {
+    final stock = availableStock;
+    if (stock != null && quantity.value > stock) {
+      customSnackBar(
+        stock <= 0 ? 'Out of Stock' : 'Insufficient Stock',
+        stock <= 0
+            ? '${product.displayName} is out of stock.'
+            : 'Only $stock unit(s) of ${product.displayName} available.',
+        snackBarType: SnackBarType.error,
+      );
+      return;
+    }
     final variant = selectedVariant.value;
     final item = ProductItem(
       id: product.id?.toString() ?? '',

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -56,7 +57,11 @@ class _PaneCard extends StatelessWidget {
   final String title;
   final Widget child;
 
-  const _PaneCard({required this.icon, required this.title, required this.child});
+  const _PaneCard({
+    required this.icon,
+    required this.title,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -105,13 +110,22 @@ class _ProductListPane extends GetView<InventoryController> {
           TextField(
             controller: controller.searchController,
             onChanged: controller.onSearchChanged,
-            style: AppFonts.geistMono(fontSize: context.fontSM, color: ColorResources.labelColor),
+            style: AppFonts.geistMono(
+              fontSize: context.fontSM,
+              color: ColorResources.labelColor,
+            ),
             decoration: InputDecoration(
               filled: true,
               fillColor: ColorResources.backgroundColor,
               hintText: 'Search product name / SKU',
-              hintStyle: AppFonts.geistMono(fontSize: context.fontSM, color: Colors.grey[500]),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              hintStyle: AppFonts.geistMono(
+                fontSize: context.fontSM,
+                color: Colors.grey[500],
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 12,
+              ),
               prefixIcon: const Icon(Icons.search_rounded, size: 20),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -123,7 +137,10 @@ class _ProductListPane extends GetView<InventoryController> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: theme.secondaryColor.value, width: 1.5),
+                borderSide: BorderSide(
+                  color: theme.secondaryColor.value,
+                  width: 1.5,
+                ),
               ),
             ),
           ),
@@ -136,11 +153,18 @@ class _ProductListPane extends GetView<InventoryController> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.search_off_rounded, size: 36, color: Colors.grey[350]),
+                      Icon(
+                        Icons.search_off_rounded,
+                        size: 36,
+                        color: Colors.grey[350],
+                      ),
                       const SizedBox(height: 8),
                       Text(
                         'No products found',
-                        style: AppFonts.geistMono(fontSize: context.fontSM, color: Colors.grey[600]),
+                        style: AppFonts.geistMono(
+                          fontSize: context.fontSM,
+                          color: Colors.grey[600],
+                        ),
                       ),
                     ],
                   ),
@@ -155,7 +179,9 @@ class _ProductListPane extends GetView<InventoryController> {
                   final isSelected = product.id == selectedId;
                   final stock = product.hasVariants
                       ? product.variants.fold<int>(
-                          0, (sum, v) => sum + (v.stockQuantity ?? 0))
+                          0,
+                          (sum, v) => sum + (v.stockQuantity ?? 0),
+                        )
                       : product.stock;
                   final inStock = (stock ?? 0) > 0;
                   return Material(
@@ -167,7 +193,10 @@ class _ProductListPane extends GetView<InventoryController> {
                       borderRadius: BorderRadius.circular(12),
                       onTap: () => controller.selectProduct(product),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
@@ -179,20 +208,36 @@ class _ProductListPane extends GetView<InventoryController> {
                         ),
                         child: Row(
                           children: [
-                            Container(
-                              width: 34,
-                              height: 34,
-                              decoration: BoxDecoration(
-                                color: ColorResources.whiteColor,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: ColorResources.cardBorderColor),
-                              ),
-                              child: Icon(
-                                product.hasVariants
-                                    ? Icons.style_outlined
-                                    : Icons.inventory_2_outlined,
-                                size: 16,
-                                color: Colors.grey[600],
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                width: 34,
+                                height: 34,
+                                decoration: BoxDecoration(
+                                  color: ColorResources.whiteColor,
+                                  border: Border.all(
+                                    color: ColorResources.cardBorderColor,
+                                  ),
+                                ),
+                                child: product.primaryImageUrl != null
+                                    ? CachedNetworkImage(
+                                        imageUrl: product.primaryImageUrl!,
+                                        fit: BoxFit.contain,
+                                        errorWidget: (_, __, ___) => Icon(
+                                          product.hasVariants
+                                              ? Icons.style_outlined
+                                              : Icons.inventory_2_outlined,
+                                          size: 16,
+                                          color: Colors.grey[600],
+                                        ),
+                                      )
+                                    : Icon(
+                                        product.hasVariants
+                                            ? Icons.style_outlined
+                                            : Icons.inventory_2_outlined,
+                                        size: 16,
+                                        color: Colors.grey[600],
+                                      ),
                               ),
                             ),
                             const SizedBox(width: 10),
@@ -213,18 +258,28 @@ class _ProductListPane extends GetView<InventoryController> {
                                   if (product.sku != null)
                                     Text(
                                       product.sku!,
-                                      style: AppFonts.geistMono(fontSize: 10, color: Colors.grey[600]),
+                                      style: AppFonts.geistMono(
+                                        fontSize: 10,
+                                        color: Colors.grey[600],
+                                      ),
                                     ),
                                 ],
                               ),
                             ),
                             const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: inStock
-                                    ? ColorResources.successGreen.withOpacity(0.14)
-                                    : ColorResources.gradientRed.withOpacity(0.14),
+                                    ? ColorResources.successGreen.withOpacity(
+                                        0.14,
+                                      )
+                                    : ColorResources.gradientRed.withOpacity(
+                                        0.14,
+                                      ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -267,12 +322,19 @@ class _AdjustmentPane extends GetView<InventoryController> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.touch_app_outlined, size: 36, color: Colors.grey[350]),
+                Icon(
+                  Icons.touch_app_outlined,
+                  size: 36,
+                  color: Colors.grey[350],
+                ),
                 const SizedBox(height: 8),
                 Text(
                   'Select a product to adjust stock',
                   textAlign: TextAlign.center,
-                  style: AppFonts.geistMono(fontSize: context.fontSM, color: Colors.grey[600]),
+                  style: AppFonts.geistMono(
+                    fontSize: context.fontSM,
+                    color: Colors.grey[600],
+                  ),
                 ),
               ],
             ),
@@ -294,14 +356,21 @@ class _AdjustmentPane extends GetView<InventoryController> {
               SizedBox(height: context.spacingSM),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: theme.secondaryColor.value.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.warehouse_outlined, size: 18, color: theme.secondaryColor.value),
+                    Icon(
+                      Icons.warehouse_outlined,
+                      size: 18,
+                      color: theme.secondaryColor.value,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Current Stock',
@@ -327,29 +396,36 @@ class _AdjustmentPane extends GetView<InventoryController> {
                 SizedBox(height: context.spacingMD),
                 Text(
                   'Variant',
-                  style: AppFonts.geistMono(fontSize: context.fontXS, fontWeight: FontWeight.w700),
+                  style: AppFonts.geistMono(
+                    fontSize: context.fontXS,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: product.variants.map((v) {
-                    final isSelected = controller.selectedVariant.value?.id == v.id;
-                    final label = [v.color?.displayName, v.size?.label]
-                        .where((e) => e != null)
-                        .join(' / ');
+                    final isSelected =
+                        controller.selectedVariant.value?.id == v.id;
+                    final label = [
+                      v.color?.displayName,
+                      v.size?.label,
+                    ].where((e) => e != null).join(' / ');
                     return ChoiceChip(
                       label: Text(
                         label.isEmpty ? (v.sku ?? 'Variant #${v.id}') : label,
                         style: AppFonts.geistMono(
                           fontSize: 11,
-                          color: isSelected ? Colors.white : ColorResources.labelColor,
+                          color: isSelected
+                              ? theme.onPrimaryColor
+                              : ColorResources.labelColor,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       selected: isSelected,
                       backgroundColor: ColorResources.backgroundColor,
-                      selectedColor: theme.secondaryColor.value,
+                      selectedColor: theme.primaryColor.value,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                         side: BorderSide.none,
@@ -362,7 +438,10 @@ class _AdjustmentPane extends GetView<InventoryController> {
               SizedBox(height: context.spacingMD),
               Text(
                 'Action',
-                style: AppFonts.geistMono(fontSize: context.fontXS, fontWeight: FontWeight.w700),
+                style: AppFonts.geistMono(
+                  fontSize: context.fontXS,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 8),
               Container(
@@ -381,7 +460,9 @@ class _AdjustmentPane extends GetView<InventoryController> {
                           duration: const Duration(milliseconds: 150),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            color: isSelected ? theme.secondaryColor.value : Colors.transparent,
+                            color: isSelected
+                                ? theme.primaryColor.value
+                                : Colors.transparent,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -390,7 +471,9 @@ class _AdjustmentPane extends GetView<InventoryController> {
                             style: AppFonts.geistMono(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: isSelected ? Colors.white : ColorResources.labelColor,
+                              color: isSelected
+                                  ? theme.onPrimaryColor
+                                  : ColorResources.labelColor,
                             ),
                           ),
                         ),
@@ -413,38 +496,58 @@ class _AdjustmentPane extends GetView<InventoryController> {
                 SizedBox(height: context.spacingMD),
                 Theme(
                   data: Theme.of(context).copyWith(
-                    colorScheme: Theme.of(context).colorScheme.copyWith(
-                          primary: theme.secondaryColor.value,
-                        ),
+                    colorScheme: Theme.of(
+                      context,
+                    ).colorScheme.copyWith(primary: theme.secondaryColor.value),
                     canvasColor: ColorResources.whiteColor,
                   ),
                   child: DropdownButtonFormField<InventoryReason>(
                     value: controller.reason.value,
                     dropdownColor: ColorResources.whiteColor,
-                    style: AppFonts.geistMono(fontSize: context.fontSM, color: ColorResources.labelColor),
+                    style: AppFonts.geistMono(
+                      fontSize: context.fontSM,
+                      color: ColorResources.labelColor,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'Reason',
-                      labelStyle: AppFonts.geistMono(fontSize: context.fontXS, color: Colors.grey[600]),
+                      labelStyle: AppFonts.geistMono(
+                        fontSize: context.fontXS,
+                        color: Colors.grey[600],
+                      ),
                       filled: true,
                       fillColor: ColorResources.whiteColor,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: ColorResources.cardBorderColor),
+                        borderSide: BorderSide(
+                          color: ColorResources.cardBorderColor,
+                        ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: ColorResources.cardBorderColor),
+                        borderSide: BorderSide(
+                          color: ColorResources.cardBorderColor,
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: theme.secondaryColor.value, width: 1.5),
+                        borderSide: BorderSide(
+                          color: theme.secondaryColor.value,
+                          width: 1.5,
+                        ),
                       ),
                     ),
                     items: InventoryReason.values
-                        .map((r) => DropdownMenuItem(
-                              value: r,
-                              child: Text(r.label, style: AppFonts.geistMono(fontSize: context.fontSM)),
-                            ))
+                        .map(
+                          (r) => DropdownMenuItem(
+                            value: r,
+                            child: Text(
+                              r.label,
+                              style: AppFonts.geistMono(
+                                fontSize: context.fontSM,
+                              ),
+                            ),
+                          ),
+                        )
                         .toList(),
                     onChanged: (val) {
                       if (val != null) controller.reason.value = val;
@@ -462,14 +565,14 @@ class _AdjustmentPane extends GetView<InventoryController> {
               ),
               SizedBox(height: context.spacingMD),
               AppButton(
-                backgroundColor: theme.secondaryColor.value,
+                backgroundColor: theme.primaryColor.value,
                 isLoading: controller.isSubmitting.value,
                 borderRadius: 10,
                 onPressed: controller.submit,
                 child: Text(
                   _submitLabel(controller.action.value),
                   style: AppFonts.geistMono(
-                    color: theme.onSecondaryColor,
+                    color: theme.onPrimaryColor,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

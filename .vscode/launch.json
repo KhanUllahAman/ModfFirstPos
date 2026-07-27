@@ -10,6 +10,16 @@
                 "--flavor",
                 "cashier"
             ]
+        },
+        {
+            "name": "Customer",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main_customer.dart",
+            "args": [
+                "--flavor",
+                "customer"
+            ]
         }
     ]
 }

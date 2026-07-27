@@ -52,7 +52,7 @@ class PinSettingsView extends GetView<PinSettingsController> {
                         ),
                         Switch(
                           value: controller.pinController.pinEnabled.value,
-                          activeColor: theme.secondaryColor.value,
+                          activeColor: theme.primaryColor.value,
                           onChanged: (val) {
                             if (val) {
                               Get.toNamed(Routes.setPin);
@@ -100,7 +100,7 @@ class PinSettingsView extends GetView<PinSettingsController> {
                                     min: 1,
                                     max: 120,
                                     divisions: 119,
-                                    activeColor: theme.secondaryColor.value,
+                                    activeColor: theme.primaryColor.value,
                                     label:
                                         "${controller.autoLockMinutes.value} min",
                                     onChanged: (val) {
@@ -138,7 +138,12 @@ class PinSettingsView extends GetView<PinSettingsController> {
         fields: [PinDialogField(controller: pinCtrl, label: "Current PIN")],
         onConfirm: () => controller.disablePin(pinCtrl.text.trim()),
       ),
-    ).whenComplete(pinCtrl.dispose);
+    ).whenComplete(() {
+      // The dialog's exit transition keeps animating (and rebuilding the
+      // still-mounted TextField) for a moment after the route is popped —
+      // disposing the controller synchronously here races that animation.
+      Future.delayed(const Duration(milliseconds: 300), pinCtrl.dispose);
+    });
   }
 
   void _showChangePinDialog(BuildContext context) {
@@ -163,9 +168,11 @@ class PinSettingsView extends GetView<PinSettingsController> {
         ),
       ),
     ).whenComplete(() {
-      currentCtrl.dispose();
-      newCtrl.dispose();
-      confirmCtrl.dispose();
+      Future.delayed(const Duration(milliseconds: 300), () {
+        currentCtrl.dispose();
+        newCtrl.dispose();
+        confirmCtrl.dispose();
+      });
     });
   }
 }

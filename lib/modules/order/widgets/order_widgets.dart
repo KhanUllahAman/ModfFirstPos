@@ -42,13 +42,15 @@ class OrderSearchField extends StatelessWidget {
                 fillColor: ColorResources.whiteColor,
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide:
-                      const BorderSide(color: ColorResources.cardBorderColor),
+                  borderSide: const BorderSide(
+                    color: ColorResources.cardBorderColor,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide:
-                      const BorderSide(color: ColorResources.cardBorderColor),
+                  borderSide: const BorderSide(
+                    color: ColorResources.cardBorderColor,
+                  ),
                 ),
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: context.spacingSM,
@@ -59,12 +61,14 @@ class OrderSearchField extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Obx(() => AppSyncButton(
-              onPressed: controller.syncOrders,
-              isLoading: controller.isLoading.value,
-              label: 'Sync Orders',
-              height: context.responsiveHeight(0.055),
-            )),
+        Obx(
+          () => AppSyncButton(
+            onPressed: controller.syncOrders,
+            isLoading: controller.isLoading.value,
+            label: 'Sync Orders',
+            height: context.responsiveHeight(0.055),
+          ),
+        ),
       ],
     );
   }
@@ -79,9 +83,11 @@ class OrderStatusFilterRow extends StatelessWidget {
     return status
         .replaceAll('_', ' ')
         .split(' ')
-        .map((word) => word.isNotEmpty
-            ? '${word[0].toUpperCase()}${word.substring(1)}'
-            : '')
+        .map(
+          (word) => word.isNotEmpty
+              ? '${word[0].toUpperCase()}${word.substring(1)}'
+              : '',
+        )
         .join(' ');
   }
 
@@ -279,8 +285,9 @@ class OrderPaginationControls extends StatelessWidget {
           Row(
             children: [
               IconButton(
-                onPressed:
-                    controller.hasPrev.value ? controller.prevPage : null,
+                onPressed: controller.hasPrev.value
+                    ? controller.prevPage
+                    : null,
                 icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 16),
                 color: ColorResources.appAccentColor,
               ),
@@ -295,8 +302,9 @@ class OrderPaginationControls extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               IconButton(
-                onPressed:
-                    controller.hasNext.value ? controller.nextPage : null,
+                onPressed: controller.hasNext.value
+                    ? controller.nextPage
+                    : null,
                 icon: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
                 color: ColorResources.appAccentColor,
               ),
@@ -326,7 +334,8 @@ class OrderListItemCard extends StatelessWidget {
     final formattedDate = _formatDate(order.orderDate);
     final total = double.tryParse(order.totalAmount ?? '0') ?? 0.0;
     final isPaid = (order.paymentStatus?.toLowerCase() == 'paid');
-    final isHomeDelivery = (order.deliveryType?.toLowerCase() == 'home_delivery');
+    final isHomeDelivery =
+        (order.deliveryType?.toLowerCase() == 'home_delivery');
 
     return GestureDetector(
       onTap: onTap,
@@ -350,7 +359,7 @@ class OrderListItemCard extends StatelessWidget {
                     color: theme.secondaryColor.value.withOpacity(0.1),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
-                  )
+                  ),
                 ]
               : null,
         ),
@@ -387,14 +396,16 @@ class OrderListItemCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Obx(() => Text(
-                      '\$${total.toStringAsFixed(2)}',
-                      style: AppFonts.geistMono(
-                        fontSize: context.fontSM,
-                        fontWeight: FontWeight.w700,
-                        color: theme.primaryColor.value,
-                      ),
-                    )),
+                Obx(
+                  () => Text(
+                    '\$${total.toStringAsFixed(2)}',
+                    style: AppFonts.geistMono(
+                      fontSize: context.fontSM,
+                      fontWeight: FontWeight.w700,
+                      color: theme.secondaryColor.value,
+                    ),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -464,7 +475,9 @@ class OrderListItemCard extends StatelessWidget {
     return status
         .replaceAll('_', ' ')
         .split(' ')
-        .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
+        .map(
+          (w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '',
+        )
         .join(' ');
   }
 

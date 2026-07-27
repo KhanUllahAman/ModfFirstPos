@@ -67,6 +67,7 @@ class PosDeviceModel {
   final String deviceType;
   final String ipAddress;
   final String? macAddress;
+  final String? customerIp;
   final String location;
   final String receiptType;
   final bool isActive;
@@ -80,6 +81,7 @@ class PosDeviceModel {
     required this.deviceType,
     required this.ipAddress,
     this.macAddress,
+    this.customerIp,
     required this.location,
     required this.receiptType,
     this.isActive = true,
@@ -95,6 +97,7 @@ class PosDeviceModel {
       deviceType: JsonUtils.asString(json['device_type']),
       ipAddress: JsonUtils.asString(json['ip_address']),
       macAddress: JsonUtils.asStringOrNull(json['mac_address']),
+      customerIp: JsonUtils.asStringOrNull(json['customer_ip']),
       location: JsonUtils.asString(json['location']),
       receiptType: JsonUtils.asString(json['receipt_type']),
       isActive: JsonUtils.asBool(json['is_active'], fallback: true),
@@ -110,6 +113,7 @@ class PosDeviceModel {
         'device_code': deviceCode,
         'device_type': deviceType,
         'ip_address': ipAddress,
+        'customer_ip': customerIp,
         'location': location,
         'receipt_type': receiptType,
         'is_active': isActive,
@@ -128,6 +132,7 @@ class PosDeviceModel {
     String? deviceCode,
     String? deviceType,
     String? ipAddress,
+    String? customerIp,
     String? location,
     String? receiptType,
     bool? isActive,
@@ -140,6 +145,7 @@ class PosDeviceModel {
       deviceType: deviceType ?? this.deviceType,
       ipAddress: ipAddress ?? this.ipAddress,
       macAddress: macAddress,
+      customerIp: customerIp ?? this.customerIp,
       location: location ?? this.location,
       receiptType: receiptType ?? this.receiptType,
       isActive: isActive ?? this.isActive,

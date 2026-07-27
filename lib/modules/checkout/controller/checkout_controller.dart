@@ -4,12 +4,26 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:modfirstpos/core/database/key_value_store.dart';
+import 'package:modfirstpos/core/services/local_receipt_builder.dart';
 import 'package:modfirstpos/core/services/print_receipt_helper.dart';
+import 'package:modfirstpos/core/services/sync_service.dart';
+import 'package:modfirstpos/core/services/thermal_printer_service.dart';
+import 'package:modfirstpos/core/utils/client_reference_generator.dart';
 import 'package:modfirstpos/modules/bootstrap/controller/bootstrap_controller.dart';
+import 'package:modfirstpos/modules/bootstrap/model/bootstrap_model.dart';
 import 'package:modfirstpos/modules/checkout/service/checkout_service.dart';
 import 'package:modfirstpos/modules/checkout/model/checkout_models.dart';
+import 'package:modfirstpos/modules/customer/model/customer_model.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
+import 'package:modfirstpos/modules/order/repository/pending_order_repository.dart';
+import 'package:modfirstpos/modules/setting/service/setting_service.dart';
+import 'package:modfirstpos/modules/setting/storage/pos_device_cache_storage.dart';
+import 'package:modfirstpos/modules/shift/controller/shift_controller.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
+
+/// Payment methods that skip the online order-create + checkout APIs
+/// entirely and go straight to the local offline queue (orders/pos/sync).
+const _offlinePaymentMethods = {'cash', 'bank_transfer', 'without_payment'};
 
 class CheckoutController extends GetxController {
   final CheckoutService _service = CheckoutService();
@@ -39,6 +53,14 @@ class CheckoutController extends GetxController {
   final RxString paymentMethod = 'without_payment'.obs;
   final RxDouble customOnlineAmount = 0.0.obs;
   final RxDouble customCashAmount = 0.0.obs;
+
+  // Resolved delivery details captured by createOrder(), reused by
+  // submitCheckout() — for offline payment methods there's no server order
+  // yet to carry these, so they're held here until final submit.
+  List<Map<String, dynamic>> _pendingItemsPayload = [];
+  int? _pendingAddressId;
+  NewAddressInput? _pendingInlineAddress;
+  int? _pendingPickupLocationId;
 
   /// Cash portion of a split payment, typed on the POS keypad (kept as a
   /// string for display control — no device keyboard involved).
@@ -335,6 +357,11 @@ class CheckoutController extends GetxController {
     return true;
   }
 
+  /// Resolves delivery details + cart items and moves to the payment step.
+  /// Entirely local/instant — no network call. The real online order (for
+  /// Stripe/PayPal/split methods) or the offline queue entry (for
+  /// cash/bank_transfer/without_payment) is only created at
+  /// [submitCheckout] once the payment method is actually known.
   Future<bool> createOrder(HomeController homeController) async {
     final customer = homeController.selectedCartCustomer.value;
     if (customer == null) {
@@ -358,76 +385,65 @@ class CheckoutController extends GetxController {
       };
     }).toList();
 
-    isLoading.value = true;
-    try {
-      NewAddressInput? inlineAddress;
-      int? addressId;
+    NewAddressInput? inlineAddress;
+    int? addressId;
 
-      if (deliveryType.value == 'home_delivery') {
-        if (showNewAddressForm.value) {
-          if (!validateNewAddressForm()) {
-            return false;
-          }
-          inlineAddress = NewAddressInput(
-            fullName: fullNameController.text.trim(),
-            phone: phoneController.text.trim(),
-            email: emailController.text.trim().isEmpty ? null : emailController.text.trim(),
-            addressLine1: address1Controller.text.trim(),
-            addressLine2: address2Controller.text.trim().isEmpty ? null : address2Controller.text.trim(),
-            city: cityController.text.trim(),
-            state: stateController.text.trim().isEmpty ? null : stateController.text.trim(),
-            postalCode: postalCodeController.text.trim().isEmpty ? null : postalCodeController.text.trim(),
-            country: countryController.text.trim().isEmpty ? 'United States' : countryController.text.trim(),
-          );
-        } else {
-          if (selectedAddress.value == null) {
-            customSnackBar('Address Required', 'Please select or add a shipping address.', snackBarType: SnackBarType.warning);
-            return false;
-          }
-          addressId = selectedAddress.value!.id;
-        }
-      } else {
-        if (selectedPickupLocation.value == null) {
-          customSnackBar('Pickup Location Required', 'Please select a pickup location.', snackBarType: SnackBarType.warning);
+    if (deliveryType.value == 'home_delivery') {
+      if (showNewAddressForm.value) {
+        if (!validateNewAddressForm()) {
           return false;
         }
-        // Backend links shipping_address_id even for pickup orders; send the
-        // customer's saved address when one exists to avoid FK errors.
-        addressId = selectedAddress.value?.id;
-      }
-
-      final notes = notesController.text.trim();
-
-      final response = await _service.createOrder(
-        userId: customer.id,
-        email: customer.email ?? '',
-        phone: customer.phone ?? '',
-        fullName: customer.fullName ?? 'Guest',
-        deliveryType: deliveryType.value,
-        shippingAddressId: addressId,
-        billingAddressId: addressId,
-        shippingAddress: inlineAddress,
-        pickupLocationId: selectedPickupLocation.value?.id,
-        items: itemsPayload,
-        notes: notes.isEmpty ? 'POS Checkout order' : notes,
-      );
-
-      if (response.isSuccess && response.order != null) {
-        createdOrder.value = response.order;
-        customOnlineAmount.value = response.order!.totalAmount;
-        customCashAmount.value = 0.0;
-        return true;
+        inlineAddress = NewAddressInput(
+          fullName: fullNameController.text.trim(),
+          phone: phoneController.text.trim(),
+          email: emailController.text.trim().isEmpty ? null : emailController.text.trim(),
+          addressLine1: address1Controller.text.trim(),
+          addressLine2: address2Controller.text.trim().isEmpty ? null : address2Controller.text.trim(),
+          city: cityController.text.trim(),
+          state: stateController.text.trim().isEmpty ? null : stateController.text.trim(),
+          postalCode: postalCodeController.text.trim().isEmpty ? null : postalCodeController.text.trim(),
+          country: countryController.text.trim().isEmpty ? 'United States' : countryController.text.trim(),
+        );
       } else {
-        customSnackBar('Order Creation Failed', response.message, snackBarType: SnackBarType.error);
+        if (selectedAddress.value == null) {
+          customSnackBar('Address Required', 'Please select or add a shipping address.', snackBarType: SnackBarType.warning);
+          return false;
+        }
+        addressId = selectedAddress.value!.id;
+      }
+    } else {
+      if (selectedPickupLocation.value == null) {
+        customSnackBar('Pickup Location Required', 'Please select a pickup location.', snackBarType: SnackBarType.warning);
         return false;
       }
-    } catch (e) {
-      log("CheckoutController createOrder error: $e");
-      customSnackBar('Error', 'An error occurred while placing order: $e', snackBarType: SnackBarType.error);
-      return false;
-    } finally {
-      isLoading.value = false;
+      // Backend links shipping_address_id even for pickup orders; send the
+      // customer's saved address when one exists to avoid FK errors.
+      addressId = selectedAddress.value?.id;
     }
+
+    _pendingItemsPayload = itemsPayload;
+    _pendingAddressId = addressId;
+    _pendingInlineAddress = inlineAddress;
+    _pendingPickupLocationId = selectedPickupLocation.value?.id;
+
+    // Local estimate for the payment-step preview — the real total (tax,
+    // shipping) is only known once the real order is created online, or is
+    // computed exactly the same way for the offline receipt at submit time.
+    final subtotal = homeController.productTotal;
+    final taxPercent =
+        double.tryParse(_bootstrapController.data.value?.store.taxPercentage ?? '') ?? 0;
+    final tax = subtotal * taxPercent / 100;
+    createdOrder.value = CreatedOrder(
+      id: 0,
+      totalAmount: subtotal + tax,
+      subtotal: subtotal,
+      taxAmount: tax,
+      shippingFee: 0,
+      discountAmount: 0,
+    );
+    customOnlineAmount.value = createdOrder.value!.totalAmount;
+    customCashAmount.value = 0.0;
+    return true;
   }
 
   double get payableAmount {
@@ -450,10 +466,207 @@ class CheckoutController extends GetxController {
       customSnackBar('Error', 'Order not created yet', snackBarType: SnackBarType.error);
       return;
     }
+
+    final method = paymentMethod.value;
+    if (_offlinePaymentMethods.contains(method)) {
+      await _submitOfflineSale(homeController, method);
+    } else {
+      await _submitOnlineCheckout(homeController, method);
+    }
+  }
+
+  /// Cash / bank_transfer / without_payment — entirely local, no network
+  /// call. Queued for `orders/pos/sync`, receipt printed immediately from
+  /// local data.
+  Future<void> _submitOfflineSale(
+    HomeController homeController,
+    String method,
+  ) async {
+    final customer = homeController.selectedCartCustomer.value;
+    if (customer == null) return;
+
     isLoading.value = true;
     try {
+      final clientReference = await ClientReferenceGenerator.generate('order');
+      final shift = Get.isRegistered<ShiftController>()
+          ? Get.find<ShiftController>().currentShift.value
+          : null;
+
+      final customerHasEmail =
+          customer.email != null && customer.email!.isNotEmpty;
+
+      final syncPayload = <String, dynamic>{
+        // Prefer email/phone/full_name — the sync endpoint finds-or-creates
+        // the customer from these, which self-heals if the cached customer
+        // record is stale (e.g. synced before a backend reset). A locally
+        // cached `user_id` can't be verified without a network round trip
+        // (defeating the point of offline mode), so it's only sent as a
+        // last resort when we have no contact info to identify them by.
+        if (customerHasEmail) ...{
+          'email': customer.email,
+          if (customer.phone != null && customer.phone!.isNotEmpty)
+            'phone': customer.phone,
+          if (customer.fullName != null && customer.fullName!.isNotEmpty)
+            'full_name': customer.fullName,
+        } else if (customer.id > 0)
+          'user_id': customer.id,
+        'client_reference': clientReference,
+        'offline_created_at': DateTime.now().toUtc().toIso8601String(),
+        'payment_method': method,
+        'delivery_type': deliveryType.value,
+        if (deliveryType.value == 'store_pickup' && _pendingPickupLocationId != null)
+          'pickup_location_id': _pendingPickupLocationId,
+        if (deliveryType.value == 'home_delivery' && _pendingAddressId != null)
+          'shipping_address_id': _pendingAddressId,
+        if (deliveryType.value == 'home_delivery' && _pendingInlineAddress != null)
+          'shipping_address': _pendingInlineAddress!.toJson(),
+        'items': _pendingItemsPayload,
+        if (shift != null && shift.id > 0) 'shift_id': shift.id,
+        if (shift != null && shift.id <= 0)
+          'shift_client_reference': shift.shiftCode.startsWith('PENDING-')
+              ? shift.shiftCode.substring('PENDING-'.length)
+              : null,
+      };
+
+      final grandTotal = payableAmount;
+      final localPayload = <String, dynamic>{
+        'grand_total': grandTotal,
+        'subtotal': createdOrder.value!.subtotal,
+        'tax': createdOrder.value!.taxAmount,
+        'discount': couponDiscount,
+        'customer_name': customer.fullName,
+        'customer_phone': customer.phone,
+        'customer_email': customer.email,
+        'notes': notesController.text.trim(),
+      };
+
+      await PendingOrderRepository.add(
+        clientReference: clientReference,
+        shiftClientReference: syncPayload['shift_client_reference'] as String?,
+        orderJson: {'sync': syncPayload, 'local': localPayload},
+      );
+
+      customSnackBar(
+        'Sale Complete',
+        'Order saved. It will sync automatically once online.',
+        snackBarType: SnackBarType.success,
+      );
+
+      // Fire-and-forget: printing/sync must never block clearing the cart.
+      final bootstrap = _bootstrapController.data.value;
+      if (bootstrap != null) {
+        unawaited(_printLocalReceipt(
+          bootstrap: bootstrap,
+          homeController: homeController,
+          customer: customer,
+          receiptId: clientReference,
+          grandTotal: grandTotal,
+        ));
+      }
+      if (Get.isRegistered<SyncService>()) {
+        final sync = Get.find<SyncService>();
+        await sync.refreshPendingCount();
+        unawaited(sync.syncOrdersNow());
+      }
+
+      homeController.clearCart();
+      homeController.showCheckoutPanel.value = false;
+      resetCheckoutState();
+    } catch (e) {
+      log("CheckoutController _submitOfflineSale error: $e");
+      customSnackBar('Error', 'Could not save the sale: $e', snackBarType: SnackBarType.error);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> _printLocalReceipt({
+    required BootstrapPayload bootstrap,
+    required HomeController homeController,
+    required CustomerModel? customer,
+    required String receiptId,
+    required double grandTotal,
+  }) async {
+    try {
+      final receipt = LocalReceiptBuilder.build(
+        bootstrap: bootstrap,
+        cartItems: homeController.cartItems,
+        receiptId: receiptId,
+        customer: customer,
+        subtotal: createdOrder.value?.subtotal ?? 0,
+        discount: couponDiscount,
+        tax: createdOrder.value?.taxAmount ?? 0,
+        grandTotal: grandTotal,
+        deliveryInfo: deliveryType.value == 'store_pickup'
+            ? selectedPickupLocation.value?.displayName
+            : selectedAddress.value?.summaryLine,
+        notes: notesController.text.trim(),
+      );
+
+      var device = await PosDeviceCacheStorage.getDevice();
+      if (device == null) {
+        final devicesResponse = await SettingService().getMyBranchDevices();
+        if (devicesResponse.isSuccess && devicesResponse.payload.isNotEmpty) {
+          device = devicesResponse.payload.first;
+          await PosDeviceCacheStorage.saveDevice(device);
+        }
+      }
+      if (device == null || device.ipAddress.trim().isEmpty) {
+        customSnackBar(
+          'Print Receipt',
+          'No printer IP configured. Please set it up in Settings.',
+          snackBarType: SnackBarType.warning,
+        );
+        return;
+      }
+
+      final printed = await ThermalPrinterService()
+          .printReceipt(receipt, printerIp: device.ipAddress);
+      if (!printed) {
+        customSnackBar(
+          'Print Receipt',
+          'Could not reach the printer at ${device.ipAddress}.',
+          snackBarType: SnackBarType.error,
+        );
+      }
+    } catch (e) {
+      log("CheckoutController _printLocalReceipt error: $e");
+    }
+  }
+
+  /// Stripe / PayPal / split methods — real online order create + checkout,
+  /// exactly as before (unchanged online flow).
+  Future<void> _submitOnlineCheckout(
+    HomeController homeController,
+    String method,
+  ) async {
+    final customer = homeController.selectedCartCustomer.value;
+    if (customer == null) return;
+
+    isLoading.value = true;
+    try {
+      final notes = notesController.text.trim();
+      final createResponse = await _service.createOrder(
+        userId: customer.id,
+        email: customer.email ?? '',
+        phone: customer.phone ?? '',
+        fullName: customer.fullName ?? 'Guest',
+        deliveryType: deliveryType.value,
+        shippingAddressId: _pendingAddressId,
+        billingAddressId: _pendingAddressId,
+        shippingAddress: _pendingInlineAddress,
+        pickupLocationId: _pendingPickupLocationId,
+        items: _pendingItemsPayload,
+        notes: notes.isEmpty ? 'POS Checkout order' : notes,
+      );
+
+      if (!createResponse.isSuccess || createResponse.order == null) {
+        customSnackBar('Order Creation Failed', createResponse.message, snackBarType: SnackBarType.error);
+        return;
+      }
+      createdOrder.value = createResponse.order;
+
       final orderId = createdOrder.value!.id;
-      final method = paymentMethod.value;
       double? online;
       double? cash;
       if (method == 'stripe_and_cash' || method == 'paypal_and_cash') {
@@ -508,7 +721,7 @@ class CheckoutController extends GetxController {
         );
       }
     } catch (e) {
-      log("CheckoutController submitCheckout error: $e");
+      log("CheckoutController _submitOnlineCheckout error: $e");
       customSnackBar('Error', 'An error occurred during checkout: $e', snackBarType: SnackBarType.error);
     } finally {
       isLoading.value = false;

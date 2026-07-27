@@ -19,7 +19,8 @@ class OrderView extends GetView<OrderController> {
 
   @override
   Widget build(BuildContext context) {
-    final isWide = MediaQuery.of(context).size.width >= 600 ||
+    final isWide =
+        MediaQuery.of(context).size.width >= 600 ||
         MediaQuery.of(context).orientation == Orientation.landscape;
 
     return Scaffold(
@@ -49,11 +50,16 @@ class OrderView extends GetView<OrderController> {
 
                       return Container(
                         margin: EdgeInsets.only(bottom: context.spacingSM),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: theme.primaryColor.value.withOpacity(0.06),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: theme.primaryColor.value.withOpacity(0.15)),
+                          border: Border.all(
+                            color: theme.primaryColor.value.withOpacity(0.15),
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -91,11 +97,15 @@ class OrderView extends GetView<OrderController> {
                                 controller.toggleCustomerInCart();
                               },
                               icon: Icon(
-                                inCart ? Icons.remove_circle_outline : Icons.add_circle_outline,
+                                inCart
+                                    ? Icons.remove_circle_outline
+                                    : Icons.add_circle_outline,
                                 size: 16,
                               ),
                               label: Text(
-                                inCart ? 'Remove from cart' : 'Add this user to cart',
+                                inCart
+                                    ? 'Remove from cart'
+                                    : 'Add this user to cart',
                                 style: AppFonts.geistMono(
                                   fontSize: context.fontXS,
                                   fontWeight: FontWeight.bold,
@@ -105,12 +115,17 @@ class OrderView extends GetView<OrderController> {
                                 backgroundColor: inCart
                                     ? ColorResources.gradientRed
                                     : theme.secondaryColor.value,
-                                foregroundColor: inCart ? Colors.white : Colors.black,
+                                foregroundColor: inCart
+                                    ? Colors.white
+                                    : Colors.black,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 elevation: 0,
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 10,
+                                ),
                               ),
                             ),
                             if (inCart) ...[
@@ -119,7 +134,10 @@ class OrderView extends GetView<OrderController> {
                                 onPressed: () {
                                   Get.offAllNamed(Routes.home);
                                 },
-                                icon: const Icon(Icons.shopping_cart_checkout_rounded, size: 16),
+                                icon: const Icon(
+                                  Icons.shopping_cart_checkout_rounded,
+                                  size: 16,
+                                ),
                                 label: Text(
                                   'Go to cart',
                                   style: AppFonts.geistMono(
@@ -134,13 +152,19 @@ class OrderView extends GetView<OrderController> {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   elevation: 0,
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
                                 ),
                               ),
                             ],
                             const SizedBox(width: 8),
                             IconButton(
-                              icon: const Icon(Icons.close_rounded, color: Colors.grey),
+                              icon: const Icon(
+                                Icons.close_rounded,
+                                color: Colors.grey,
+                              ),
                               onPressed: () {
                                 controller.currentFilterCustomer.value = null;
                                 controller.searchQuery.value = '';

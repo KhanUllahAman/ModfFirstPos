@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/connectivity/connectivity_service.dart';
 import 'package:modfirstpos/core/exceptions/app_exceptions.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
+import 'package:modfirstpos/core/utils/pin_hash_util.dart';
 import 'package:modfirstpos/modules/pin/service/pin_service.dart';
 
 class PinController extends GetxController with WidgetsBindingObserver {
@@ -93,31 +95,65 @@ class PinController extends GetxController with WidgetsBindingObserver {
   }
 
   Future<bool> unlockWithPin(String pin) async {
+    final isOnline = !Get.isRegistered<ConnectivityService>() ||
+        Get.find<ConnectivityService>().isConnected;
+
+    // Fully offline: skip the network call entirely and verify against the
+    // locally saved hash (kept in sync on every successful online
+    // verify/set/change) so a dead network can never lock the cashier out.
+    if (!isOnline) {
+      return _unlockOffline(pin);
+    }
+
     try {
       isLoading.value = true;
       verifyError.value = '';
       final response = await _pinService.verifyPin(pin: pin);
       if (response.isSuccess) {
-        isLocked.value = false;
-        enteredPin.value = '';
-        _lastActiveAt = DateTime.now();
-        _startIdleWatcher();
-        SecureStorageService.saveWasLocked(false);
-        SecureStorageService.saveLastActiveAt(_lastActiveAt!);
+        await SecureStorageService.savePinHash(PinHashUtil.hash(pin));
+        _completeUnlock();
         return true;
       } else {
         verifyError.value = response.displayMessage;
         return false;
       }
     } catch (e) {
+      if (e is NoInternetException) {
+        // Connectivity dropped between the check above and the call.
+        return _unlockOffline(pin);
+      }
       verifyError.value = e is AppException
           ? e.message
           : 'Something went wrong. Please try again.';
       log("PinController unlockWithPin error: $e");
-      return false; 
+      return false;
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<bool> _unlockOffline(String pin) async {
+    final savedHash = await SecureStorageService.getPinHash();
+    if (savedHash == null || savedHash.isEmpty) {
+      verifyError.value =
+          'No internet connection. Connect once to enable offline unlock.';
+      return false;
+    }
+    if (PinHashUtil.hash(pin) != savedHash) {
+      verifyError.value = 'Incorrect PIN';
+      return false;
+    }
+    _completeUnlock();
+    return true;
+  }
+
+  void _completeUnlock() {
+    isLocked.value = false;
+    enteredPin.value = '';
+    _lastActiveAt = DateTime.now();
+    _startIdleWatcher();
+    SecureStorageService.saveWasLocked(false);
+    SecureStorageService.saveLastActiveAt(_lastActiveAt!);
   }
 
   @override

@@ -128,7 +128,10 @@ class _OrderCommentsDialogState extends State<OrderCommentsDialog> {
               _buildTypeBadge(comment.commentType),
               Text(
                 _formatDateTime(comment.createdAt),
-                style: AppFonts.geistMono(fontSize: 10, color: Colors.grey[500]),
+                style: AppFonts.geistMono(
+                  fontSize: 10,
+                  color: Colors.grey[500],
+                ),
               ),
             ],
           ),
@@ -181,7 +184,11 @@ class _OrderCommentsDialogState extends State<OrderCommentsDialog> {
       ),
       child: Text(
         (commentTypes[type] ?? type ?? '').toUpperCase(),
-        style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w800),
+        style: TextStyle(
+          color: color,
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
@@ -199,14 +206,22 @@ class _OrderCommentsDialogState extends State<OrderCommentsDialog> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.file(attachment, height: 48, width: 48, fit: BoxFit.cover),
+                  child: Image.file(
+                    attachment,
+                    height: 48,
+                    width: 48,
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     attachment.path.split(Platform.pathSeparator).last,
                     overflow: TextOverflow.ellipsis,
-                    style: AppFonts.geistMono(fontSize: 11, color: Colors.grey[600]),
+                    style: AppFonts.geistMono(
+                      fontSize: 11,
+                      color: Colors.grey[600],
+                    ),
                   ),
                 ),
                 IconButton(
@@ -229,21 +244,35 @@ class _OrderCommentsDialogState extends State<OrderCommentsDialog> {
                   isDense: true,
                   filled: true,
                   fillColor: ColorResources.whiteColor,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: ColorResources.labelBorderColor),
+                    borderSide: BorderSide(
+                      color: ColorResources.labelBorderColor,
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: ColorResources.labelBorderColor),
+                    borderSide: BorderSide(
+                      color: ColorResources.labelBorderColor,
+                    ),
                   ),
                 ),
-                style: AppFonts.geistMono(fontSize: 11, color: ColorResources.labelColor),
+                style: AppFonts.geistMono(
+                  fontSize: 11,
+                  color: ColorResources.labelColor,
+                ),
                 items: commentTypes.entries
-                    .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
+                    .map(
+                      (e) =>
+                          DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    )
                     .toList(),
-                onChanged: (val) => setState(() => selectedType = val ?? selectedType),
+                onChanged: (val) =>
+                    setState(() => selectedType = val ?? selectedType),
               ),
             ),
             const SizedBox(width: 8),
@@ -266,7 +295,9 @@ class _OrderCommentsDialogState extends State<OrderCommentsDialog> {
           alignment: Alignment.centerRight,
           child: Obx(
             () => ElevatedButton.icon(
-              onPressed: controller.isPostingComment.value ? null : _submitComment,
+              onPressed: controller.isPostingComment.value
+                  ? null
+                  : _submitComment,
               icon: controller.isPostingComment.value
                   ? const SizedBox(
                       width: 14,
@@ -274,11 +305,16 @@ class _OrderCommentsDialogState extends State<OrderCommentsDialog> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.send_rounded, size: 16),
-              label: Text('SEND', style: AppFonts.geistMono(fontWeight: FontWeight.w700)),
+              label: Text(
+                'SEND',
+                style: AppFonts.geistMono(fontWeight: FontWeight.w700),
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: theme.secondaryColor.value,
+                backgroundColor: theme.primaryColor.value,
                 foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
           ),

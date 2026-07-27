@@ -13,6 +13,7 @@ import 'package:modfirstpos/modules/customer/model/customer_model.dart';
 import 'package:modfirstpos/modules/customer/controller/customer_controller.dart';
 import 'package:modfirstpos/modules/home/widgets/cash_payment_panel.dart';
 import 'package:modfirstpos/modules/home/widgets/checkout_flow_panel.dart';
+import 'package:modfirstpos/shared/widgets/AppWidgets/product_pin_button.dart';
 import 'package:modfirstpos/shared/widgets/AppWidgets/variant_selector.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/sync_button_widget.dart';
 import 'package:modfirstpos/shared/widgets/DynamicImage/product_image_carousel.dart';
@@ -391,8 +392,7 @@ class ProductListPanel extends StatelessWidget {
                   ),
                 ),
                 style: TextButton.styleFrom(
-                  backgroundColor:
-                      theme.secondaryColor.value.withOpacity(0.12),
+                  backgroundColor: theme.secondaryColor.value.withOpacity(0.12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -788,8 +788,7 @@ class ProductListPanel extends StatelessWidget {
                     Obx(
                       () => VariantSelector(
                         product: product,
-                        selectedVariant:
-                            controller.selectedInlineVariant.value,
+                        selectedVariant: controller.selectedInlineVariant.value,
                         onVariantSelected: (variant) {
                           controller.selectedInlineVariant.value = variant;
                         },
@@ -900,7 +899,7 @@ class ProductListPanel extends StatelessWidget {
                           controller.selectedProduct.value = null;
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.secondaryColor.value,
+                          backgroundColor: theme.primaryColor.value,
                           foregroundColor: Colors.black,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -1208,7 +1207,7 @@ class _InlineProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final homeController = Get.find<HomeController>();
-    final theme = Get.find<AppThemeService>();
+    final productId = product.id?.toString() ?? product.displayName;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
@@ -1222,20 +1221,13 @@ class _InlineProductCard extends StatelessWidget {
           children: [
             Positioned.fill(child: _buildCardBody(context)),
             Positioned(
-              top: 2,
-              right: 2,
+              top: 4,
+              right: 4,
               child: Obx(
-                () => InkWell(
+                () => ProductPinButton(
+                  isPinned: homeController.isPinned(productId),
                   onTap: () => homeController.pinProduct(product),
-                  borderRadius: BorderRadius.circular(10),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.push_pin_outlined,
-                      size: 14,
-                      color: theme.secondaryColor.value,
-                    ),
-                  ),
+                  size: 22,
                 ),
               ),
             ),
@@ -1247,81 +1239,79 @@ class _InlineProductCard extends StatelessWidget {
 
   Widget _buildCardBody(BuildContext context) {
     return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              flex: 5,
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(8),
-                ),
-                child: product.primaryImageUrl != null
-                    ? CachedNetworkImage(
-                        imageUrl: product.primaryImageUrl!,
-                        fit: BoxFit.contain,
-                        width: double.infinity,
-                        height: double.infinity,
-                        errorWidget: (_, __, ___) => Container(
-                          color: const Color(0xFFE5E7EB),
-                          child: const Icon(
-                            Icons.image_not_supported_outlined,
-                            color: Colors.grey,
-                            size: 20,
-                          ),
-                        ),
-                      )
-                    : Container(
-                        color: const Color(0xFFE5E7EB),
-                        child: const Icon(
-                          Icons.image_outlined,
-                          color: Colors.grey,
-                          size: 20,
-                        ),
-                      ),
-              ),
-            ),
-            Expanded(
-              flex: 4,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      product.displayName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: AppFonts.geistMono(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w600,
-                        color: ColorResources.labelColor,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          flex: 5,
+          child: ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+            child: product.primaryImageUrl != null
+                ? CachedNetworkImage(
+                    imageUrl: product.primaryImageUrl!,
+                    fit: BoxFit.contain,
+                    width: double.infinity,
+                    height: double.infinity,
+                    errorWidget: (_, __, ___) => Container(
+                      color: const Color(0xFFE5E7EB),
+                      child: const Icon(
+                        Icons.image_not_supported_outlined,
+                        color: Colors.grey,
+                        size: 20,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      CurrencyUtils.format(product.effectivePrice, decimals: 0),
-                      style: AppFonts.geistMono(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        color: ColorResources.labelColor,
-                      ),
+                  )
+                : Container(
+                    color: const Color(0xFFE5E7EB),
+                    child: const Icon(
+                      Icons.image_outlined,
+                      color: Colors.grey,
+                      size: 20,
                     ),
-                    if (product.hasVariants)
-                      Text(
-                        '${product.variants.length} variants',
-                        style: AppFonts.geistMono(
-                          fontSize: 8,
-                          color: ColorResources.labelColor.withOpacity(0.5),
-                        ),
-                      ),
-                  ],
+                  ),
+          ),
+        ),
+        Expanded(
+          flex: 4,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  product.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: AppFonts.geistMono(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                    color: ColorResources.labelColor,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 2),
+                Text(
+                  CurrencyUtils.format(product.effectivePrice, decimals: 0),
+                  style: AppFonts.geistMono(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: ColorResources.labelColor,
+                  ),
+                ),
+                if (product.hasVariants)
+                  Text(
+                    '${product.variants.length} variants',
+                    style: AppFonts.geistMono(
+                      fontSize: 8,
+                      color: ColorResources.labelColor.withOpacity(0.5),
+                    ),
+                  ),
+              ],
             ),
-          ],
-        );
+          ),
+        ),
+      ],
+    );
   }
 }
 

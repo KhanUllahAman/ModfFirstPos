@@ -9,6 +9,7 @@ import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 import 'package:modfirstpos/shared/widgets/TextFormFeild/custom_text_form_field.dart';
 import 'package:modfirstpos/shared/widgets/dailogs/dialog_transitions.dart';
+import 'package:modfirstpos/shared/widgets/helperFunction/logout_helper.dart';
 
 /// Mandatory shift-open dialog — shown once per app session when the
 /// cashier has no active shift. No cancel button: the POS shouldn't be
@@ -169,6 +170,21 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: context.spacingXS),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      AppLogout.attempt(context, checkActiveShift: false);
+                    },
+                    child: Text(
+                      'Log Out Instead',
+                      style: AppFonts.geistMono(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[600],
                       ),
                     ),
                   ),

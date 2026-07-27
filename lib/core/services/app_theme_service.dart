@@ -50,11 +50,13 @@ class AppThemeService extends GetxService {
     final font = await WebsiteSettingsStorageService.getFontPrimary();
     final logo = await WebsiteSettingsStorageService.getLogoUrl();
 
+    // Swapped: the website settings' "primary" reads as this app's
+    // secondary, and its "secondary" reads as this app's primary.
     final parsedPrimary = primaryHex?.toColorOrNull();
-    if (parsedPrimary != null) primaryColor.value = parsedPrimary;
+    if (parsedPrimary != null) secondaryColor.value = parsedPrimary;
 
     final parsedSecondary = secondaryHex?.toColorOrNull();
-    if (parsedSecondary != null) secondaryColor.value = parsedSecondary;
+    if (parsedSecondary != null) primaryColor.value = parsedSecondary;
 
     if (font != null && font.trim().isNotEmpty) fontFamily.value = font.trim();
     if (logo != null && logo.trim().isNotEmpty) logoUrl.value = logo.trim();

@@ -3,6 +3,8 @@ import 'dart:developer';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/modules/bootstrap/controller/bootstrap_controller.dart';
+import 'package:modfirstpos/core/services/customer_display_service.dart';
+import 'package:modfirstpos/modules/setting/storage/pos_device_cache_storage.dart';
 import 'package:modfirstpos/modules/category/model/category_model.dart';
 import 'package:modfirstpos/modules/product/model/product_model.dart';
 import 'package:modfirstpos/modules/home/model/cart_item_model.dart';
@@ -18,6 +20,8 @@ import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
 class HomeController extends GetxController {
   final BootstrapController _bootstrapController = Get.find<BootstrapController>();
+  final CustomerDisplayClientService _customerDisplay =
+      Get.find<CustomerDisplayClientService>();
 
   final Rxn<CustomerModel> selectedCartCustomer = Rxn<CustomerModel>();
   final RxBool showCustomerPanel = false.obs;
@@ -60,6 +64,41 @@ class HomeController extends GetxController {
     _bootstrapController.hydrateFromCache().then((_) => _refreshFromBootstrap());
     ever(_bootstrapController.data, (_) => _refreshFromBootstrap());
     _loadPinnedProducts();
+    _connectCustomerDisplay();
+    ever(cartItems, (_) => _pushCustomerDisplay());
+    ever(discountInput, (_) => _pushCustomerDisplay());
+  }
+
+  /// Connects to the customer-facing tab (Settings > Customer IP) so cart
+  /// changes can be mirrored there in real time.
+  Future<void> _connectCustomerDisplay() async {
+    final device = await PosDeviceCacheStorage.getDevice();
+    final ip = device?.customerIp;
+    if (ip != null && ip.trim().isNotEmpty) {
+      await _customerDisplay.connect(ip);
+    }
+  }
+
+  void _pushCustomerDisplay() {
+    final store = _bootstrapController.data.value?.store;
+    _customerDisplay.pushCartUpdate(
+      items: cartItems
+          .map(
+            (c) => CustomerDisplayItem(
+              name: c.product.name,
+              quantity: c.quantity,
+              unitPrice: c.product.unitPrice,
+              total: c.total,
+              imageUrl: c.product.imageUrl,
+            ),
+          )
+          .toList(),
+      subtotal: productTotal,
+      discount: discount,
+      total: balance,
+      currencySymbol: store?.currencySymbol,
+      storeName: store?.siteName,
+    );
   }
 
   /// Categories/products come straight from the offline-first bootstrap
@@ -193,6 +232,25 @@ class HomeController extends GetxController {
     );
   }
 
+  /// Current stock for a product/variant from the cached bootstrap
+  /// catalogue (kept in sync with inventory adjustments), or null when it
+  /// can't be resolved — treated as unlimited/untracked so it never blocks
+  /// the add.
+  int? _liveStock({int? productId, int? variantId}) {
+    if (productId == null) return null;
+    final product = _bootstrapController.allProducts.firstWhereOrNull(
+      (p) => p.id == productId,
+    );
+    if (product == null) return null;
+    if (variantId != null) {
+      final variant = product.variants.firstWhereOrNull(
+        (v) => v.id == variantId,
+      );
+      return variant?.stockQuantity;
+    }
+    return product.stock;
+  }
+
   /// Adds a line to the cart, or bumps the quantity when the SKU is already
   /// in the cart. Single source of truth for all add-to-cart flows.
   void _addOrIncrementCartItem({
@@ -207,6 +265,28 @@ class HomeController extends GetxController {
   }) {
     final existingIndex =
         cartItems.indexWhere((c) => c.product.skuCode == sku);
+
+    final stock = _liveStock(productId: productId, variantId: variantId);
+    if (stock != null) {
+      final alreadyInCart =
+          existingIndex != -1 ? cartItems[existingIndex].quantity : 0;
+      if (stock <= 0) {
+        customSnackBar(
+          'Out of Stock',
+          '$displayName is out of stock.',
+          snackBarType: SnackBarType.error,
+        );
+        return;
+      }
+      if (alreadyInCart + quantity > stock) {
+        customSnackBar(
+          'Insufficient Stock',
+          'Only $stock unit(s) of $displayName available.',
+          snackBarType: SnackBarType.error,
+        );
+        return;
+      }
+    }
 
     if (existingIndex != -1) {
       cartItems[existingIndex].quantity += quantity;
@@ -242,6 +322,18 @@ class HomeController extends GetxController {
   }
 
   void incrementQty(CartItemModel item) {
+    final stock = _liveStock(
+      productId: item.product.productId,
+      variantId: item.product.variantId,
+    );
+    if (stock != null && item.quantity + 1 > stock) {
+      customSnackBar(
+        'Insufficient Stock',
+        'Only $stock unit(s) of ${item.product.name} available.',
+        snackBarType: SnackBarType.error,
+      );
+      return;
+    }
     item.quantity++;
     cartItems.refresh();
   }
@@ -257,6 +349,31 @@ class HomeController extends GetxController {
 
   void removeFromCart(CartItemModel item) {
     cartItems.remove(item);
+  }
+
+  /// Sets the quantity directly (from the editable qty field) instead of
+  /// stepping it one tap at a time.
+  void setQty(CartItemModel item, int quantity) {
+    if (quantity <= 0) {
+      removeFromCart(item);
+      return;
+    }
+    final stock = _liveStock(
+      productId: item.product.productId,
+      variantId: item.product.variantId,
+    );
+    if (stock != null && quantity > stock) {
+      customSnackBar(
+        'Insufficient Stock',
+        'Only $stock unit(s) of ${item.product.name} available.',
+        snackBarType: SnackBarType.error,
+      );
+      item.quantity = stock;
+      cartItems.refresh();
+      return;
+    }
+    item.quantity = quantity;
+    cartItems.refresh();
   }
 
   // ------------------------------------------------------------------------

@@ -35,12 +35,9 @@ class HomeView extends GetView<HomeController> {
             trackVisibility: WidgetStateProperty.all(true),
             thickness: WidgetStateProperty.all(5),
             radius: const Radius.circular(8),
-            thumbColor:
-                WidgetStateProperty.all(ColorResources.thumbColor),
-            trackColor:
-                WidgetStateProperty.all(const Color(0xffE6E8EC)),
-            trackBorderColor:
-                WidgetStateProperty.all(Colors.transparent),
+            thumbColor: WidgetStateProperty.all(ColorResources.thumbColor),
+            trackColor: WidgetStateProperty.all(const Color(0xffE6E8EC)),
+            trackBorderColor: WidgetStateProperty.all(Colors.transparent),
             crossAxisMargin: 2,
             mainAxisMargin: 4,
             minThumbLength: 40,
@@ -54,8 +51,7 @@ class HomeView extends GetView<HomeController> {
             children: [
               Expanded(
                 child: Padding(
-                  padding:
-                      EdgeInsets.all(context.responsiveWidth(0.02)),
+                  padding: EdgeInsets.all(context.responsiveWidth(0.02)),
                   child: isLandscapeOrTablet
                       ? _buildTabletLayout(context)
                       : _buildMobileLayout(context),
@@ -72,15 +68,9 @@ class HomeView extends GetView<HomeController> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          flex: 5,
-          child: _buildCartPanel(context),
-        ),
+        Expanded(flex: 5, child: _buildCartPanel(context)),
         SizedBox(width: context.responsiveWidth(0.015)),
-        Expanded(
-          flex: 4,
-          child: ProductListPanel(controller: controller),
-        ),
+        Expanded(flex: 4, child: ProductListPanel(controller: controller)),
       ],
     );
   }
@@ -103,8 +93,7 @@ class HomeView extends GetView<HomeController> {
                   SizedBox(
                     height: 48,
                     child: ElevatedButton.icon(
-                      onPressed: () =>
-                          controller.selectedCategory.value = null,
+                      onPressed: () => controller.selectedCategory.value = null,
                       icon: const Icon(Icons.grid_view_rounded),
                       label: const Text('Browse Products'),
                       style: ElevatedButton.styleFrom(

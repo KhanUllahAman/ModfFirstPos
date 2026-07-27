@@ -91,10 +91,10 @@ class ReportingView extends GetView<ReportingController> {
                           ? null
                           : controller.generateReport,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.secondaryColor.value,
+                        backgroundColor: theme.primaryColor.value,
                         foregroundColor: Colors.black,
-                        disabledBackgroundColor:
-                            theme.secondaryColor.value.withOpacity(0.6),
+                        disabledBackgroundColor: theme.secondaryColor.value
+                            .withOpacity(0.6),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -175,10 +175,9 @@ class ReportingView extends GetView<ReportingController> {
     final accent = theme.secondaryColor.value;
     return Theme(
       data: Theme.of(context).copyWith(
-        colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: accent,
-              secondary: accent,
-            ),
+        colorScheme: Theme.of(
+          context,
+        ).colorScheme.copyWith(primary: accent, secondary: accent),
         splashColor: accent.withOpacity(0.1),
         highlightColor: accent.withOpacity(0.1),
       ),
@@ -287,9 +286,9 @@ class ReportingView extends GetView<ReportingController> {
             lastDate: DateTime(2100),
             builder: (ctx, child) => Theme(
               data: Theme.of(ctx).copyWith(
-                colorScheme: Theme.of(ctx).colorScheme.copyWith(
-                      primary: theme.secondaryColor.value,
-                    ),
+                colorScheme: Theme.of(
+                  ctx,
+                ).colorScheme.copyWith(primary: theme.secondaryColor.value),
               ),
               child: child!,
             ),
@@ -322,7 +321,10 @@ class ReportingView extends GetView<ReportingController> {
   InputDecoration _fieldDecoration(String label, Color accent) {
     return InputDecoration(
       labelText: label,
-      labelStyle: AppFonts.geistMono(fontSize: 10, color: ColorResources.labelColor),
+      labelStyle: AppFonts.geistMono(
+        fontSize: 10,
+        color: ColorResources.labelColor,
+      ),
       filled: true,
       fillColor: ColorResources.whiteColor,
       isDense: true,
@@ -358,7 +360,10 @@ class ReportingView extends GetView<ReportingController> {
       return Center(
         child: Text(
           'Generate a report to preview it here',
-          style: AppFonts.geistMono(fontSize: context.fontSM, color: Colors.grey[500]),
+          style: AppFonts.geistMono(
+            fontSize: context.fontSM,
+            color: Colors.grey[500],
+          ),
         ),
       );
     }
@@ -366,7 +371,10 @@ class ReportingView extends GetView<ReportingController> {
       return Center(
         child: Text(
           'No rows found in the report',
-          style: AppFonts.geistMono(fontSize: context.fontSM, color: Colors.grey[500]),
+          style: AppFonts.geistMono(
+            fontSize: context.fontSM,
+            color: Colors.grey[500],
+          ),
         ),
       );
     }
@@ -427,7 +435,10 @@ class ReportingView extends GetView<ReportingController> {
               const SizedBox(width: 6),
               Text(
                 'Scroll horizontally / vertically to see all columns and rows',
-                style: AppFonts.geistMono(fontSize: 10, color: Colors.grey[500]),
+                style: AppFonts.geistMono(
+                  fontSize: 10,
+                  color: Colors.grey[500],
+                ),
               ),
             ],
           ),

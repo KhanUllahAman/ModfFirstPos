@@ -7,9 +7,7 @@ import 'package:modfirstpos/modules/bootstrap/model/bootstrap_model.dart';
 class BootstrapService {
   final NetworkClient _client = NetworkClient();
 
-  /// Returns the parsed response along with the raw JSON map (needed so the
-  /// caller can cache the exact payload and later patch it in place, e.g.
-  /// after a local inventory adjustment).
+
   Future<(BootstrapResponse, Map<String, dynamic>?)> fetchBootstrap() async {
     try {
       final response = await _client.get(

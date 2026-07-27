@@ -53,20 +53,21 @@ class SetPinView extends GetView<SetPinController> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Obx(() => 
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: theme.secondaryColor.value
-                                      .withOpacity(0.1),
+                              Obx(
+                                () => Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: theme.secondaryColor.value
+                                        .withOpacity(0.1),
+                                  ),
+                                  child: Icon(
+                                    Icons.lock_outline_rounded,
+                                    color: theme.secondaryColor.value,
+                                    size: 26,
+                                  ),
                                 ),
-                                child: Icon(
-                                  Icons.lock_outline_rounded,
-                                  color: theme.secondaryColor.value,
-                                  size: 26,
-                                ),
-                              ),),
+                              ),
                               SizedBox(height: context.spacingSM),
                               Obx(
                                 () => Text(

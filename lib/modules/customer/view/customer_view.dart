@@ -57,18 +57,27 @@ class CustomerView extends GetView<CustomerController> {
                                 hintStyle: AppFonts.geistMono(
                                   fontWeight: FontWeight.w600,
                                   fontSize: context.fontSM,
-                                  color: ColorResources.labelColor.withOpacity(0.5),
+                                  color: ColorResources.labelColor.withOpacity(
+                                    0.5,
+                                  ),
                                 ),
-                                suffixIcon: const Icon(Icons.search, color: ColorResources.blackColor),
+                                suffixIcon: const Icon(
+                                  Icons.search,
+                                  color: ColorResources.blackColor,
+                                ),
                                 filled: true,
                                 fillColor: ColorResources.whiteColor,
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10),
-                                  borderSide: const BorderSide(color: ColorResources.cardBorderColor),
+                                  borderSide: const BorderSide(
+                                    color: ColorResources.cardBorderColor,
+                                  ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10),
-                                  borderSide: const BorderSide(color: ColorResources.cardBorderColor),
+                                  borderSide: const BorderSide(
+                                    color: ColorResources.cardBorderColor,
+                                  ),
                                 ),
                                 contentPadding: EdgeInsets.symmetric(
                                   horizontal: context.spacingSM,
@@ -79,11 +88,13 @@ class CustomerView extends GetView<CustomerController> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Obx(() => AppSyncButton(
-                              onPressed: controller.syncCustomers,
-                              isLoading: controller.isLoading.value,
-                              label: 'Sync Customers',
-                            )),
+                        Obx(
+                          () => AppSyncButton(
+                            onPressed: controller.syncCustomers,
+                            isLoading: controller.isLoading.value,
+                            label: 'Sync Customers',
+                          ),
+                        ),
                       ],
                     ),
                     SizedBox(height: context.spacingSM),
@@ -91,7 +102,9 @@ class CustomerView extends GetView<CustomerController> {
                       child: Obx(() {
                         if (controller.isLoading.value) {
                           return Center(
-                            child: CircularProgressIndicator(color: theme.secondaryColor.value),
+                            child: CircularProgressIndicator(
+                              color: theme.secondaryColor.value,
+                            ),
                           );
                         }
 
@@ -106,7 +119,8 @@ class CustomerView extends GetView<CustomerController> {
                                   'No customers found',
                                   style: AppFonts.geistMono(
                                     fontSize: context.fontSM,
-                                    color: ColorResources.blackColor.withOpacity(0.5),
+                                    color: ColorResources.blackColor
+                                        .withOpacity(0.5),
                                   ),
                                 ),
                                 const SizedBox(height: 12),
@@ -122,24 +136,30 @@ class CustomerView extends GetView<CustomerController> {
 
                         return GridView.builder(
                           primary: false,
-                          padding: EdgeInsets.symmetric(horizontal: context.spacingSM),
-                          itemCount: customers.length,
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 4,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 1.25,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: context.spacingSM,
                           ),
+                          itemCount: customers.length,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 4,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 1.25,
+                              ),
                           itemBuilder: (_, i) => _CustomerListCard(
                             customer: customers[i],
-                            onTap: () => controller.navigateToCustomerOrders(customers[i]),
+                            onTap: () => controller.navigateToCustomerOrders(
+                              customers[i],
+                            ),
                           ),
                         );
                       }),
                     ),
                     // Customer Pagination
                     Obx(() {
-                      if (controller.customers.isEmpty) return const SizedBox.shrink();
+                      if (controller.customers.isEmpty)
+                        return const SizedBox.shrink();
                       return Container(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Row(
@@ -156,8 +176,13 @@ class CustomerView extends GetView<CustomerController> {
                             Row(
                               children: [
                                 IconButton(
-                                  onPressed: controller.hasPrev.value ? controller.prevPage : null,
-                                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 16),
+                                  onPressed: controller.hasPrev.value
+                                      ? controller.prevPage
+                                      : null,
+                                  icon: const Icon(
+                                    Icons.arrow_back_ios_new_rounded,
+                                    size: 16,
+                                  ),
                                   color: ColorResources.appAccentColor,
                                 ),
                                 const SizedBox(width: 8),
@@ -171,8 +196,13 @@ class CustomerView extends GetView<CustomerController> {
                                 ),
                                 const SizedBox(width: 8),
                                 IconButton(
-                                  onPressed: controller.hasNext.value ? controller.nextPage : null,
-                                  icon: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                                  onPressed: controller.hasNext.value
+                                      ? controller.nextPage
+                                      : null,
+                                  icon: const Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    size: 16,
+                                  ),
                                   color: ColorResources.appAccentColor,
                                 ),
                               ],
@@ -222,10 +252,7 @@ class _CustomerListCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                _CustomerAvatar(
-                  customer: customer,
-                  radius: 20,
-                ),
+                _CustomerAvatar(customer: customer, radius: 20),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -243,13 +270,17 @@ class _CustomerListCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.blueGrey[50],
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          customer.role?.replaceAll('_', ' ').toUpperCase() ?? 'CUSTOMER',
+                          customer.role?.replaceAll('_', ' ').toUpperCase() ??
+                              'CUSTOMER',
                           style: AppFonts.geistMono(
                             fontSize: 8,
                             fontWeight: FontWeight.bold,
@@ -308,7 +339,9 @@ class _CustomerListCard extends StatelessWidget {
                   'Verified',
                   style: AppFonts.geistMono(
                     fontSize: 10,
-                    color: customer.emailVerified ? ColorResources.successGreen : Colors.grey,
+                    color: customer.emailVerified
+                        ? ColorResources.successGreen
+                        : Colors.grey,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -351,7 +384,8 @@ class _CustomerAvatar extends StatelessWidget {
         ? customer.fullName![0].toUpperCase()
         : '?';
 
-    final hasImage = customer.image != null &&
+    final hasImage =
+        customer.image != null &&
         customer.image!.isNotEmpty &&
         customer.image != 'default-user.png';
 

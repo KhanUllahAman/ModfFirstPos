@@ -50,4 +50,6 @@ class ApiConstants {
       '${baseUrl}order-comments/order/$orderId';
   static final String orderCommentListEndpoint = '${baseUrl}order-comments/list';
   static final String reportsDurationExcelEndpoint = '${baseUrl}reports/duration/excel';
+  static final String posShiftSyncEndpoint = '${baseUrl}pos-shifts/sync';
+  static final String orderPosSyncEndpoint = '${baseUrl}orders/pos/sync';
 }

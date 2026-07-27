@@ -1,6 +1,8 @@
 import 'dart:developer';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/exceptions/app_exceptions.dart';
+import 'package:modfirstpos/core/storage/secure_storage_service.dart';
+import 'package:modfirstpos/core/utils/pin_hash_util.dart';
 import 'package:modfirstpos/modules/pin/controller/pin_controller.dart';
 import 'package:modfirstpos/modules/pin/service/pin_service.dart';
 import 'package:modfirstpos/shared/widgets/CircularProgressIndicator/circular_progress_indicator.dart';
@@ -34,6 +36,7 @@ class PinSettingsController extends GetxController {
         );
         return;
       }
+      await SecureStorageService.deletePinHash();
       await pinController.fetchPinStatus();
       Get.back();
       customSnackBar(
@@ -94,6 +97,7 @@ class PinSettingsController extends GetxController {
         return;
       }
 
+      await SecureStorageService.savePinHash(PinHashUtil.hash(newPin));
       Get.back();
       customSnackBar(
         'Success',

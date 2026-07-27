@@ -115,11 +115,21 @@ class BootstrapController extends GetxController {
     required int newQuantity,
   }) async {
     final raw = _rawPayload;
-    if (raw == null) return;
+    // No cache yet on this device (e.g. adjusted before any bootstrap sync
+    // ever completed) — pull a full snapshot instead of silently no-op'ing.
+    if (raw == null) {
+      await syncBootstrap(showSnackbar: false);
+      return;
+    }
 
     try {
       final products = raw['products'];
-      if (products is! List) return;
+      if (products is! List) {
+        await syncBootstrap(showSnackbar: false);
+        return;
+      }
+
+      var matched = false;
 
       for (final productJson in products) {
         if (productJson is! Map<String, dynamic>) continue;
@@ -127,6 +137,7 @@ class BootstrapController extends GetxController {
 
         if (variantId == null) {
           productJson['stock'] = newQuantity;
+          matched = true;
         } else {
           final variants = productJson['variants'];
           if (variants is List) {
@@ -142,16 +153,27 @@ class BootstrapController extends GetxController {
               } else {
                 variantJson['inventory'] = {'quantity': newQuantity};
               }
+              matched = true;
             }
           }
         }
         break;
       }
 
+      if (!matched) {
+        // Product/variant isn't in the cached catalogue (new since last
+        // sync, or catalogue never included it) — fall back to a full
+        // re-sync so the local snapshot catches up instead of quietly
+        // dropping the stock change.
+        await syncBootstrap(showSnackbar: false);
+        return;
+      }
+
       data.value = BootstrapPayload.fromJson(raw);
       await BootstrapCacheStorage.saveBootstrap(raw);
     } catch (e) {
       log("BootstrapController patchInventory error: $e");
+      await syncBootstrap(showSnackbar: false);
     }
   }
 }

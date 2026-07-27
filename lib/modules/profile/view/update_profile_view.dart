@@ -75,7 +75,7 @@ class UpdateProfileView extends GetView<UpdateProfileController> {
                   SizedBox(height: context.spacingXL),
                   Obx(
                     () => AppButton(
-                      backgroundColor: theme.secondaryColor.value,
+                      backgroundColor: theme.primaryColor.value,
                       onPressed:
                           controller.isLoading.value ||
                               controller.isUploadingImage.value
@@ -94,7 +94,7 @@ class UpdateProfileView extends GetView<UpdateProfileController> {
                         style: AppFonts.geistMono(
                           fontSize: context.fontSM,
                           fontWeight: FontWeight.w500,
-                          color: theme.onSecondaryColor,
+                          color: theme.onPrimaryColor,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -159,12 +159,9 @@ class _AvatarPicker extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: theme.secondaryColor.value,
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: theme.onSecondaryColor,
-                    width: 2,
-                  ),
+                  border: Border.all(color: theme.onSecondaryColor, width: 2),
                 ),
-                child:  Icon(
+                child: Icon(
                   Iconsax.camera,
                   size: 16,
                   color: theme.onSecondaryColor,

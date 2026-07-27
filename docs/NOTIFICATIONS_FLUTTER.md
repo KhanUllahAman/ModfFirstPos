@@ -53,21 +53,6 @@ Everything else is **event-specific** (section 3).
 
 ### Products
 
-**`product.created`** — `sync: catalogue`
-```json
-{ "event": "product.created", "entity_type": "product", "entity_id": "12", "sync": "catalogue", "notification_id": "801" }
-```
-
-**`product.updated`** — `sync: catalogue`
-```json
-{ "event": "product.updated", "entity_type": "product", "entity_id": "12", "sync": "catalogue", "notification_id": "802" }
-```
-
-**`product.deleted`** — `sync: catalogue`
-```json
-{ "event": "product.deleted", "entity_type": "product", "entity_id": "12", "sync": "catalogue", "notification_id": "803" }
-```
-
 **`product.price_increased`** / **`product.price_decreased`** — `sync: catalogue`
 extra: `old_price`, `new_price`
 ```json
@@ -76,11 +61,6 @@ extra: `old_price`, `new_price`
 ```
 
 ### Variants
-
-**`variant.created`** / **`variant.updated`** / **`variant.deleted`** — `sync: catalogue`
-```json
-{ "event": "variant.created", "entity_type": "variant", "entity_id": "55", "sync": "catalogue", "notification_id": "805" }
-```
 
 ### Inventory / Stock  (extra: `product_id`, `quantity` = new stock)
 

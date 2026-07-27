@@ -113,12 +113,13 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
                   icon: Icons.person_outline_rounded,
                   child: Column(
                     children: [
-                      _buildDetailRow(context, 'Full Name',
-                          order.fullName ?? 'Walk-in Customer'),
                       _buildDetailRow(
-                          context, 'Phone', order.phone ?? '--'),
-                      _buildDetailRow(
-                          context, 'Email', order.email ?? '--'),
+                        context,
+                        'Full Name',
+                        order.fullName ?? 'Walk-in Customer',
+                      ),
+                      _buildDetailRow(context, 'Phone', order.phone ?? '--'),
+                      _buildDetailRow(context, 'Email', order.email ?? '--'),
                       _buildDetailRow(
                         context,
                         'Delivery Type',
@@ -128,8 +129,12 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
                             'STORE PICKUP',
                       ),
                       if (order.notes != null && order.notes!.isNotEmpty)
-                        _buildDetailRow(context, 'Notes', order.notes!,
-                            isMultiLine: true),
+                        _buildDetailRow(
+                          context,
+                          'Notes',
+                          order.notes!,
+                          isMultiLine: true,
+                        ),
                     ],
                   ),
                 ),
@@ -147,8 +152,7 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: order.items.length,
-                        separatorBuilder: (_, __) =>
-                            const Divider(height: 1),
+                        separatorBuilder: (_, __) => const Divider(height: 1),
                         itemBuilder: (_, i) =>
                             _buildItemRow(context, order.items[i]),
                       ),
@@ -165,10 +169,11 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: order.paymentLogs.length,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(height: 8),
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
                       itemBuilder: (_, i) => _buildPaymentTransactionLog(
-                          context, order.paymentLogs[i]),
+                        context,
+                        order.paymentLogs[i],
+                      ),
                     ),
                   ),
                   SizedBox(height: context.spacingSM),
@@ -224,8 +229,12 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
     );
   }
 
-  Widget _buildDetailRow(BuildContext context, String label, String value,
-      {bool isMultiLine = false}) {
+  Widget _buildDetailRow(
+    BuildContext context,
+    String label,
+    String value, {
+    bool isMultiLine = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
@@ -264,38 +273,50 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
       children: [
         Expanded(
           flex: 4,
-          child: Text('Product / Customization',
-              style: AppFonts.geistMono(
-                  fontSize: context.fontXS,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[700])),
+          child: Text(
+            'Product / Customization',
+            style: AppFonts.geistMono(
+              fontSize: context.fontXS,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[700],
+            ),
+          ),
         ),
         Expanded(
           flex: 1,
-          child: Text('Qty',
-              textAlign: TextAlign.center,
-              style: AppFonts.geistMono(
-                  fontSize: context.fontXS,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[700])),
+          child: Text(
+            'Qty',
+            textAlign: TextAlign.center,
+            style: AppFonts.geistMono(
+              fontSize: context.fontXS,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[700],
+            ),
+          ),
         ),
         Expanded(
           flex: 2,
-          child: Text('Price',
-              textAlign: TextAlign.right,
-              style: AppFonts.geistMono(
-                  fontSize: context.fontXS,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[700])),
+          child: Text(
+            'Price',
+            textAlign: TextAlign.right,
+            style: AppFonts.geistMono(
+              fontSize: context.fontXS,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[700],
+            ),
+          ),
         ),
         Expanded(
           flex: 2,
-          child: Text('Total',
-              textAlign: TextAlign.right,
-              style: AppFonts.geistMono(
-                  fontSize: context.fontXS,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[700])),
+          child: Text(
+            'Total',
+            textAlign: TextAlign.right,
+            style: AppFonts.geistMono(
+              fontSize: context.fontXS,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[700],
+            ),
+          ),
         ),
       ],
     );
@@ -314,62 +335,83 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.productName ?? 'Unnamed Product',
-                    style: AppFonts.geistMono(
-                        fontSize: context.fontXS,
-                        fontWeight: FontWeight.w700,
-                        color: ColorResources.labelColor)),
+                Text(
+                  item.productName ?? 'Unnamed Product',
+                  style: AppFonts.geistMono(
+                    fontSize: context.fontXS,
+                    fontWeight: FontWeight.w700,
+                    color: ColorResources.labelColor,
+                  ),
+                ),
                 if (item.variantName != null && item.variantName!.isNotEmpty)
-                  Text('Variant: ${item.variantName}',
-                      style: AppFonts.geistMono(
-                          fontSize: 10, color: Colors.grey[600])),
+                  Text(
+                    'Variant: ${item.variantName}',
+                    style: AppFonts.geistMono(
+                      fontSize: 10,
+                      color: Colors.grey[600],
+                    ),
+                  ),
                 if (item.printMethod != null && item.printMethod!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 2.0),
                     child: Text(
-                        'Print: ${item.printMethod?.toUpperCase()}',
-                        style: AppFonts.geistMono(
-                            fontSize: 10,
-                            color: ColorResources.appAccentColor,
-                            fontWeight: FontWeight.w600)),
+                      'Print: ${item.printMethod?.toUpperCase()}',
+                      style: AppFonts.geistMono(
+                        fontSize: 10,
+                        color: ColorResources.appAccentColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 if (item.customText != null && item.customText!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 2.0),
-                    child: Text('Text: "${item.customText}"',
-                        style: AppFonts.geistMono(
-                            fontSize: 10,
-                            color: Colors.blueGrey,
-                            fontWeight: FontWeight.w500)),
+                    child: Text(
+                      'Text: "${item.customText}"',
+                      style: AppFonts.geistMono(
+                        fontSize: 10,
+                        color: Colors.blueGrey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
               ],
             ),
           ),
           Expanded(
             flex: 1,
-            child: Text('${item.quantity}',
-                textAlign: TextAlign.center,
-                style: AppFonts.geistMono(
-                    fontSize: context.fontXS,
-                    fontWeight: FontWeight.w600,
-                    color: ColorResources.labelColor)),
+            child: Text(
+              '${item.quantity}',
+              textAlign: TextAlign.center,
+              style: AppFonts.geistMono(
+                fontSize: context.fontXS,
+                fontWeight: FontWeight.w600,
+                color: ColorResources.labelColor,
+              ),
+            ),
           ),
           Expanded(
             flex: 2,
-            child: Text('\$${price.toStringAsFixed(2)}',
-                textAlign: TextAlign.right,
-                style: AppFonts.geistMono(
-                    fontSize: context.fontXS,
-                    color: ColorResources.labelColor)),
+            child: Text(
+              '\$${price.toStringAsFixed(2)}',
+              textAlign: TextAlign.right,
+              style: AppFonts.geistMono(
+                fontSize: context.fontXS,
+                color: ColorResources.labelColor,
+              ),
+            ),
           ),
           Expanded(
             flex: 2,
-            child: Text('\$${total.toStringAsFixed(2)}',
-                textAlign: TextAlign.right,
-                style: AppFonts.geistMono(
-                    fontSize: context.fontXS,
-                    fontWeight: FontWeight.w700,
-                    color: ColorResources.labelColor)),
+            child: Text(
+              '\$${total.toStringAsFixed(2)}',
+              textAlign: TextAlign.right,
+              style: AppFonts.geistMono(
+                fontSize: context.fontXS,
+                fontWeight: FontWeight.w700,
+                color: ColorResources.labelColor,
+              ),
+            ),
           ),
         ],
       ),
@@ -377,7 +419,9 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
   }
 
   Widget _buildPaymentTransactionLog(
-      BuildContext context, OrderPaymentLogModel log) {
+    BuildContext context,
+    OrderPaymentLogModel log,
+  ) {
     final amount = double.tryParse(log.amount ?? '0') ?? 0.0;
     return Container(
       padding: const EdgeInsets.all(8),
@@ -385,7 +429,8 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-            color: ColorResources.cardBorderColor.withOpacity(0.5)),
+          color: ColorResources.cardBorderColor.withOpacity(0.5),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -394,21 +439,20 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                  'Gateway: ${log.paymentMethod?.toUpperCase() ?? '--'}',
-                  style: AppFonts.geistMono(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: ColorResources.labelColor)),
+                'Gateway: ${log.paymentMethod?.toUpperCase() ?? '--'}',
+                style: AppFonts.geistMono(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: ColorResources.labelColor,
+                ),
+              ),
               _buildPaymentStatusBadge(log.status),
             ],
           ),
           const SizedBox(height: 6),
-          _buildTransactionRow(
-              'Transaction ID', log.transactionId ?? '--'),
-          _buildTransactionRow(
-              'Amount', '\$${amount.toStringAsFixed(2)}'),
-          _buildTransactionRow(
-              'Date/Time', _formatDateTime(log.createdAt)),
+          _buildTransactionRow('Transaction ID', log.transactionId ?? '--'),
+          _buildTransactionRow('Amount', '\$${amount.toStringAsFixed(2)}'),
+          _buildTransactionRow('Date/Time', _formatDateTime(log.createdAt)),
         ],
       ),
     );
@@ -419,17 +463,24 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
       padding: const EdgeInsets.only(bottom: 2.0),
       child: Row(
         children: [
-          Text('$label: ',
-              style: AppFonts.geistMono(
-                  fontSize: 10,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w600)),
+          Text(
+            '$label: ',
+            style: AppFonts.geistMono(
+              fontSize: 10,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           Expanded(
-              child: Text(value,
-                  style: AppFonts.geistMono(
-                      fontSize: 10,
-                      color: ColorResources.labelColor,
-                      fontWeight: FontWeight.w500))),
+            child: Text(
+              value,
+              style: AppFonts.geistMono(
+                fontSize: 10,
+                color: ColorResources.labelColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -444,80 +495,91 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
     final paid = double.tryParse(order.paidAmount ?? '0') ?? 0.0;
     final balance = total - paid;
     final theme = Get.find<AppThemeService>();
-    return Obx(() => Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                ColorResources.backgroundColor.withOpacity(0.5),
-                Colors.white,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: ColorResources.cardBorderColor),
-          ),
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildPricingRow(
-                  'Subtotal', '\$${subtotal.toStringAsFixed(2)}'),
-              _buildPricingRow(
-                  'Shipping Fee', '\$${shipping.toStringAsFixed(2)}'),
-              if (discount > 0)
-                _buildPricingRow(
-                  'Discount (${order.discountSource?.replaceAll('_', ' ') ?? 'coupon'})',
-                  '-\$${discount.toStringAsFixed(2)}',
-                  valueColor: ColorResources.gradientRed,
-                ),
-              _buildPricingRow(
-                  'Tax Amount', '\$${tax.toStringAsFixed(2)}'),
-              const Divider(),
-              _buildPricingRow(
-                'Total Amount',
-                '\$${total.toStringAsFixed(2)}',
-                isBold: true,
-                fontSize: context.fontMD,
-                valueColor: theme.primaryColor.value,
-              ),
-              _buildPricingRow(
-                'Paid Amount',
-                '\$${paid.toStringAsFixed(2)}',
-                valueColor: ColorResources.successGreen,
-              ),
-              _buildPricingRow(
-                balance <= 0 ? 'Change Returned' : 'Balance Due',
-                '\$${balance.abs().toStringAsFixed(2)}',
-                isBold: true,
-                valueColor: balance <= 0
-                    ? ColorResources.successGreen
-                    : ColorResources.gradientRed,
-              ),
+    return Obx(
+      () => Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              ColorResources.backgroundColor.withOpacity(0.5),
+              Colors.white,
             ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ));
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: ColorResources.cardBorderColor),
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildPricingRow('Subtotal', '\$${subtotal.toStringAsFixed(2)}'),
+            _buildPricingRow(
+              'Shipping Fee',
+              '\$${shipping.toStringAsFixed(2)}',
+            ),
+            if (discount > 0)
+              _buildPricingRow(
+                'Discount (${order.discountSource?.replaceAll('_', ' ') ?? 'coupon'})',
+                '-\$${discount.toStringAsFixed(2)}',
+                valueColor: ColorResources.gradientRed,
+              ),
+            _buildPricingRow('Tax Amount', '\$${tax.toStringAsFixed(2)}'),
+            const Divider(),
+            _buildPricingRow(
+              'Total Amount',
+              '\$${total.toStringAsFixed(2)}',
+              isBold: true,
+              fontSize: context.fontMD,
+              valueColor: theme.secondaryColor.value,
+            ),
+            _buildPricingRow(
+              'Paid Amount',
+              '\$${paid.toStringAsFixed(2)}',
+              valueColor: ColorResources.successGreen,
+            ),
+            _buildPricingRow(
+              balance <= 0 ? 'Change Returned' : 'Balance Due',
+              '\$${balance.abs().toStringAsFixed(2)}',
+              isBold: true,
+              valueColor: balance <= 0
+                  ? ColorResources.successGreen
+                  : ColorResources.gradientRed,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
-  Widget _buildPricingRow(String label, String value,
-      {bool isBold = false, double? fontSize, Color? valueColor}) {
+  Widget _buildPricingRow(
+    String label,
+    String value, {
+    bool isBold = false,
+    double? fontSize,
+    Color? valueColor,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: AppFonts.geistMono(
-                  fontSize: fontSize ?? 11,
-                  fontWeight:
-                      isBold ? FontWeight.bold : FontWeight.w500,
-                  color: ColorResources.labelColor)),
-          Text(value,
-              style: AppFonts.geistMono(
-                  fontSize: fontSize ?? 11,
-                  fontWeight:
-                      isBold ? FontWeight.bold : FontWeight.w700,
-                  color: valueColor ?? ColorResources.labelColor)),
+          Text(
+            label,
+            style: AppFonts.geistMono(
+              fontSize: fontSize ?? 11,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
+              color: ColorResources.labelColor,
+            ),
+          ),
+          Text(
+            value,
+            style: AppFonts.geistMono(
+              fontSize: fontSize ?? 11,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.w700,
+              color: valueColor ?? ColorResources.labelColor,
+            ),
+          ),
         ],
       ),
     );
@@ -531,7 +593,8 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
           child: SizedBox(
             height: 44,
             child: Obx(
-              () => OutlinedButton.icon(
+              () => 
+              OutlinedButton.icon(
                 onPressed: controller.isPrintingReceipt.value
                     ? null
                     : () => controller.printReceipt(order.id),
@@ -542,14 +605,15 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.print_rounded, size: 18),
-                label: Text('PRINT RECEIPT',
-                    style: AppFonts.geistMono(
-                        fontWeight: FontWeight.w700)),
+                label: Text(
+                  'PRINT RECEIPT',
+                  style: AppFonts.geistMono(fontWeight: FontWeight.w700),
+                ),
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(
-                      color: ColorResources.cardBorderColor),
+                  side: const BorderSide(color: ColorResources.cardBorderColor),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   foregroundColor: ColorResources.labelColor,
                 ),
               ),
@@ -560,22 +624,25 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
         Expanded(
           child: SizedBox(
             height: 44,
-            child: Obx(() => ElevatedButton.icon(
-                  onPressed: () => OrderCommentsDialog.show(context),
-                  icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.secondaryColor.value,
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
+            child: Obx(
+              () => ElevatedButton.icon(
+                onPressed: () => OrderCommentsDialog.show(context),
+                icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.primaryColor.value,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  label: Text(
-                      controller.orderComments.isEmpty
-                          ? 'COMMENTS'
-                          : 'COMMENTS (${controller.orderComments.length})',
-                      style: AppFonts.geistMono(
-                          fontWeight: FontWeight.w700)),
-                )),
+                ),
+                label: Text(
+                  controller.orderComments.isEmpty
+                      ? 'COMMENTS'
+                      : 'COMMENTS (${controller.orderComments.length})',
+                  style: AppFonts.geistMono(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
           ),
         ),
       ],
@@ -613,11 +680,14 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
         color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(status?.toUpperCase() ?? 'UNKNOWN',
-          style: TextStyle(
-              color: color,
-              fontSize: 10,
-              fontWeight: FontWeight.w800)),
+      child: Text(
+        status?.toUpperCase() ?? 'UNKNOWN',
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
     );
   }
 
@@ -643,11 +713,14 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
         color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(status?.toUpperCase() ?? 'PENDING',
-          style: TextStyle(
-              color: color,
-              fontSize: 10,
-              fontWeight: FontWeight.w800)),
+      child: Text(
+        status?.toUpperCase() ?? 'PENDING',
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
     );
   }
 

@@ -47,12 +47,14 @@ class SplashScreen extends GetView<SplashController> {
                     },
                   ),
                   SizedBox(height: context.spacingLG),
-                  Obx(() => CircularProgressIndicator(
-                        color: controller.theme.hasThemeData.value
-                            ? controller.theme.primaryColor.value
-                            : Colors.white,
-                        strokeWidth: 2.5,
-                      )),
+                  Obx(
+                    () => CircularProgressIndicator(
+                      color: controller.theme.hasThemeData.value
+                          ? controller.theme.primaryColor.value
+                          : Colors.white,
+                      strokeWidth: 2.5,
+                    ),
+                  ),
                   const Spacer(flex: 3),
                 ],
               ),

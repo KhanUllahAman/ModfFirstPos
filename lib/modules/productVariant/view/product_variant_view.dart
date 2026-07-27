@@ -50,39 +50,43 @@ class ProductVariantView extends GetView<ProductVariantController> {
                   ),
                   const SizedBox(width: 8),
                   Obx(() {
-                    if (!controller.addedToCart.value) return const SizedBox.shrink();
+                    if (!controller.addedToCart.value)
+                      return const SizedBox.shrink();
                     return GestureDetector(
-                      onTap: controller.goToCart,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: theme.secondaryColor.value,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.shopping_cart_rounded,
-                              size: 16,
-                              color: theme.onSecondaryColor,
+                          onTap: controller.goToCart,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
                             ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Go to Cart',
-                              style: AppFonts.geistMono(
-                                fontSize: context.fontXS,
-                                fontWeight: FontWeight.w700,
-                                color: theme.onSecondaryColor,
-                              ),
+                            decoration: BoxDecoration(
+                              color: theme.secondaryColor.value,
+                              borderRadius: BorderRadius.circular(20),
                             ),
-                          ],
-                        ),
-                      ),
-                    )
-                    .animate(onPlay: (c) => c.repeat(reverse: true))
-                    .fadeIn(duration: 600.ms)
-                    .fadeOut(delay: 600.ms, duration: 600.ms);
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.shopping_cart_rounded,
+                                  size: 16,
+                                  color: theme.onSecondaryColor,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Go to Cart',
+                                  style: AppFonts.geistMono(
+                                    fontSize: context.fontXS,
+                                    fontWeight: FontWeight.w700,
+                                    color: theme.onSecondaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                        .animate(onPlay: (c) => c.repeat(reverse: true))
+                        .fadeIn(duration: 600.ms)
+                        .fadeOut(delay: 600.ms, duration: 600.ms);
                   }),
                 ],
               ),
@@ -101,7 +105,11 @@ class ProductVariantView extends GetView<ProductVariantController> {
                         decoration: BoxDecoration(
                           color: ColorResources.whiteColor,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: ColorResources.cardBorderColor.withOpacity(0.6)),
+                          border: Border.all(
+                            color: ColorResources.cardBorderColor.withOpacity(
+                              0.6,
+                            ),
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,7 +124,8 @@ class ProductVariantView extends GetView<ProductVariantController> {
                                 color: ColorResources.labelColor,
                               ),
                             ),
-                            if (controller.product.sku != null && controller.product.sku!.isNotEmpty) ...[
+                            if (controller.product.sku != null &&
+                                controller.product.sku!.isNotEmpty) ...[
                               const SizedBox(height: 4),
                               Text(
                                 'SKU: ${controller.product.sku}',
@@ -147,7 +156,8 @@ class ProductVariantView extends GetView<ProductVariantController> {
                                     controller.product.shortDesc!,
                                     style: AppFonts.geistMono(
                                       fontSize: context.fontSM,
-                                      color: ColorResources.labelColor.withOpacity(0.7),
+                                      color: ColorResources.labelColor
+                                          .withOpacity(0.7),
                                       height: 1.4,
                                     ),
                                   ),
@@ -169,7 +179,11 @@ class ProductVariantView extends GetView<ProductVariantController> {
                         decoration: BoxDecoration(
                           color: ColorResources.whiteColor,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: ColorResources.cardBorderColor.withOpacity(0.6)),
+                          border: Border.all(
+                            color: ColorResources.cardBorderColor.withOpacity(
+                              0.6,
+                            ),
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -183,14 +197,19 @@ class ProductVariantView extends GetView<ProductVariantController> {
                               ),
                             ),
                             const SizedBox(height: 6),
-                            Obx(() => Text(
-                              CurrencyUtils.format(controller.displayPrice, decimals: 0),
-                              style: AppFonts.geistMono(
-                                fontSize: context.fontXXL,
-                                fontWeight: FontWeight.w800,
-                                color: theme.secondaryColor.value,
+                            Obx(
+                              () => Text(
+                                CurrencyUtils.format(
+                                  controller.displayPrice,
+                                  decimals: 0,
+                                ),
+                                style: AppFonts.geistMono(
+                                  fontSize: context.fontXXL,
+                                  fontWeight: FontWeight.w800,
+                                  color: theme.secondaryColor.value,
+                                ),
                               ),
-                            )),
+                            ),
                             const SizedBox(height: 16),
                             const Divider(),
                             const SizedBox(height: 12),
@@ -237,49 +256,61 @@ class ProductVariantView extends GetView<ProductVariantController> {
                                     color: Colors.grey[500],
                                   ),
                                 ),
-                                
-                                Obx(() => Row(
-                                  children: [
-                                    QtyBtn(
-                                      icon: Icons.remove,
-                                      onTap: controller.decrementQty,
-                                    ),
-                                    SizedBox(width: context.spacingMD),
-                                    Text(
-                                      '${controller.quantity.value}',
-                                      style: AppFonts.geistMono(
-                                        fontSize: context.fontMD,
-                                        fontWeight: FontWeight.w700,
-                                        color: ColorResources.labelColor,
+
+                                Obx(
+                                  () => Row(
+                                    children: [
+                                      QtyBtn(
+                                        icon: Icons.remove,
+                                        onTap: controller.decrementQty,
                                       ),
-                                    ),
-                                    SizedBox(width: context.spacingMD),
-                                    QtyBtn(
-                                      icon: Icons.add,
-                                      onTap: controller.incrementQty,
-                                    ),
-                                  ],
-                                )),
+                                      SizedBox(width: context.spacingMD),
+                                      Text(
+                                        '${controller.quantity.value}',
+                                        style: AppFonts.geistMono(
+                                          fontSize: context.fontMD,
+                                          fontWeight: FontWeight.w700,
+                                          color: ColorResources.labelColor,
+                                        ),
+                                      ),
+                                      SizedBox(width: context.spacingMD),
+                                      QtyBtn(
+                                        icon: Icons.add,
+                                        onTap: controller.incrementQty,
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 24),
 
                             // Cart Add Action
-                            Obx(() => AppButton(
-                              backgroundColor: controller.addedToCart.value ? Colors.grey.shade300 : theme.secondaryColor.value,
-                              onPressed: controller.addedToCart.value ? () {} : controller.addToCart,
-                              isLoading: false,
-                              borderRadius: 12,
-                              height: 52,
-                              child: Text(
-                                controller.addedToCart.value ? 'ADDED TO CART ✓' : 'ADD TO CART',
-                                style: AppFonts.geistMono(
-                                  fontSize: context.fontSM,
-                                  fontWeight: FontWeight.w700,
-                                  color: controller.addedToCart.value ? Colors.grey.shade600 : theme.onSecondaryColor,
+                            Obx(
+                              () => AppButton(
+                                backgroundColor: controller.addedToCart.value
+                                    ? Colors.grey.shade300
+                                    : theme.secondaryColor.value,
+                                onPressed: controller.addedToCart.value
+                                    ? () {}
+                                    : controller.addToCart,
+                                isLoading: false,
+                                borderRadius: 12,
+                                height: 52,
+                                child: Text(
+                                  controller.addedToCart.value
+                                      ? 'ADDED TO CART ✓'
+                                      : 'ADD TO CART',
+                                  style: AppFonts.geistMono(
+                                    fontSize: context.fontSM,
+                                    fontWeight: FontWeight.w700,
+                                    color: controller.addedToCart.value
+                                        ? Colors.grey.shade600
+                                        : theme.onSecondaryColor,
+                                  ),
                                 ),
                               ),
-                            )),
+                            ),
                           ],
                         ),
                       ),
@@ -334,11 +365,7 @@ class QtyBtn extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
         ),
         alignment: Alignment.center,
-        child: Icon(
-          icon,
-          size: 18,
-          color: theme.secondaryColor.value,
-        ),
+        child: Icon(icon, size: 18, color: theme.secondaryColor.value),
       ),
     );
   }

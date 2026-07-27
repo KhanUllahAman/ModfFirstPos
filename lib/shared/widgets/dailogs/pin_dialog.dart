@@ -6,7 +6,6 @@ import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/services/app_theme_service.dart';
 
-
 class PinDialogField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
@@ -115,9 +114,13 @@ class PinActionDialog extends StatelessWidget {
     final theme = Get.find<AppThemeService>();
 
     return Obx(() {
-      final accentColor = isDestructive ? Colors.red : theme.secondaryColor.value;
-      final confirmBg = isDestructive ? Colors.red : theme.secondaryColor.value;
-      final confirmTextColor = confirmBg.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+      final accentColor = isDestructive
+          ? Colors.red
+          : theme.secondaryColor.value;
+      final confirmBg = isDestructive ? Colors.red : theme.primaryColor.value;
+      final confirmTextColor = confirmBg.computeLuminance() > 0.5
+          ? Colors.black
+          : Colors.white;
 
       return Dialog(
         backgroundColor: Colors.transparent,

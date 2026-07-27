@@ -89,4 +89,14 @@ class SecureStorageService {
 
   static Future<void> deleteProfileData() =>
       _delete(StorageKeys.keyProfileData);
+
+  /// Salted hash of the current screen-lock PIN — lets unlocking work while
+  /// offline without ever storing the PIN itself. Kept fresh whenever a PIN
+  /// verify/set/change succeeds online.
+  static Future<void> savePinHash(String hash) =>
+      _write(StorageKeys.keyPinHash, hash);
+
+  static Future<String?> getPinHash() => _read(StorageKeys.keyPinHash);
+
+  static Future<void> deletePinHash() => _delete(StorageKeys.keyPinHash);
 }

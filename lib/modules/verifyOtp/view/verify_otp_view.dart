@@ -197,58 +197,59 @@ class _OtpBox extends StatelessWidget {
     focusNode.addListener(() => isFocused.value = focusNode.hasFocus);
     return AspectRatio(
       aspectRatio: 0.85,
-      child: Obx(() => AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
+      child: Obx(
+        () => AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: isFocused.value
+                ? ColorResources.whiteColor
+                : ColorResources.backgroundColor,
+            border: Border.all(
               color: isFocused.value
-                  ? ColorResources.whiteColor
-                  : ColorResources.backgroundColor,
-              border: Border.all(
-                color: isFocused.value
-                    ? theme.secondaryColor.value
-                    : const Color(0xFFE7E9F0),
-                width: isFocused.value ? 1.5 : 1,
-              ),
-              boxShadow: isFocused.value
-                  ? [
-                      BoxShadow(
-                        color:
-                            theme.secondaryColor.value.withOpacity(0.15),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ]
-                  : null,
+                  ? theme.secondaryColor.value
+                  : const Color(0xFFE7E9F0),
+              width: isFocused.value ? 1.5 : 1,
             ),
-            child: Center(
-              child: TextField(
-                controller: controller,
-                focusNode: focusNode,
-                onChanged: onChanged,
-                textAlign: TextAlign.center,
-                textAlignVertical: TextAlignVertical.center,
-                keyboardType: TextInputType.number,
-                maxLength: 1,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                showCursor: true,
-                cursorColor: theme.secondaryColor.value,
-                style: AppFonts.geistMono(
-                  fontSize: context.fontLG,
-                  fontWeight: FontWeight.w600,
-                  color: ColorResources.blackColor,
-                ),
-                decoration: const InputDecoration(
-                  counterText: '',
-                  contentPadding: EdgeInsets.zero,
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  isCollapsed: true,
-                ),
+            boxShadow: isFocused.value
+                ? [
+                    BoxShadow(
+                      color: theme.secondaryColor.value.withOpacity(0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Center(
+            child: TextField(
+              controller: controller,
+              focusNode: focusNode,
+              onChanged: onChanged,
+              textAlign: TextAlign.center,
+              textAlignVertical: TextAlignVertical.center,
+              keyboardType: TextInputType.number,
+              maxLength: 1,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              showCursor: true,
+              cursorColor: theme.secondaryColor.value,
+              style: AppFonts.geistMono(
+                fontSize: context.fontLG,
+                fontWeight: FontWeight.w600,
+                color: ColorResources.blackColor,
+              ),
+              decoration: const InputDecoration(
+                counterText: '',
+                contentPadding: EdgeInsets.zero,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                isCollapsed: true,
               ),
             ),
-          )),
+          ),
+        ),
+      ),
     );
   }
 }

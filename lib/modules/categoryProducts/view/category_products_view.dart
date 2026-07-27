@@ -7,10 +7,12 @@ import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/categoryProducts/controller/category_products_controller.dart';
+import 'package:modfirstpos/modules/home/controller/home_controller.dart';
 import 'package:modfirstpos/modules/product/model/product_model.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 import 'package:modfirstpos/shared/widgets/appBarWidget/app_bar_widget.dart';
 import 'package:modfirstpos/shared/widgets/backButtonWidgt/back_button_widget.dart';
+import 'package:modfirstpos/shared/widgets/AppWidgets/product_pin_button.dart';
 import 'package:modfirstpos/shared/widgets/noKeyboard/no_keyboard_extension.dart';
 
 class CategoryProductsView extends GetView<CategoryProductsController> {
@@ -20,7 +22,8 @@ class CategoryProductsView extends GetView<CategoryProductsController> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: ColorResources.backgroundColor, // Changed from white to grey background for premium card contrast
+      backgroundColor: ColorResources
+          .backgroundColor, // Changed from white to grey background for premium card contrast
       appBar: AppTopBar(showMenuIcon: false, showBackIcon: true),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
@@ -76,7 +79,10 @@ class _SearchField extends StatelessWidget {
             fontSize: context.fontSM,
             color: ColorResources.labelColor.withOpacity(0.4),
           ),
-          prefixIcon: const Icon(Icons.search_rounded, color: ColorResources.blackColor),
+          prefixIcon: const Icon(
+            Icons.search_rounded,
+            color: ColorResources.blackColor,
+          ),
           suffixIcon: controller.searchController.text.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.clear_rounded, color: Colors.grey),
@@ -113,7 +119,10 @@ class _ProductGrid extends StatelessWidget {
       final _ = controller.searchQuery.value; // rebuild trigger
       if (controller.isLoading.value) {
         return Center(
-          child: CircularProgressIndicator(color: theme.secondaryColor.value, strokeWidth: 3),
+          child: CircularProgressIndicator(
+            color: theme.secondaryColor.value,
+            strokeWidth: 3,
+          ),
         );
       }
 
@@ -188,6 +197,8 @@ class _ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Get.find<AppThemeService>();
+    final homeController = Get.find<HomeController>();
+    final productId = product.id?.toString() ?? product.displayName;
 
     return InkWell(
       onTap: onTap,
@@ -196,7 +207,9 @@ class _ProductCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: ColorResources.cardBorderColor.withOpacity(0.6)),
+          border: Border.all(
+            color: ColorResources.cardBorderColor.withOpacity(0.6),
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.03),
@@ -205,112 +218,141 @@ class _ProductCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Stack(
           children: [
-            // Image part with badge overlay
-            Expanded(
-              flex: 6,
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                      child: product.primaryImageUrl != null
-                          ? CachedNetworkImage(
-                              imageUrl: product.primaryImageUrl!,
-                              fit: BoxFit.contain,
-                              width: double.infinity,
-                              height: double.infinity,
-                              errorWidget: (_, __, ___) => Container(
-                                color: const Color(0xFFF3F4F6),
-                                child: const Icon(Icons.image_not_supported_outlined, color: Colors.grey),
-                              ),
-                            )
-                          : Container(
-                              color: const Color(0xFFF3F4F6),
-                              child: const Icon(Icons.image_outlined, color: Colors.grey),
-                            ),
-                    ),
-                  ),
-                  if (product.hasVariants)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: theme.primaryColor.value.withOpacity(0.85),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          '${product.variants.length} VARIANTS',
-                          style: AppFonts.geistMono(
-                            fontSize: 8,
-                            fontWeight: FontWeight.w800,
-                            color: theme.onPrimaryColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            // Info text part
-            Expanded(
-              flex: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Text(
-                      product.displayName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppFonts.geistMono(
-                        fontSize: context.fontXS,
-                        fontWeight: FontWeight.bold,
-                        color: ColorResources.labelColor,
-                      ),
-                    ),
-                    if (product.sku != null && product.sku!.isNotEmpty)
-                      Text(
-                        'SKU: ${product.sku}',
-                        style: AppFonts.geistMono(
-                          fontSize: 9,
-                          color: Colors.grey[500],
-                          fontWeight: FontWeight.w500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          CurrencyUtils.format(product.effectivePrice, decimals: 0),
-                          style: AppFonts.geistMono(
-                            fontSize: context.fontSM,
-                            fontWeight: FontWeight.w800,
-                            color: theme.secondaryColor.value,
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 14,
-                          color: theme.secondaryColor.value,
-                        ),
-                      ],
-                    ),
-                  ],
+            _buildCardBody(context, theme),
+            Positioned(
+              top: 6,
+              right: 6,
+              child: Obx(
+                () => ProductPinButton(
+                  isPinned: homeController.isPinned(productId),
+                  onTap: () => homeController.pinProduct(product),
                 ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCardBody(BuildContext context, AppThemeService theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Image part with badge overlay
+        Expanded(
+          flex: 6,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
+                  child: product.primaryImageUrl != null
+                      ? CachedNetworkImage(
+                          imageUrl: product.primaryImageUrl!,
+                          fit: BoxFit.contain,
+                          width: double.infinity,
+                          height: double.infinity,
+                          errorWidget: (_, __, ___) => Container(
+                            color: const Color(0xFFF3F4F6),
+                            child: const Icon(
+                              Icons.image_not_supported_outlined,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        )
+                      : Container(
+                          color: const Color(0xFFF3F4F6),
+                          child: const Icon(
+                            Icons.image_outlined,
+                            color: Colors.grey,
+                          ),
+                        ),
+                ),
+              ),
+              if (product.hasVariants)
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.primaryColor.value.withOpacity(0.85),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${product.variants.length} VARIANTS',
+                      style: AppFonts.geistMono(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w800,
+                        color: theme.onPrimaryColor,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        // Info text part
+        Expanded(
+          flex: 4,
+          child: Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Text(
+                  product.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppFonts.geistMono(
+                    fontSize: context.fontXS,
+                    fontWeight: FontWeight.bold,
+                    color: ColorResources.labelColor,
+                  ),
+                ),
+                if (product.sku != null && product.sku!.isNotEmpty)
+                  Text(
+                    'SKU: ${product.sku}',
+                    style: AppFonts.geistMono(
+                      fontSize: 9,
+                      color: Colors.grey[500],
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      CurrencyUtils.format(product.effectivePrice, decimals: 0),
+                      style: AppFonts.geistMono(
+                        fontSize: context.fontSM,
+                        fontWeight: FontWeight.w800,
+                        color: theme.secondaryColor.value,
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 14,
+                      color: theme.secondaryColor.value,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

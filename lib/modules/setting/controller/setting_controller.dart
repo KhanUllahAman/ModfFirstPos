@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/customer_display_service.dart';
 import 'package:modfirstpos/modules/setting/model/pos_device_model.dart';
 import 'package:modfirstpos/modules/setting/service/setting_service.dart';
 import 'package:modfirstpos/modules/setting/storage/pos_device_cache_storage.dart';
@@ -13,6 +15,7 @@ class SettingController extends GetxController {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController deviceCodeController = TextEditingController();
   final TextEditingController ipAddressController = TextEditingController();
+  final TextEditingController customerIpController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
 
   final RxString deviceType = 'tablet'.obs;
@@ -55,6 +58,7 @@ class SettingController extends GetxController {
     nameController.dispose();
     deviceCodeController.dispose();
     ipAddressController.dispose();
+    customerIpController.dispose();
     locationController.dispose();
     super.onClose();
   }
@@ -64,6 +68,7 @@ class SettingController extends GetxController {
     nameController.text = device.name;
     deviceCodeController.text = device.deviceCode;
     ipAddressController.text = device.ipAddress;
+    customerIpController.text = device.customerIp ?? '';
     locationController.text = device.location;
     deviceType.value = device.deviceType;
     receiptType.value = device.receiptType;
@@ -117,23 +122,29 @@ class SettingController extends GetxController {
     }
   }
 
+  /// Tests reachability of the customer-facing display tab — that tab runs
+  /// the CustomerDisplayServer on [CustomerDisplayConfig.port], so a
+  /// successful handshake here means the two tabs can actually pair up.
   Future<void> checkCashierConnection() async {
     try {
       isCheckingCashier.value = true;
-      isCashierConnected.value = await _pingHost(ipAddressController.text);
+      isCashierConnected.value = await _pingHost(
+        customerIpController.text,
+        port: CustomerDisplayConfig.port,
+      );
 
       if (isCashierConnected.value) {
         customSnackBar(
-          'Cashier Diagnostic',
-          'Successfully established connection to Cashier Tab at ${ipAddressController.text}',
+          'Customer Display Diagnostic',
+          'Successfully established connection to Customer Tab at ${customerIpController.text}',
           snackBarType: SnackBarType.success,
         );
       } else {
         customSnackBar(
-          'Cashier Diagnostic',
-          ipAddressController.text.trim().isEmpty
-              ? 'Connection failed. IP address is empty.'
-              : 'Could not reach ${ipAddressController.text}.',
+          'Customer Display Diagnostic',
+          customerIpController.text.trim().isEmpty
+              ? 'Connection failed. Customer IP is empty.'
+              : 'Could not reach ${customerIpController.text}. Make sure the customer tab is on and open on the Customer Display screen.',
           snackBarType: SnackBarType.warning,
         );
       }
@@ -216,6 +227,7 @@ class SettingController extends GetxController {
       deviceCode: deviceCodeController.text.trim(),
       deviceType: deviceType.value,
       ipAddress: ipAddressController.text.trim(),
+      customerIp: customerIpController.text.trim(),
       location: locationController.text.trim(),
       receiptType: receiptType.value,
       isActive: isActive.value,
@@ -227,6 +239,15 @@ class SettingController extends GetxController {
       if (response.isSuccess && response.payload != null) {
         _applyDevice(response.payload!);
         await PosDeviceCacheStorage.saveDevice(response.payload!);
+        if (Get.isRegistered<CustomerDisplayClientService>() &&
+            response.payload!.customerIp != null &&
+            response.payload!.customerIp!.trim().isNotEmpty) {
+          unawaited(
+            Get.find<CustomerDisplayClientService>().connect(
+              response.payload!.customerIp!,
+            ),
+          );
+        }
         customSnackBar(
           'Server Settings',
           'Settings updated successfully to server.',

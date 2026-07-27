@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:modfirstpos/core/services/app_theme_service.dart';
-import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
-import 'package:modfirstpos/core/utils/images_constant.dart';
 import 'package:modfirstpos/modules/shift/controller/shift_controller.dart';
+import 'package:modfirstpos/modules/shift/widgets/close_shift_dialog.dart';
 import 'package:modfirstpos/modules/shift/widgets/open_shift_dialog.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
-import 'package:modfirstpos/shared/widgets/AppWidgets/appinfo_dailog_widget.dart';
 import 'package:modfirstpos/shared/widgets/DynamicImage/dynamic_network_image.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
+import 'package:modfirstpos/shared/widgets/helperFunction/logout_helper.dart';
 
 class PosNavItem {
   final String route;
@@ -50,9 +49,17 @@ class AppNavDrawer extends StatelessWidget {
       icon: Iconsax.profile_circle,
       label: 'Profile',
     ),
-    PosNavItem(route: Routes.setting, icon: Iconsax.setting_2, label: 'Setting'),
+    PosNavItem(
+      route: Routes.setting,
+      icon: Iconsax.setting_2,
+      label: 'Setting',
+    ),
     PosNavItem(route: Routes.shift, icon: Iconsax.moneys, label: 'Shift'),
-    PosNavItem(route: Routes.inventory, icon: Iconsax.box_1, label: 'Inventory'),
+    PosNavItem(
+      route: Routes.inventory,
+      icon: Iconsax.box_1,
+      label: 'Inventory',
+    ),
     PosNavItem(route: Routes.menu, icon: Iconsax.category_2, label: 'Menu'),
     PosNavItem(
       route: Routes.reporting,
@@ -88,36 +95,7 @@ class AppNavDrawer extends StatelessWidget {
 
   void _onLogoutTap(BuildContext context) {
     Navigator.of(context).pop();
-
-    final hasActiveShift =
-        Get.find<ShiftController>().currentShift.value != null;
-    if (hasActiveShift) {
-      AppDialog.showInfo(
-        context,
-        title: "Shift Still Open",
-        content:
-            "You have an active shift. Please close your shift before logging out.",
-        buttonText: "OK",
-      );
-      return;
-    }
-
-    AppDialog.showConfirm(
-      context,
-      title: "Log Out",
-      message: "Are you sure",
-      subMessage: "You want to log out.",
-      image: Image.asset(
-        ImagesConstant.logout,
-        height: context.responsiveHeight(0.20),
-        width: context.responsiveWidth(0.20),
-      ),
-      onYes: () async {
-        await SecureStorageService.clearAll();
-        Get.find<ShiftController>().resetForLogout();
-        Get.offAllNamed(Routes.storeSelection);
-      },
-    );
+    AppLogout.attempt(context);
   }
 
   @override
@@ -126,11 +104,12 @@ class AppNavDrawer extends StatelessWidget {
 
     return Obx(() {
       final navBgColor = theme.hasThemeData.value
-          ? theme.primaryColor.value
+          ? theme.secondaryColor.value
           : ColorResources.blackColor;
-      final accent = theme.secondaryColor.value;
+      final accent = theme.primaryColor.value;
       final activeRoute = Get.currentRoute;
-      final hasActiveShift = Get.find<ShiftController>().currentShift.value != null;
+      final hasActiveShift =
+          Get.find<ShiftController>().currentShift.value != null;
 
       return Drawer(
         backgroundColor: navBgColor,
@@ -150,44 +129,58 @@ class AppNavDrawer extends StatelessWidget {
                 color: Colors.white24,
               ),
               const SizedBox(height: 12),
-              if (!hasActiveShift)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Material(
-                    color: accent.withOpacity(0.14),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Material(
+                  color: (hasActiveShift ? ColorResources.gradientRed : accent)
+                      .withOpacity(0.14),
+                  borderRadius: BorderRadius.circular(12),
+                  child: InkWell(
                     borderRadius: BorderRadius.circular(12),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: () {
-                        Navigator.of(context).pop();
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      if (hasActiveShift) {
+                        CloseShiftDialog.show(context);
+                      } else {
                         OpenShiftDialog.show(context);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Iconsax.moneys, size: 22, color: accent),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Text(
-                                'Open Shift',
-                                style: AppFonts.geistMono(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: accent,
-                                ),
+                      }
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            hasActiveShift
+                                ? Icons.lock_clock_rounded
+                                : Iconsax.moneys,
+                            size: 22,
+                            color: hasActiveShift
+                                ? ColorResources.gradientRed
+                                : accent,
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Text(
+                              hasActiveShift ? 'Close Shift' : 'Open Shift',
+                              style: AppFonts.geistMono(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: hasActiveShift
+                                    ? ColorResources.gradientRed
+                                    : accent,
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
-              if (!hasActiveShift) const SizedBox(height: 12),
+              ),
+              const SizedBox(height: 12),
               Expanded(
                 child: ListView.separated(
                   primary: false,
@@ -201,7 +194,7 @@ class AppNavDrawer extends StatelessWidget {
                     return Material(
                       color: isSelected
                           ? accent.withOpacity(0.14)
-                          : Colors.transparent,
+                          : accent.withOpacity(0.10),
                       borderRadius: BorderRadius.circular(12),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(12),
@@ -218,7 +211,7 @@ class AppNavDrawer extends StatelessWidget {
                                 size: 22,
                                 color: isSelected
                                     ? accent
-                                    : theme.onPrimaryColor.withOpacity(0.65),
+                                    : theme.onSecondaryColor.withOpacity(0.65),
                               ),
                               const SizedBox(width: 14),
                               Expanded(
@@ -231,8 +224,9 @@ class AppNavDrawer extends StatelessWidget {
                                         : FontWeight.w500,
                                     color: isSelected
                                         ? accent
-                                        : theme.onPrimaryColor
-                                            .withOpacity(0.85),
+                                        : theme.onSecondaryColor.withOpacity(
+                                            0.85,
+                                          ),
                                   ),
                                 ),
                               ),

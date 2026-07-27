@@ -98,7 +98,7 @@ class SettingView extends GetView<SettingController> {
                                             hintText: 'e.g. Counter 1 Tablet',
                                             borderRadius: 12,
                                             customFocusedBorderColor:
-                                                theme.primaryColor.value,
+                                                theme.secondaryColor.value,
                                             customEnabledBorderColor:
                                                 ColorResources.cardBorderColor,
                                           ),
@@ -115,7 +115,9 @@ class SettingView extends GetView<SettingController> {
                                                   hintText: 'e.g. POS-TAB-001',
                                                   borderRadius: 12,
                                                   customFocusedBorderColor:
-                                                      theme.primaryColor.value,
+                                                      theme
+                                                          .secondaryColor
+                                                          .value,
                                                   customEnabledBorderColor:
                                                       ColorResources
                                                           .cardBorderColor,
@@ -228,7 +230,20 @@ class SettingView extends GetView<SettingController> {
                                                 'Enter device / printer IP address (e.g. 192.168.1.45)',
                                             borderRadius: 12,
                                             customFocusedBorderColor:
-                                                theme.primaryColor.value,
+                                                theme.secondaryColor.value,
+                                            customEnabledBorderColor:
+                                                ColorResources.cardBorderColor,
+                                          ),
+                                          SizedBox(height: context.spacingMD),
+                                          CustomTextFormField(
+                                            controller:
+                                                controller.customerIpController,
+                                            labelText: 'Customer IP',
+                                            hintText:
+                                                'IP shown on the customer-facing tab (e.g. 192.168.1.60)',
+                                            borderRadius: 12,
+                                            customFocusedBorderColor:
+                                                theme.secondaryColor.value,
                                             customEnabledBorderColor:
                                                 ColorResources.cardBorderColor,
                                           ),
@@ -240,7 +255,7 @@ class SettingView extends GetView<SettingController> {
                                             hintText: 'e.g. Main Counter',
                                             borderRadius: 12,
                                             customFocusedBorderColor:
-                                                theme.primaryColor.value,
+                                                theme.secondaryColor.value,
                                             customEnabledBorderColor:
                                                 ColorResources.cardBorderColor,
                                           ),
@@ -394,19 +409,25 @@ class SettingView extends GetView<SettingController> {
                                   children: [
                                     Expanded(
                                       child: Obx(
-                                        () => AppButton(
+                                        () => OutlinedButton(
                                           onPressed:
                                               controller.getSettingsFromServer,
-                                          isLoading: controller.isLoading.value,
-                                          backgroundColor:
-                                              theme.primaryColor.value,
-                                          borderRadius: 12,
+                                          style: OutlinedButton.styleFrom(
+                                            side: const BorderSide(
+                                              color: ColorResources
+                                                  .cardBorderColor,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            foregroundColor:
+                                                ColorResources.labelColor,
+                                          ),
                                           child: Text(
-                                            'Get from Server',
+                                            'GET FROM SERVER',
                                             style: AppFonts.geistMono(
                                               fontWeight: FontWeight.w700,
-                                              fontSize: context.fontXS,
-                                              color: theme.onPrimaryColor,
                                             ),
                                           ),
                                         ),
@@ -421,10 +442,10 @@ class SettingView extends GetView<SettingController> {
                                           isLoading:
                                               controller.isUpdating.value,
                                           backgroundColor:
-                                              theme.secondaryColor.value,
+                                              theme.primaryColor.value,
                                           borderRadius: 12,
                                           child: Text(
-                                            'Update to Server',
+                                            'UPDATE TO SERVER',
                                             style: AppFonts.geistMono(
                                               fontWeight: FontWeight.w700,
                                               fontSize: context.fontXS,
@@ -521,7 +542,7 @@ class SettingView extends GetView<SettingController> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isConnected
                       ? Colors.grey[200]
-                      : theme.secondaryColor.value,
+                      : theme.primaryColor.value,
                   foregroundColor: Colors.black,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -589,7 +610,7 @@ class SettingView extends GetView<SettingController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Cashier Tab Link',
+                      'Customer Display Link',
                       style: AppFonts.geistMono(
                         fontSize: context.fontSM,
                         fontWeight: FontWeight.bold,
@@ -621,7 +642,7 @@ class SettingView extends GetView<SettingController> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isConnected
                       ? Colors.grey[200]
-                      : theme.secondaryColor.value,
+                      : theme.primaryColor.value,
                   foregroundColor: Colors.black,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),

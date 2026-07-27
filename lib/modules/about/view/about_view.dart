@@ -19,10 +19,7 @@ class AboutView extends GetView<AboutController> {
     if (uri == null) return;
 
     try {
-      final launched = await launchUrl(
-        uri,
-        mode: LaunchMode.inAppWebView,
-      );
+      final launched = await launchUrl(uri, mode: LaunchMode.inAppWebView);
       if (!launched) {
         customSnackBar(
           'Error',
@@ -51,17 +48,19 @@ class AboutView extends GetView<AboutController> {
         child: Obx(() {
           if (controller.isLoading.value) {
             return Center(
-              child: CircularProgressIndicator(color: theme.secondaryColor.value),
+              child: CircularProgressIndicator(
+                color: theme.secondaryColor.value,
+              ),
             );
           }
-        
+
           return ListView(
             primary: false,
             padding: EdgeInsets.all(context.spacingMD),
             children: [
               _HeaderCard(controller: controller, theme: theme),
               SizedBox(height: context.spacingMD),
-        
+
               if (controller.siteDescription.value.isNotEmpty)
                 _SectionCard(
                   title: 'About',
@@ -76,7 +75,7 @@ class AboutView extends GetView<AboutController> {
                     ),
                   ],
                 ),
-        
+
               SizedBox(height: context.spacingMD),
               _SectionCard(
                 title: 'Contact',
@@ -107,7 +106,7 @@ class AboutView extends GetView<AboutController> {
                     ),
                 ],
               ),
-        
+
               SizedBox(height: context.spacingMD),
               _SectionCard(
                 title: 'Location',
@@ -143,7 +142,7 @@ class AboutView extends GetView<AboutController> {
                     ),
                 ],
               ),
-        
+
               SizedBox(height: context.spacingMD),
               _SectionCard(
                 title: 'Store Info',
@@ -157,7 +156,7 @@ class AboutView extends GetView<AboutController> {
                     ),
                 ],
               ),
-        
+
               if (_hasAnySocialLink(controller)) ...[
                 SizedBox(height: context.spacingMD),
                 _SectionCard(
@@ -167,7 +166,7 @@ class AboutView extends GetView<AboutController> {
                   ],
                 ),
               ],
-        
+
               SizedBox(height: context.spacingMD),
               _SectionCard(
                 title: 'App Info',
@@ -184,7 +183,7 @@ class AboutView extends GetView<AboutController> {
                   ),
                 ],
               ),
-        
+
               SizedBox(height: context.spacingLG),
             ],
           );

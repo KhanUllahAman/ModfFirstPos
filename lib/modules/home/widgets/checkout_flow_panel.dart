@@ -957,6 +957,18 @@ class CheckoutFlowPanel extends StatelessWidget {
 
   static const List<_PaymentMethodOption> _paymentMethods = [
     _PaymentMethodOption(
+      value: 'cash',
+      icon: Iconsax.money,
+      label: 'Cash',
+      subtitle: 'Full cash payment — saved offline, syncs automatically',
+    ),
+    _PaymentMethodOption(
+      value: 'bank_transfer',
+      icon: Iconsax.bank,
+      label: 'Bank Transfer',
+      subtitle: 'Full bank transfer — saved offline, syncs automatically',
+    ),
+    _PaymentMethodOption(
       value: 'without_payment',
       icon: Iconsax.money_3,
       label: 'Manual / Pay Later',

@@ -2,10 +2,14 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/sync_service.dart';
 import 'package:modfirstpos/core/services/thermal_printer_service.dart';
+import 'package:modfirstpos/core/utils/json_utils.dart';
+import 'package:modfirstpos/modules/bootstrap/controller/bootstrap_controller.dart';
 import 'package:modfirstpos/modules/setting/service/setting_service.dart';
 import 'package:modfirstpos/modules/setting/storage/pos_device_cache_storage.dart';
 import 'package:modfirstpos/modules/shift/model/shift_model.dart';
+import 'package:modfirstpos/modules/shift/repository/shift_local_repository.dart';
 import 'package:modfirstpos/modules/shift/service/shift_service.dart';
 import 'package:modfirstpos/modules/shift/storage/shift_cache_storage.dart';
 import 'package:modfirstpos/modules/shift/widgets/open_shift_dialog.dart';
@@ -42,16 +46,24 @@ class ShiftController extends GetxController {
     currentShift.value = null;
   }
 
+  /// Offline-first: the local `pending_shifts` row is the source of truth
+  /// for "is there a shift open right now". Only when there's genuinely no
+  /// local record do we fall back to the last-synced bootstrap snapshot
+  /// (no extra network call — bootstrap is already cached).
   Future<void> checkCurrentShift() async {
     try {
       isLoading.value = true;
-      final response = await _service.getCurrentShift();
-      if (response.isSuccess && response.payload != null) {
-        currentShift.value = response.payload;
-        await ShiftCacheStorage.saveShift(response.payload!);
-      } else {
-        currentShift.value = null;
+      final localRow = await ShiftLocalRepository.getCurrentOpenRow();
+      if (localRow != null) {
+        currentShift.value = ShiftLocalRepository.rowToShiftModel(localRow);
+        return;
       }
+
+      final bootstrapShift = Get.isRegistered<BootstrapController>()
+          ? Get.find<BootstrapController>().data.value?.openShift
+          : null;
+      currentShift.value =
+          (bootstrapShift != null && bootstrapShift.isOpen) ? bootstrapShift : null;
     } catch (e) {
       log("ShiftController checkCurrentShift error: $e");
       currentShift.value = null;
@@ -60,45 +72,39 @@ class ShiftController extends GetxController {
     }
   }
 
-  
   void maybeShowOpenShiftPrompt(BuildContext context) {
     if (_openPromptShown || currentShift.value != null) return;
     _openPromptShown = true;
     OpenShiftDialog.show(context);
   }
 
+  /// Opens a shift entirely offline — saved to the local queue and synced
+  /// automatically (or via Menu > Sync Shifts) once online.
   Future<bool> openShift({
     required double openingFloat,
     String? openingNotes,
   }) async {
     try {
       isOpeningShift.value = true;
-      final response = await _service.openShift(
+      final row = await ShiftLocalRepository.addOpen(
         openingFloat: openingFloat,
         openingNotes: openingNotes,
       );
-
-      if (response.isSuccess && response.payload != null) {
-        currentShift.value = response.payload;
-        await ShiftCacheStorage.saveShift(response.payload!);
-        customSnackBar(
-          'Shift Opened',
-          response.message.isNotEmpty
-              ? response.message
-              : 'Shift opened successfully.',
-          snackBarType: SnackBarType.success,
-        );
-        return true;
-      }
+      currentShift.value = ShiftLocalRepository.rowToShiftModel(row);
+      await ShiftCacheStorage.saveShift(currentShift.value!);
 
       customSnackBar(
-        'Could Not Open Shift',
-        response.message.isNotEmpty
-            ? response.message
-            : 'Something went wrong.',
-        snackBarType: SnackBarType.error,
+        'Shift Opened',
+        'Shift opened. It will sync automatically once online.',
+        snackBarType: SnackBarType.success,
       );
-      return false;
+
+      if (Get.isRegistered<SyncService>()) {
+        final sync = Get.find<SyncService>();
+        await sync.refreshPendingCount();
+        unawaited(sync.syncShiftsNow());
+      }
+      return true;
     } catch (e) {
       log("ShiftController openShift error: $e");
       customSnackBar(
@@ -112,13 +118,16 @@ class ShiftController extends GetxController {
     }
   }
 
+  /// Pause/resume has no offline equivalent from the backend — only
+  /// available once the shift has synced (real, positive id). The Shift
+  /// view hides these buttons for local-only (id < 0) shifts.
   Future<void> pauseShift() => _updateStatus('paused');
 
   Future<void> resumeShift() => _updateStatus('open');
 
   Future<void> _updateStatus(String status) async {
     final shift = currentShift.value;
-    if (shift == null) return;
+    if (shift == null || shift.id <= 0) return;
     try {
       isUpdatingStatus.value = true;
       final response = await _service.updateStatus(
@@ -127,8 +136,11 @@ class ShiftController extends GetxController {
       );
 
       if (response.isSuccess) {
-        // The status-update response doesn't include totals/branch/device —
-        // reload the full current-shift snapshot instead of using it as-is.
+        final row = await ShiftLocalRepository.ensureLocalRow(shift);
+        await ShiftLocalRepository.updateLiveStatus(
+          JsonUtils.asInt(row['local_id']),
+          status,
+        );
         await checkCurrentShift();
         customSnackBar(
           'Shift Updated',
@@ -158,6 +170,9 @@ class ShiftController extends GetxController {
     }
   }
 
+  /// Closes the current shift entirely offline — expected cash/variance are
+  /// computed on-device from the cash orders taken during this shift, then
+  /// queued for sync just like the open.
   Future<bool> closeShift({
     required double countedCash,
     String? closingNotes,
@@ -166,38 +181,43 @@ class ShiftController extends GetxController {
     if (shift == null) return false;
     try {
       isClosingShift.value = true;
-      final response = await _service.closeShift(
-        shiftId: shift.id,
+      final row = await ShiftLocalRepository.getCurrentOpenRow() ??
+          await ShiftLocalRepository.ensureLocalRow(shift);
+
+      final localId = JsonUtils.asInt(row['local_id']);
+      final clientReference = row['client_reference'] as String;
+      final cashCollected =
+          await ShiftLocalRepository.cashCollectedForShift(clientReference);
+      final expectedCash = shift.openingFloat + cashCollected;
+      final variance = countedCash - expectedCash;
+
+      await ShiftLocalRepository.closeLocal(
+        localId: localId,
         countedCash: countedCash,
+        expectedCash: expectedCash,
+        variance: variance,
         closingNotes: closingNotes,
       );
 
-      if (response.isSuccess && response.payload != null) {
-        final closedShiftId = response.payload!.id;
-        final varianceStatus =
-            response.payload!.reconciliation?.varianceStatus;
-        await ShiftCacheStorage.clearShift();
-        // Reflect "No Active Shift" immediately — no manual refresh needed.
-        currentShift.value = null;
-        customSnackBar(
-          'Shift Closed',
-          varianceStatus != null
-              ? 'Shift closed — cash $varianceStatus.'
-              : 'Shift closed successfully.',
-          snackBarType: SnackBarType.success,
-        );
-        unawaited(_printReceiptForShiftId(closedShiftId));
-        return true;
-      }
+      await ShiftCacheStorage.clearShift();
+      // Reflect "No Active Shift" immediately — no manual refresh needed.
+      currentShift.value = null;
 
+      final varianceLabel = variance == 0
+          ? 'balanced'
+          : (variance > 0 ? 'over by ${variance.toStringAsFixed(2)}' : 'short by ${(-variance).toStringAsFixed(2)}');
       customSnackBar(
-        'Could Not Close Shift',
-        response.message.isNotEmpty
-            ? response.message
-            : 'Something went wrong.',
-        snackBarType: SnackBarType.error,
+        'Shift Closed',
+        'Shift closed — cash $varianceLabel. It will sync automatically once online.',
+        snackBarType: SnackBarType.success,
       );
-      return false;
+
+      if (Get.isRegistered<SyncService>()) {
+        final sync = Get.find<SyncService>();
+        await sync.refreshPendingCount();
+        unawaited(sync.syncShiftsNow());
+      }
+      return true;
     } catch (e) {
       log("ShiftController closeShift error: $e");
       customSnackBar(
@@ -211,9 +231,18 @@ class ShiftController extends GetxController {
     }
   }
 
+  /// Only available once the shift has synced — the server print-receipt
+  /// API needs a real shift id.
   Future<void> printReceipt() async {
     final shift = currentShift.value;
-    if (shift == null) return;
+    if (shift == null || shift.id <= 0) {
+      customSnackBar(
+        'Print Receipt',
+        'Sync this shift first before printing its receipt.',
+        snackBarType: SnackBarType.warning,
+      );
+      return;
+    }
     await _printReceiptForShiftId(shift.id);
   }
 

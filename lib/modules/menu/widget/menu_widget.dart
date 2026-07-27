@@ -11,12 +11,17 @@ class MenuList extends StatelessWidget {
   final VoidCallback menuTap;
   final MenuTileColor menuColor;
 
+  /// Optional count badge shown before the chevron (e.g. pending-sync
+  /// count). Hidden entirely when null or 0.
+  final int? badgeCount;
+
   const MenuList({
     super.key,
     required this.menuIcon,
     required this.menuTitle,
     required this.menuTap,
     this.menuColor = MenuTileColor.neutral,
+    this.badgeCount,
   });
 
   bool get _destructive => menuColor == MenuTileColor.destructive;
@@ -66,6 +71,24 @@ class MenuList extends StatelessWidget {
                   ),
                 ),
               ),
+              if (badgeCount != null && badgeCount! > 0) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE5484D),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '$badgeCount',
+                    style: AppFonts.geistMono(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+              ],
               const Icon(
                 Icons.chevron_right_rounded,
                 color: Color(0xFFB4B9C6),

@@ -197,10 +197,63 @@ class _EmptyCart extends StatelessWidget {
   }
 }
 
-class _CartItemTile extends StatelessWidget {
+class _CartItemTile extends StatefulWidget {
   final CartItemModel item;
   final HomeController controller;
   const _CartItemTile({required this.item, required this.controller});
+
+  @override
+  State<_CartItemTile> createState() => _CartItemTileState();
+}
+
+class _CartItemTileState extends State<_CartItemTile> {
+  late final TextEditingController _qtyController;
+  late final FocusNode _qtyFocusNode;
+
+  CartItemModel get item => widget.item;
+  HomeController get controller => widget.controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _qtyController = TextEditingController(text: '${item.quantity}');
+    _qtyFocusNode = FocusNode();
+    _qtyFocusNode.addListener(() {
+      if (_qtyFocusNode.hasFocus) {
+        _qtyController.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: _qtyController.text.length,
+        );
+      } else {
+        _submitQty();
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _CartItemTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_qtyFocusNode.hasFocus && _qtyController.text != '${item.quantity}') {
+      _qtyController.text = '${item.quantity}';
+    }
+  }
+
+  @override
+  void dispose() {
+    _qtyController.dispose();
+    _qtyFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _submitQty() {
+    final parsed = int.tryParse(_qtyController.text.trim());
+    if (parsed == null) {
+      _qtyController.text = '${item.quantity}';
+      return;
+    }
+    controller.setQty(item, parsed);
+    _qtyController.text = '${item.quantity}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -284,14 +337,34 @@ class _CartItemTile extends StatelessWidget {
                           padding: EdgeInsets.zero,
                           color: ColorResources.gradientRed,
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                          child: Text(
-                            '${item.quantity}',
-                            style: AppFonts.geistMono(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
+                        Container(
+                          width: 34,
+                          height: 26,
+                          margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                          decoration: BoxDecoration(
+                            color: theme.secondaryColor.value.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: theme.secondaryColor.value.withOpacity(0.3),
                             ),
+                          ),
+                          child: TextField(
+                            controller: _qtyController,
+                            focusNode: _qtyFocusNode,
+                            textAlign: TextAlign.center,
+                            keyboardType: TextInputType.number,
+                            style: AppFonts.geistMono(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: ColorResources.blackColor,
+                            ),
+                            decoration: const InputDecoration(
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
+                              border: InputBorder.none,
+                            ),
+                            onSubmitted: (_) => _submitQty(),
+                            onTapOutside: (_) => _qtyFocusNode.unfocus(),
                           ),
                         ),
                         IconButton(
@@ -300,6 +373,14 @@ class _CartItemTile extends StatelessWidget {
                           constraints: const BoxConstraints(),
                           padding: EdgeInsets.zero,
                           color: ColorResources.successGreen,
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                          onPressed: () => controller.removeFromCart(item),
+                          constraints: const BoxConstraints(),
+                          padding: const EdgeInsets.only(left: 6.0),
+                          color: Colors.grey[600],
+                          tooltip: 'Remove item',
                         ),
                       ],
                     ),

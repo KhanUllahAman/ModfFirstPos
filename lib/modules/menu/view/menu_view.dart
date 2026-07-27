@@ -2,17 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/services/app_theme_service.dart';
+import 'package:modfirstpos/core/services/sync_service.dart';
 import 'package:modfirstpos/core/services/website_settings_service.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
-import 'package:modfirstpos/core/utils/images_constant.dart';
 import 'package:modfirstpos/modules/menu/widget/menu_widget.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
 import 'package:modfirstpos/shared/widgets/AppWidgets/appinfo_dailog_widget.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 import 'package:modfirstpos/shared/widgets/appBarWidget/app_bar_widget.dart';
 import 'package:modfirstpos/shared/widgets/helperFunction/get_device_id_function.dart';
+import 'package:modfirstpos/shared/widgets/helperFunction/logout_helper.dart';
 import 'package:modfirstpos/shared/widgets/noKeyboard/no_keyboard_extension.dart';
 
 import 'package:modfirstpos/shared/widgets/sideNav/app_nav_drawer.dart';
@@ -108,6 +109,28 @@ class _MainTab extends StatelessWidget {
     }
   }
 
+  Future<void> _syncAndReport({
+    required String label,
+    required Future<SyncSummary> Function() run,
+  }) async {
+    final summary = await run();
+    if (summary.total == 0) {
+      customSnackBar(
+        '$label Sync',
+        'Nothing to sync — everything is already up to date.',
+        snackBarType: SnackBarType.info,
+      );
+      return;
+    }
+    customSnackBar(
+      '$label Sync',
+      '${summary.synced} synced, ${summary.duplicates} duplicate, ${summary.failed} failed.',
+      snackBarType: summary.failed > 0
+          ? SnackBarType.warning
+          : SnackBarType.success,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -154,10 +177,51 @@ class _MainTab extends StatelessWidget {
             //     Get.toNamed(Routes.notification);
             //   },
             // ),
+            Obx(
+              () => MenuList(
+                menuIcon: Icons.cloud_sync_rounded,
+                menuTitle: 'Sync Pending Items',
+                badgeCount: Get.find<SyncService>().pendingCount.value,
+                menuTap: () async {
+                  final sync = Get.find<SyncService>();
+                  await sync.syncNow();
+                  await sync.refreshPendingCount();
+                  if (sync.pendingCount.value == 0) {
+                    customSnackBar(
+                      'Sync',
+                      'Everything is synced — nothing pending.',
+                      snackBarType: SnackBarType.success,
+                    );
+                  } else {
+                    customSnackBar(
+                      'Sync',
+                      '${sync.pendingCount.value} item(s) still pending — will retry automatically.',
+                      snackBarType: SnackBarType.warning,
+                    );
+                  }
+                },
+              ),
+            ),
             MenuList(
               menuIcon: Icons.refresh_rounded,
               menuTitle: 'Refresh Website Settings',
               menuTap: _refreshWebsiteSettings,
+            ),
+            MenuList(
+              menuIcon: Icons.cloud_sync_rounded,
+              menuTitle: 'Sync Shifts',
+              menuTap: () => _syncAndReport(
+                label: 'Shifts',
+                run: () => Get.find<SyncService>().syncShiftsNow(),
+              ),
+            ),
+            MenuList(
+              menuIcon: Icons.cloud_sync_rounded,
+              menuTitle: 'Sync Orders',
+              menuTap: () => _syncAndReport(
+                label: 'Orders',
+                run: () => Get.find<SyncService>().syncOrdersNow(),
+              ),
             ),
           ],
         ),
@@ -247,23 +311,7 @@ class _SystemTab extends StatelessWidget {
               menuIcon: Icons.logout_rounded,
               menuTitle: 'Log Out',
               menuColor: MenuTileColor.destructive,
-              menuTap: () {
-                AppDialog.showConfirm(
-                  context,
-                  title: "Log Out",
-                  message: "Are you sure",
-                  subMessage: "You want to log out.",
-                  image: Image.asset(
-                    ImagesConstant.logout,
-                    height: context.responsiveHeight(0.20),
-                    width: context.responsiveWidth(0.20),
-                  ),
-                  onYes: () async {
-                    await SecureStorageService.clearAll();
-                    Get.offAllNamed(Routes.storeSelection);
-                  },
-                );
-              },
+              menuTap: () => AppLogout.attempt(context),
             ),
           ],
         ),

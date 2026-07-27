@@ -108,10 +108,10 @@ class ProductGrid extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: context.spacingSM),
         itemCount: categories.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 0.85,
+          crossAxisCount: 5,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: 0.82,
         ),
         itemBuilder: (_, i) => _CategoryCard(
           category: categories[i],

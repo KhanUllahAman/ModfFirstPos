@@ -6,6 +6,7 @@ class StorageKeys {
   static const String keyProfileData = 'key_profile_data';
   static const String keyLastActiveAt = 'last_active_at';
   static const String keyWasLocked = 'was_locked';
+  static const String keyPinHash = 'pin_hash';
 
   static const String keySiteId = 'site_id';
   static const String keySiteName = 'site_name';

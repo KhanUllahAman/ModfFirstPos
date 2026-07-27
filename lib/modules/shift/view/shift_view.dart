@@ -40,7 +40,8 @@ class ShiftView extends GetView<ShiftController> {
                     () => IconButton(
                       onPressed: Get.find<BootstrapController>().isSyncing.value
                           ? null
-                          : () => Get.find<BootstrapController>().syncBootstrap(),
+                          : () =>
+                                Get.find<BootstrapController>().syncBootstrap(),
                       icon: Get.find<BootstrapController>().isSyncing.value
                           ? const SizedBox(
                               width: 18,
@@ -151,6 +152,7 @@ class _ActiveShiftDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<ShiftController>();
+    final theme = Get.find<AppThemeService>();
     final totals = shift.totals;
     final currency = shift.websiteSetting?.currencySymbol ?? '\$';
 
@@ -179,7 +181,10 @@ class _ActiveShiftDetails extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: _statusColor().withOpacity(0.14),
                       borderRadius: BorderRadius.circular(20),
@@ -195,11 +200,49 @@ class _ActiveShiftDetails extends StatelessWidget {
                   ),
                 ],
               ),
+              if (shift.id <= 0) ...[
+                SizedBox(height: context.spacingXS),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: ColorResources.warningOrange.withOpacity(0.14),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.cloud_off_rounded,
+                        size: 14,
+                        color: ColorResources.warningOrange,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Pending sync — will upload automatically once online',
+                        style: AppFonts.geistMono(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: ColorResources.warningOrange,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               SizedBox(height: context.spacingSM),
-              if (shift.branch?.name != null) _InfoRow('Branch', shift.branch!.name!),
-              if (shift.posDevice?.name != null) _InfoRow('Device', shift.posDevice!.name!),
-              _InfoRow('Opening Float', '$currency${shift.openingFloat.toStringAsFixed(2)}'),
-              if (shift.openedAt != null) _InfoRow('Opened At', shift.openedAt!),
+              if (shift.branch?.name != null)
+                _InfoRow('Branch', shift.branch!.name!),
+              if (shift.posDevice?.name != null)
+                _InfoRow('Device', shift.posDevice!.name!),
+              _InfoRow(
+                'Opening Float',
+                '$currency${shift.openingFloat.toStringAsFixed(2)}',
+              ),
+              if (shift.openedAt != null)
+                _InfoRow('Opened At', shift.openedAt!),
               if (shift.openingNotes != null && shift.openingNotes!.isNotEmpty)
                 _InfoRow('Notes', shift.openingNotes!),
             ],
@@ -223,7 +266,10 @@ class _ActiveShiftDetails extends StatelessWidget {
               _InfoRow('Net Sales', '$currency${totals.sales.netSales}'),
               _InfoRow('Collected', '$currency${totals.sales.collected}'),
               _InfoRow('Outstanding', '$currency${totals.sales.outstanding}'),
-              _InfoRow('Cash Collected', '$currency${totals.cashCollected ?? '0.00'}'),
+              _InfoRow(
+                'Cash Collected',
+                '$currency${totals.cashCollected ?? '0.00'}',
+              ),
             ],
           ),
           SizedBox(height: context.spacingSM),
@@ -233,25 +279,29 @@ class _ActiveShiftDetails extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Expanded(
-                    child: AppButton(
-                      backgroundColor: ColorResources.warningOrange,
-                      isLoading: controller.isUpdatingStatus.value,
-                      borderRadius: 10,
-                      onPressed: shift.isOpen
-                          ? controller.pauseShift
-                          : controller.resumeShift,
-                      child: Text(
-                        shift.isOpen ? 'Pause Shift' : 'Resume Shift',
-                        style: AppFonts.geistMono(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: context.fontXS,
+                  // Pause/Resume has no offline equivalent — only available
+                  // once the shift has synced (a real, positive id).
+                  if (shift.id > 0) ...[
+                    Expanded(
+                      child: AppButton(
+                        backgroundColor: ColorResources.warningOrange,
+                        isLoading: controller.isUpdatingStatus.value,
+                        borderRadius: 10,
+                        onPressed: shift.isOpen
+                            ? controller.pauseShift
+                            : controller.resumeShift,
+                        child: Text(
+                          shift.isOpen ? 'Pause Shift' : 'Resume Shift',
+                          style: AppFonts.geistMono(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: context.fontXS,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  SizedBox(width: context.spacingSM),
+                    SizedBox(width: context.spacingSM),
+                  ],
                   Expanded(
                     child: AppButton(
                       backgroundColor: ColorResources.gradientRed,
@@ -271,20 +321,22 @@ class _ActiveShiftDetails extends StatelessWidget {
                 ],
               ),
               SizedBox(height: context.spacingSM),
-              AppButton(
-                backgroundColor: ColorResources.blackColor,
-                isLoading: controller.isPrinting.value,
-                borderRadius: 10,
-                onPressed: controller.printReceipt,
-                child: Text(
-                  'Print Shift Receipt',
-                  style: AppFonts.geistMono(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: context.fontXS,
+              // The server print-receipt API needs a real shift id.
+              if (shift.id > 0)
+                AppButton(
+                  backgroundColor: theme.primaryColor.value,
+                  isLoading: controller.isPrinting.value,
+                  borderRadius: 10,
+                  onPressed: controller.printReceipt,
+                  child: Text(
+                    'Print Shift Receipt',
+                    style: AppFonts.geistMono(
+                      color: theme.onPrimaryColor,
+                      fontWeight: FontWeight.w700,
+                      fontSize: context.fontXS,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
