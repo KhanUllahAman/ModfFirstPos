@@ -1,7 +1,9 @@
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:path/path.dart' as p;
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
+import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 
 
 class AppDatabase {
@@ -19,8 +21,59 @@ class AppDatabase {
 
   static Future<Database> _open() async {
     final dbPath = p.join(await getDatabasesPath(), _dbName);
+    final password = await SecureStorageService.getOrCreateDbEncryptionKey();
+    try {
+      return await openDatabase(
+        dbPath,
+        password: password,
+        version: _version,
+        onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
+        onCreate: _createSchema,
+        onUpgrade: _onUpgrade,
+      );
+    } catch (e) {
+      // Devices that installed the app before encryption was added have a
+      // plain (unencrypted) database file — opening it with a password
+      // fails. Fall back to a one-time migration instead of losing data.
+      log('AppDatabase: encrypted open failed ($e), trying legacy-plain migration...');
+      return _migrateLegacyPlainDatabase(dbPath, password);
+    }
+  }
+
+  /// Opens the existing unencrypted database file, exports it into a new
+  /// encrypted file via SQLCipher's documented `ATTACH` + `sqlcipher_export()`
+  /// procedure (PRAGMA rekey is unreliable on a genuinely-plaintext file —
+  /// SQLCipher itself points at this as the correct alternative), then
+  /// swaps the encrypted copy into place. Preserves all existing data
+  /// (including any not-yet-synced offline sales) instead of wiping it.
+  static Future<Database> _migrateLegacyPlainDatabase(
+    String dbPath,
+    String password,
+  ) async {
+    final plainDb = await openDatabase(
+      dbPath,
+      version: _version,
+      onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
+      onCreate: _createSchema,
+      onUpgrade: _onUpgrade,
+    );
+
+    final tempPath = '$dbPath.encrypting';
+    final tempFile = File(tempPath);
+    if (await tempFile.exists()) await tempFile.delete();
+
+    await plainDb.execute("ATTACH DATABASE '$tempPath' AS encrypted KEY '$password'");
+    await plainDb.execute("SELECT sqlcipher_export('encrypted')");
+    await plainDb.execute('DETACH DATABASE encrypted');
+    await plainDb.close();
+
+    await File(dbPath).delete();
+    await tempFile.rename(dbPath);
+    log('AppDatabase: migrated legacy unencrypted database to SQLCipher.');
+
     return openDatabase(
       dbPath,
+      password: password,
       version: _version,
       onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
       onCreate: _createSchema,

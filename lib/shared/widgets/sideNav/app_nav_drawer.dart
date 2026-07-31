@@ -120,7 +120,10 @@ class AppNavDrawer extends StatelessWidget {
           child: Column(
             children: [
               const SizedBox(height: 20),
-              DynamicAppLogo(height: context.responsiveHeight(0.032)),
+              DynamicAppLogo(
+                height: context.responsiveHeight(0.032),
+                variant: LogoVariant.white,
+              ),
               const SizedBox(height: 20),
               const Divider(
                 height: 1,

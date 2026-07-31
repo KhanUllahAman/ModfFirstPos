@@ -20,8 +20,10 @@ class ScanField extends StatelessWidget {
       child: TextField(
         controller: controller.scanController,
         style: AppFonts.geistMono(fontSize: context.fontSM),
+        textInputAction: TextInputAction.search,
+        onSubmitted: (_) => controller.submitScan(),
         decoration: InputDecoration(
-          hintText: 'Scan Product',
+          hintText: 'Scan or search product / category / variant',
           hintStyle: AppFonts.geistMono(
             color: ColorResources.blackColor,
             fontSize: context.fontSM,
@@ -31,9 +33,9 @@ class ScanField extends StatelessWidget {
             vertical: context.responsiveHeight(0.018),
           ),
           border: InputBorder.none,
-          suffixIcon: Padding(
-            padding: EdgeInsets.all(context.responsiveWidth(0.012)),
-            child: Icon(Iconsax.scan_barcode, color: ColorResources.blackColor),
+          suffixIcon: IconButton(
+            onPressed: controller.submitScan,
+            icon: Icon(Iconsax.scan_barcode, color: ColorResources.blackColor),
           ),
         ),
       ),

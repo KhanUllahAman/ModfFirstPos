@@ -100,6 +100,41 @@ class _CustomerPairingViewState extends State<CustomerPairingView> {
                   ],
                 ),
               ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.06),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white24),
+                ),
+                child: Column(
+                  children: [
+                    const Text(
+                      'And this pairing code → Settings → Customer Pairing Code',
+                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Obx(
+                      () => Text(
+                        _server.pairingCode.value.isEmpty
+                            ? '......'
+                            : _server.pairingCode.value,
+                        style: const TextStyle(
+                          color: Colors.greenAccent,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 32),
               Obx(() {
                 final running = _server.isRunning.value;

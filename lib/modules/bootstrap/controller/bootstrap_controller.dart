@@ -106,6 +106,31 @@ class BootstrapController extends GetxController {
     return DateTime.tryParse(value)?.toLocal();
   }
 
+  /// Decrements a product/variant's cached stock right after an offline
+  /// sale, so a second offline sale on this same device (before the next
+  /// sync) sees the reduced number instead of over-selling stock that's
+  /// already spoken for. Clamped at 0 — never goes negative locally.
+  Future<void> decrementStockLocally({
+    required int productId,
+    int? variantId,
+    required int quantitySold,
+  }) async {
+    final product = allProducts.firstWhereOrNull((p) => p.id == productId);
+    if (product == null) return;
+
+    final currentStock = variantId != null
+        ? product.variants.firstWhereOrNull((v) => v.id == variantId)?.stockQuantity
+        : product.stock;
+    if (currentStock == null) return;
+
+    final newStock = currentStock - quantitySold;
+    await patchInventory(
+      productId: productId,
+      variantId: variantId,
+      newQuantity: newStock < 0 ? 0 : newStock,
+    );
+  }
+
   /// Patches a product/variant's cached stock quantity in place after a
   /// successful online inventory increase/decrease/adjust call, so the UI
   /// reflects the new stock immediately without a full re-sync.

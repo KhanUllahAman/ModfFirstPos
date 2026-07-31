@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/local_shift_receipt_builder.dart';
 import 'package:modfirstpos/core/services/sync_service.dart';
 import 'package:modfirstpos/core/services/thermal_printer_service.dart';
 import 'package:modfirstpos/core/utils/json_utils.dart';
 import 'package:modfirstpos/modules/bootstrap/controller/bootstrap_controller.dart';
+import 'package:modfirstpos/modules/order/repository/pending_order_repository.dart';
 import 'package:modfirstpos/modules/setting/service/setting_service.dart';
 import 'package:modfirstpos/modules/setting/storage/pos_device_cache_storage.dart';
 import 'package:modfirstpos/modules/shift/model/shift_model.dart';
@@ -231,24 +233,30 @@ class ShiftController extends GetxController {
     }
   }
 
-  /// Only available once the shift has synced — the server print-receipt
-  /// API needs a real shift id.
+  /// Builds the shift-closing receipt entirely from local data (bootstrap
+  /// snapshot + this device's own offline orders for the shift) and prints
+  /// it directly — no server call, no dependency on the shift having synced.
   Future<void> printReceipt() async {
     final shift = currentShift.value;
-    if (shift == null || shift.id <= 0) {
-      customSnackBar(
-        'Print Receipt',
-        'Sync this shift first before printing its receipt.',
-        snackBarType: SnackBarType.warning,
-      );
-      return;
-    }
-    await _printReceiptForShiftId(shift.id);
+    if (shift == null) return;
+    await _printReceiptLocally(shift);
   }
 
-  Future<void> _printReceiptForShiftId(int shiftId) async {
+  Future<void> _printReceiptLocally(ShiftModel shift) async {
     try {
       isPrinting.value = true;
+
+      final bootstrap = Get.isRegistered<BootstrapController>()
+          ? Get.find<BootstrapController>().data.value
+          : null;
+      if (bootstrap == null) {
+        customSnackBar(
+          'Print Receipt',
+          'Store data not loaded yet. Please sync first.',
+          snackBarType: SnackBarType.warning,
+        );
+        return;
+      }
 
       var device = await PosDeviceCacheStorage.getDevice();
       if (device == null) {
@@ -268,26 +276,21 @@ class ShiftController extends GetxController {
         return;
       }
 
-      final receiptResponse = await _service.printReceiptData(
-        shiftId: shiftId,
-        printType: device.receiptType.isNotEmpty
-            ? device.receiptType
-            : 'thermal_80mm',
+      final row = await ShiftLocalRepository.getCurrentOpenRow() ??
+          await ShiftLocalRepository.ensureLocalRow(shift);
+      final clientReference = row['client_reference'] as String;
+      final orders =
+          await PendingOrderRepository.getByShiftReference(clientReference);
+
+      final receipt = LocalShiftReceiptBuilder.build(
+        bootstrap: bootstrap,
+        shift: shift,
+        device: device,
+        orders: orders,
       );
 
-      if (!receiptResponse.isSuccess || receiptResponse.payload == null) {
-        customSnackBar(
-          'Print Receipt',
-          receiptResponse.message.isNotEmpty
-              ? receiptResponse.message
-              : 'Could not fetch shift receipt data.',
-          snackBarType: SnackBarType.error,
-        );
-        return;
-      }
-
       final printed = await _printerService.printShiftReceipt(
-        receiptResponse.payload!,
+        receipt,
         printerIp: device.ipAddress,
       );
 

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/services/customer_display_service.dart';
 import 'package:modfirstpos/core/services/stripe_terminal_service.dart';
+import 'package:modfirstpos/core/storage/customer_display_settings_storage.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/core/storage/stripe_terminal_settings_storage.dart';
 import 'package:modfirstpos/modules/setting/model/pos_device_model.dart';
@@ -19,6 +20,7 @@ class SettingController extends GetxController {
   final TextEditingController deviceCodeController = TextEditingController();
   final TextEditingController ipAddressController = TextEditingController();
   final TextEditingController customerIpController = TextEditingController();
+  final TextEditingController customerPairingCodeController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
 
   final RxString deviceType = 'tablet'.obs;
@@ -56,6 +58,28 @@ class SettingController extends GetxController {
     super.onInit();
     _hydrateFromCache();
     _hydrateTerminalSettings();
+    _hydrateCustomerPairingCode();
+  }
+
+  Future<void> _hydrateCustomerPairingCode() async {
+    final code = await CustomerDisplaySettingsStorage.getPairingCode();
+    if (code != null) customerPairingCodeController.text = code;
+    customerPairingCodeController.addListener(saveCustomerPairingCode);
+  }
+
+  Future<void> saveCustomerPairingCode() async {
+    await CustomerDisplaySettingsStorage.savePairingCode(
+      customerPairingCodeController.text.trim(),
+    );
+    if (Get.isRegistered<CustomerDisplayClientService>() &&
+        customerIpController.text.trim().isNotEmpty) {
+      unawaited(
+        Get.find<CustomerDisplayClientService>().connect(
+          customerIpController.text.trim(),
+          pairingCode: customerPairingCodeController.text.trim(),
+        ),
+      );
+    }
   }
 
   // Test-only defaults so a fresh install/testing device is ready to go
@@ -142,6 +166,7 @@ class SettingController extends GetxController {
     deviceCodeController.dispose();
     ipAddressController.dispose();
     customerIpController.dispose();
+    customerPairingCodeController.dispose();
     readerIdController.dispose();
     stripeReaderTmrIdController.dispose();
     stripeTestSecretKeyController.dispose();
@@ -331,6 +356,7 @@ class SettingController extends GetxController {
           unawaited(
             Get.find<CustomerDisplayClientService>().connect(
               response.payload!.customerIp!,
+              pairingCode: customerPairingCodeController.text.trim(),
             ),
           );
         }

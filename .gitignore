@@ -45,4 +45,5 @@ app.*.map.json
 /android/app/release
 
 # Secrets — never commit API keys
-.env
+
+# Release signing — never commit the keystore or its passwords

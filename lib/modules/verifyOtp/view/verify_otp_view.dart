@@ -120,7 +120,7 @@ class VerifyOtpView extends GetView<VerifyOtpController> {
                               SizedBox(height: context.spacingXL),
                               Obx(
                                 () => AppButton(
-                                  backgroundColor: theme.secondaryColor.value,
+                                  backgroundColor: theme.primaryColor.value,
                                   onPressed: controller.verifyOtp,
                                   isLoading: false,
                                   borderRadius: 12,
@@ -129,7 +129,7 @@ class VerifyOtpView extends GetView<VerifyOtpController> {
                                     style: AppFonts.geistMono(
                                       fontSize: context.fontMD,
                                       fontWeight: FontWeight.w500,
-                                      color: theme.onSecondaryColor,
+                                      color: theme.onPrimaryColor,
                                       letterSpacing: 0.5,
                                     ),
                                   ),

@@ -30,7 +30,9 @@ class LocalReceiptBuilder {
     return ReceiptDataModel(
       company: ReceiptCompanyModel(
         name: bootstrap.store.siteName,
-        logoUrl: bootstrap.store.logoUrl,
+        // Black logo prints legibly on white thermal paper — the white
+        // variant (used on the app's dark UI) would be invisible here.
+        logoUrl: bootstrap.store.logoBlackUrl ?? bootstrap.store.logoUrl,
         tagline: bootstrap.store.siteTagline,
         phone: bootstrap.store.contactPhone,
         email: bootstrap.store.contactEmail,

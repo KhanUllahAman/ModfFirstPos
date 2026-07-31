@@ -34,6 +34,20 @@ class PendingOrderRepository {
     );
   }
 
+  /// All offline orders (synced or not) taken during [shiftClientReference]
+  /// — used to build the local shift-closing receipt without a server call.
+  static Future<List<Map<String, dynamic>>> getByShiftReference(
+    String shiftClientReference,
+  ) async {
+    final db = await AppDatabase.instance;
+    return db.query(
+      'pending_orders',
+      where: 'shift_client_reference = ?',
+      whereArgs: [shiftClientReference],
+      orderBy: 'local_id ASC',
+    );
+  }
+
   static Future<void> markSynced(int localId, {String? serverOrderCode}) async {
     final db = await AppDatabase.instance;
     await db.update(

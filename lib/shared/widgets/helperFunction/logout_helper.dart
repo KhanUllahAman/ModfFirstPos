@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/services/push_notification_service.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/core/utils/images_constant.dart';
 import 'package:modfirstpos/modules/shift/controller/shift_controller.dart';
@@ -38,6 +39,9 @@ class AppLogout {
         width: context.responsiveWidth(0.20),
       ),
       onYes: () async {
+        if (Get.isRegistered<PushNotificationService>()) {
+          await Get.find<PushNotificationService>().removeToken();
+        }
         await SecureStorageService.clearAll();
         if (Get.isRegistered<ShiftController>()) {
           Get.find<ShiftController>().resetForLogout();

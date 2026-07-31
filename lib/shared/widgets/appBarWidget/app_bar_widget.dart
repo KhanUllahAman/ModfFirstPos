@@ -5,8 +5,10 @@ import 'package:intl/intl.dart';
 import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/images_constant.dart';
+import 'package:modfirstpos/core/services/push_notification_service.dart';
 import 'package:modfirstpos/modules/bootstrap/controller/bootstrap_controller.dart';
 import 'package:modfirstpos/modules/pin/controller/pin_controller.dart';
+import 'package:modfirstpos/routes/app_routes.dart';
 import 'package:modfirstpos/shared/widgets/DynamicImage/dynamic_network_image.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 
@@ -72,7 +74,10 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                                     )?.openDrawer()),
                         ),
                       SizedBox(width: context.responsiveWidth(0.035)),
-                      DynamicAppLogo(height: context.responsiveHeight(0.028)),
+                      DynamicAppLogo(
+                        height: context.responsiveHeight(0.028),
+                        variant: LogoVariant.white,
+                      ),
                     ],
                   ),
                 ),
@@ -94,6 +99,56 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                       ),
                     );
                   }),
+                if (Get.isRegistered<PushNotificationService>())
+                  Padding(
+                    padding: EdgeInsets.only(
+                      right: context.responsiveWidth(0.02),
+                    ),
+                    child: Obx(() {
+                      final unread =
+                          Get.find<PushNotificationService>().unreadCount.value;
+                      return GestureDetector(
+                        onTap: () => Get.toNamed(Routes.notification),
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Icon(
+                              Icons.notifications_outlined,
+                              color: iconColor,
+                              size: 20,
+                            ),
+                            if (unread > 0)
+                              Positioned(
+                                top: -4,
+                                right: -6,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 1,
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 14,
+                                  ),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    unread > 9 ? '9+' : '$unread',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ),
                 Obx(() {
                   final pinController = Get.find<PinController>();
                   if (!pinController.pinEnabled.value) {

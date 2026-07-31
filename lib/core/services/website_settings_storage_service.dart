@@ -27,6 +27,8 @@ class WebsiteSettingsStorageService {
       model.siteDescription,
     );
     await _writeIfNotNull(StorageKeys.keyLogoUrl, model.logoUrl);
+    await _writeIfNotNull(StorageKeys.keyLogoWhiteUrl, model.logoWhiteUrl);
+    await _writeIfNotNull(StorageKeys.keyLogoBlackUrl, model.logoBlackUrl);
     await _writeIfNotNull(StorageKeys.keyFaviconUrl, model.faviconUrl);
     await _writeIfNotNull(StorageKeys.keyFooterLogoUrl, model.footerLogoUrl);
     await _writeIfNotNull(StorageKeys.keyPrimaryColor, model.primaryColor);
@@ -98,6 +100,10 @@ class WebsiteSettingsStorageService {
   static Future<String?> getSiteDescription() =>
       _read(StorageKeys.keySiteDescription);
   static Future<String?> getLogoUrl() => _read(StorageKeys.keyLogoUrl);
+  static Future<String?> getLogoWhiteUrl() =>
+      _read(StorageKeys.keyLogoWhiteUrl);
+  static Future<String?> getLogoBlackUrl() =>
+      _read(StorageKeys.keyLogoBlackUrl);
   static Future<String?> getFaviconUrl() => _read(StorageKeys.keyFaviconUrl);
   static Future<String?> getFooterLogoUrl() =>
       _read(StorageKeys.keyFooterLogoUrl);

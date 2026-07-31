@@ -131,8 +131,9 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
                     controller: _openingFloatController,
                     labelText: 'Opening Float *',
                     hintText: 'e.g. 100',
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     validator: _validateOpeningFloat,
                     borderRadius: 10,
                   ),
@@ -158,15 +159,16 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
                   SizedBox(height: context.responsiveHeight(0.028)),
                   Obx(
                     () => AppButton(
-                      backgroundColor: theme.secondaryColor.value,
+                      backgroundColor: theme.primaryColor.value,
                       isLoading:
-                          controller.isOpeningShift.value || _isSyncingStoreData,
+                          controller.isOpeningShift.value ||
+                          _isSyncingStoreData,
                       borderRadius: 10,
                       onPressed: _save,
                       child: Text(
                         'Open Shift',
                         style: AppFonts.geistMono(
-                          color: theme.onSecondaryColor,
+                          color: theme.onPrimaryColor,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),

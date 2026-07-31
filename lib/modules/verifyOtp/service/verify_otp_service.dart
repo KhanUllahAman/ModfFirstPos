@@ -10,9 +10,16 @@ class VerifyOtpService {
   Future<VerifyOtpModel> verifyOtp({
     required String email,
     required String otp,
+    String? fcmToken,
+    String platform = 'android',
   }) async {
     try {
-      final body = {"email": email, "otp": otp};
+      final body = {
+        "email": email,
+        "otp": otp,
+        if (fcmToken != null && fcmToken.isNotEmpty) "fcm_token": fcmToken,
+        if (fcmToken != null && fcmToken.isNotEmpty) "platform": platform,
+      };
       final response = await _networkClient.post(
         endpoint: ApiConstants.verifyOtpEndpoint,
         isLoginRequest: true,

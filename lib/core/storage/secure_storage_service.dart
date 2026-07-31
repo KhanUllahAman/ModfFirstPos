@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:modfirstpos/core/contants/storage_keys.dart';
 
@@ -12,7 +13,41 @@ class SecureStorageService {
 
   static Future<void> _delete(String key) => _storage.delete(key: key);
 
-  static Future<void> clearAll() => _storage.deleteAll();
+  /// Wipes all secure-storage values on logout — EXCEPT the DB encryption
+  /// key, which must survive logout/login cycles or the local SQLite
+  /// database becomes unreadable (wrong/missing passphrase).
+  static Future<void> clearAll() async {
+    final dbKey = await getOrCreateDbEncryptionKey();
+    await _storage.deleteAll();
+    await _write(StorageKeys.keyDbEncryptionKey, dbKey);
+  }
+
+  /// The local SQLite database's SQLCipher passphrase. Generated once (256
+  /// bits of secure randomness) on first app run and kept in Keystore/
+  /// Keychain for the lifetime of the install — never sent to the server,
+  /// never logged.
+  static Future<String> getOrCreateDbEncryptionKey() async {
+    final existing = await _read(StorageKeys.keyDbEncryptionKey);
+    if (existing != null && existing.isNotEmpty) return existing;
+
+    final randomBytes = List<int>.generate(32, (_) => Random.secure().nextInt(256));
+    final key = base64UrlEncode(randomBytes);
+    await _write(StorageKeys.keyDbEncryptionKey, key);
+    return key;
+  }
+
+  /// Per-device random salt for [PinHashUtil] — generated once, reused for
+  /// the lifetime of the install (or until logout wipes it, at which point
+  /// the next saved PIN hash gets a fresh one together with it).
+  static Future<String> getOrCreatePinSalt() async {
+    final existing = await _read(StorageKeys.keyPinSalt);
+    if (existing != null && existing.isNotEmpty) return existing;
+
+    final randomBytes = List<int>.generate(16, (_) => Random.secure().nextInt(256));
+    final salt = base64UrlEncode(randomBytes);
+    await _write(StorageKeys.keyPinSalt, salt);
+    return salt;
+  }
 
   static Future<void> delete(String key) => _delete(key);
 

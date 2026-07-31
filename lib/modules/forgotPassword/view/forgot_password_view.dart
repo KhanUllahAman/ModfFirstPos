@@ -109,7 +109,7 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
                               SizedBox(height: context.spacingMD),
                               Obx(
                                 () => AppButton(
-                                  backgroundColor: theme.secondaryColor.value,
+                                  backgroundColor: theme.primaryColor.value,
                                   onPressed: controller.submit,
                                   isLoading: false,
                                   borderRadius: 12,
@@ -120,7 +120,7 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
                                     style: AppFonts.geistMono(
                                       fontSize: context.fontMD,
                                       fontWeight: FontWeight.w500,
-                                      color: theme.onSecondaryColor,
+                                      color: theme.onPrimaryColor,
                                       letterSpacing: 0.5,
                                     ),
                                   ),

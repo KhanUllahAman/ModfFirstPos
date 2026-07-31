@@ -13,12 +13,22 @@ class AppThemeService extends GetxService {
   Color get onSecondaryColor => secondaryColor.value.contrastText;
 
   final RxString fontFamily = 'GeistMono'.obs;
+
+  /// Generic fallback logo (used when a store only sent `logo_url`, no
+  /// black/white variants) — most screens should prefer [logoBlackUrl] or
+  /// [logoWhiteUrl] instead, matching their own background.
   final RxString logoUrl = ''.obs;
+
+  /// For light backgrounds (login screen, splash screen).
+  final RxString logoBlackUrl = ''.obs;
+
+  /// For dark backgrounds (home top bar, nav drawer).
+  final RxString logoWhiteUrl = ''.obs;
 
   final RxBool hasThemeData = false.obs;
 
   LinearGradient get splashGradient {
-    final endColor = secondaryColor.value;
+    final endColor = primaryColor.value;
     final midColor = Color.lerp(const Color(0xFFFDFEFA), endColor, 0.35)!;
     return LinearGradient(
       begin: Alignment.topCenter,
@@ -48,7 +58,12 @@ class AppThemeService extends GetxService {
     final secondaryHex =
         await WebsiteSettingsStorageService.getSecondaryColor();
     final font = await WebsiteSettingsStorageService.getFontPrimary();
-    final logo = await WebsiteSettingsStorageService.getLogoUrl();
+    final blackLogo = await WebsiteSettingsStorageService.getLogoBlackUrl();
+    final whiteLogo = await WebsiteSettingsStorageService.getLogoWhiteUrl();
+    final genericLogo = await WebsiteSettingsStorageService.getLogoUrl();
+    // Prefer the white logo (home/drawer background reads dark) — fall
+    // back to the generic logo_url for stores that only sent that field.
+    final logo = whiteLogo ?? genericLogo;
 
     // Swapped: the website settings' "primary" reads as this app's
     // secondary, and its "secondary" reads as this app's primary.
@@ -60,6 +75,15 @@ class AppThemeService extends GetxService {
 
     if (font != null && font.trim().isNotEmpty) fontFamily.value = font.trim();
     if (logo != null && logo.trim().isNotEmpty) logoUrl.value = logo.trim();
+
+    final resolvedBlack = (blackLogo != null && blackLogo.trim().isNotEmpty)
+        ? blackLogo.trim()
+        : (genericLogo != null && genericLogo.trim().isNotEmpty ? genericLogo.trim() : '');
+    final resolvedWhite = (whiteLogo != null && whiteLogo.trim().isNotEmpty)
+        ? whiteLogo.trim()
+        : (genericLogo != null && genericLogo.trim().isNotEmpty ? genericLogo.trim() : '');
+    logoBlackUrl.value = resolvedBlack;
+    logoWhiteUrl.value = resolvedWhite;
   }
 
   Future<void> refreshFromStorage() => _loadFromStorage();

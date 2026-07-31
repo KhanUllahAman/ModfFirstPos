@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'dart:math' hide log;
 
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/database/key_value_store.dart';
 import 'package:modfirstpos/core/utils/json_utils.dart';
 
 /// Shared config between the cashier tab (client) and the customer-facing
@@ -46,12 +48,20 @@ class CustomerDisplayItem {
 
 /// Runs on the customer-facing tab. Listens on [CustomerDisplayConfig.port]
 /// for the cashier tab to connect and push cart snapshots.
+///
+/// Requires a short pairing code (shown on this tab's pairing screen,
+/// typed into the cashier's Settings > Customer IP screen) so that any
+/// other device on the same WiFi can't silently connect and read/spoof
+/// the cart feed.
 class CustomerDisplayServerService extends GetxService {
+  static const _pairingCodeCacheKey = 'customer_display_pairing_code';
+
   HttpServer? _server;
   WebSocket? _activeSocket;
 
   final RxBool isRunning = false.obs;
   final RxBool hasClient = false.obs;
+  final RxString pairingCode = ''.obs;
 
   final RxList<CustomerDisplayItem> items = <CustomerDisplayItem>[].obs;
   final RxDouble subtotal = 0.0.obs;
@@ -63,31 +73,46 @@ class CustomerDisplayServerService extends GetxService {
   Future<void> start() async {
     if (_server != null) return;
     try {
+      pairingCode.value = await _getOrCreatePairingCode();
       _server = await HttpServer.bind(
         InternetAddress.anyIPv4,
         CustomerDisplayConfig.port,
       );
       isRunning.value = true;
       _server!.listen((request) async {
-        if (WebSocketTransformer.isUpgradeRequest(request)) {
-          final socket = await WebSocketTransformer.upgrade(request);
-          _activeSocket = socket;
-          hasClient.value = true;
-          socket.listen(
-            _handleMessage,
-            onDone: () => hasClient.value = false,
-            onError: (_) => hasClient.value = false,
-            cancelOnError: true,
-          );
-        } else {
+        final code = request.uri.queryParameters['code'];
+        if (!WebSocketTransformer.isUpgradeRequest(request) ||
+            code != pairingCode.value) {
           request.response.statusCode = HttpStatus.forbidden;
           await request.response.close();
+          return;
         }
+        final socket = await WebSocketTransformer.upgrade(request);
+        _activeSocket = socket;
+        hasClient.value = true;
+        socket.listen(
+          _handleMessage,
+          onDone: () => hasClient.value = false,
+          onError: (_) => hasClient.value = false,
+          cancelOnError: true,
+        );
       });
     } catch (e) {
       log('CustomerDisplayServerService start error: $e');
       isRunning.value = false;
     }
+  }
+
+  /// A stable 6-digit code, generated once and reused across restarts (so
+  /// the cashier doesn't have to re-pair every time the customer tab
+  /// reopens) — shown on the pairing screen, not treated as a long-term
+  /// secret, just enough to stop casual same-WiFi drive-bys.
+  Future<String> _getOrCreatePairingCode() async {
+    final cached = await KeyValueStore.getString(_pairingCodeCacheKey);
+    if (cached != null && cached.isNotEmpty) return cached;
+    final code = (100000 + Random.secure().nextInt(900000)).toString();
+    await KeyValueStore.setString(_pairingCodeCacheKey, code);
+    return code;
   }
 
   void _handleMessage(dynamic data) {
@@ -152,7 +177,7 @@ class CustomerDisplayClientService extends GetxService {
 
   final RxBool isConnected = false.obs;
 
-  Future<void> connect(String ip) async {
+  Future<void> connect(String ip, {String? pairingCode}) async {
     final target = ip.trim();
     if (target.isEmpty) return;
     if (_targetIp == target && isConnected.value) return;
@@ -160,9 +185,10 @@ class CustomerDisplayClientService extends GetxService {
     await disconnect();
     _targetIp = target;
     try {
-      _socket = await WebSocket.connect(
-        'ws://$target:${CustomerDisplayConfig.port}',
-      ).timeout(const Duration(seconds: 4));
+      final code = (pairingCode ?? '').trim();
+      final uri = 'ws://$target:${CustomerDisplayConfig.port}'
+          '${code.isNotEmpty ? '?code=$code' : ''}';
+      _socket = await WebSocket.connect(uri).timeout(const Duration(seconds: 4));
       isConnected.value = true;
       _socket!.listen(
         (_) {},

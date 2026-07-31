@@ -36,10 +36,11 @@ class SplashScreen extends GetView<SplashController> {
                           child: controller.theme.hasThemeData.value
                               ? DynamicAppLogo(
                                   height: context.responsiveHeight(0.18),
+                                  variant: LogoVariant.black,
                                 )
                               : SvgPicture.asset(
                                   ImagesConstant.mJafferjeesLogo,
-                                  color: Colors.white,
+                                  color: Colors.black,
                                   height: context.responsiveHeight(0.18),
                                 ),
                         ),

@@ -12,6 +12,7 @@ import 'package:modfirstpos/core/services/thermal_printer_service.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/core/storage/stripe_terminal_settings_storage.dart';
 import 'package:modfirstpos/core/utils/client_reference_generator.dart';
+import 'package:modfirstpos/core/utils/json_utils.dart';
 import 'package:modfirstpos/modules/bootstrap/controller/bootstrap_controller.dart';
 import 'package:modfirstpos/modules/bootstrap/model/bootstrap_model.dart';
 import 'package:modfirstpos/modules/checkout/service/checkout_service.dart';
@@ -24,8 +25,7 @@ import 'package:modfirstpos/modules/setting/storage/pos_device_cache_storage.dar
 import 'package:modfirstpos/modules/shift/controller/shift_controller.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
-/// Payment methods that skip the online order-create + checkout APIs
-/// entirely and go straight to the local offline queue (orders/pos/sync).
+
 const _offlinePaymentMethods = {'cash', 'bank_transfer', 'without_payment'};
 
 class CheckoutController extends GetxController {
@@ -56,6 +56,12 @@ class CheckoutController extends GetxController {
   final RxString paymentMethod = 'without_payment'.obs;
   final RxDouble customOnlineAmount = 0.0.obs;
   final RxDouble customCashAmount = 0.0.obs;
+
+  /// Manual/staff discount applied by the cashier — `{type: 'percentage' |
+  /// 'fixed_amount', value: <num>, reason: <String?>}`. Sent as-is to the
+  /// backend (`manual_discount`) for the online path, and folded into the
+  /// local total for the offline path.
+  final Rxn<Map<String, dynamic>> manualDiscount = Rxn<Map<String, dynamic>>();
 
   /// Live status text shown while a Stripe Terminal payment is in flight
   /// (connecting reader / waiting for card / capturing), so the "Confirm &
@@ -158,7 +164,42 @@ class CheckoutController extends GetxController {
     customOnlineAmount.value = 0.0;
     customCashAmount.value = 0.0;
     splitCashInput.value = '';
+    manualDiscount.value = null;
   }
+
+  /// Applies a manual/staff discount for the order being checked out.
+  /// [type] is `'percentage'` or `'fixed_amount'`.
+  void applyManualDiscount({
+    required String type,
+    required double value,
+    String? reason,
+  }) {
+    manualDiscount.value = {
+      'type': type,
+      'value': value,
+      if (reason != null && reason.isNotEmpty) 'reason': reason,
+    };
+  }
+
+  void removeManualDiscount() => manualDiscount.value = null;
+
+  double get manualDiscountAmount {
+    final discount = manualDiscount.value;
+    if (discount == null || createdOrder.value == null) return 0.0;
+    final value = JsonUtils.asDouble(discount['value']);
+    if (discount['type'] == 'percentage') {
+      return createdOrder.value!.subtotal * value / 100;
+    }
+    return value;
+  }
+
+  double get totalDiscount => couponDiscount + manualDiscountAmount;
+
+  /// Backend only accepts `manual_discount` on the offline `orders/pos/sync`
+  /// path right now — Stripe Terminal / split payment methods go through
+  /// the online `orders/create` API, which rejects the field.
+  bool get manualDiscountAppliesToCurrentMethod =>
+      _offlinePaymentMethods.contains(paymentMethod.value);
 
   Future<void> startCheckoutFlow(int userId) async {
     resetCheckoutState();
@@ -458,10 +499,14 @@ class CheckoutController extends GetxController {
 
   double get payableAmount {
     if (createdOrder.value == null) return 0.0;
-    if (couponValidation.value != null) {
-      return couponValidation.value!.finalAmount;
-    }
-    return createdOrder.value!.totalAmount;
+    final base = couponValidation.value != null
+        ? couponValidation.value!.finalAmount
+        : createdOrder.value!.totalAmount;
+    // Only reflect the manual discount when it will actually be honored —
+    // the backend currently only accepts it on the offline sync path.
+    if (!manualDiscountAppliesToCurrentMethod) return base;
+    final afterManualDiscount = base - manualDiscountAmount;
+    return afterManualDiscount > 0 ? afterManualDiscount : 0.0;
   }
 
   double get couponDiscount {
@@ -536,6 +581,7 @@ class CheckoutController extends GetxController {
           'shift_client_reference': shift.shiftCode.startsWith('PENDING-')
               ? shift.shiftCode.substring('PENDING-'.length)
               : null,
+        if (manualDiscount.value != null) 'manual_discount': manualDiscount.value,
       };
 
       final grandTotal = payableAmount;
@@ -543,7 +589,7 @@ class CheckoutController extends GetxController {
         'grand_total': grandTotal,
         'subtotal': createdOrder.value!.subtotal,
         'tax': createdOrder.value!.taxAmount,
-        'discount': couponDiscount,
+        'discount': totalDiscount,
         'customer_name': customer.fullName,
         'customer_phone': customer.phone,
         'customer_email': customer.email,
@@ -555,6 +601,21 @@ class CheckoutController extends GetxController {
         shiftClientReference: syncPayload['shift_client_reference'] as String?,
         orderJson: {'sync': syncPayload, 'local': localPayload},
       );
+
+      // Reflect the sale in the cached stock immediately — otherwise a
+      // second offline sale on this device (before the next sync) would
+      // still see the pre-sale quantity and could oversell.
+      for (final item in _pendingItemsPayload) {
+        final productId = JsonUtils.asIntOrNull(item['product_id']);
+        if (productId == null) continue;
+        unawaited(
+          _bootstrapController.decrementStockLocally(
+            productId: productId,
+            variantId: JsonUtils.asIntOrNull(item['variant_id']),
+            quantitySold: JsonUtils.asInt(item['quantity'], fallback: 1),
+          ),
+        );
+      }
 
       customSnackBar(
         'Sale Complete',
@@ -604,7 +665,7 @@ class CheckoutController extends GetxController {
         receiptId: receiptId,
         customer: customer,
         subtotal: createdOrder.value?.subtotal ?? 0,
-        discount: couponDiscount,
+        discount: totalDiscount,
         tax: createdOrder.value?.taxAmount ?? 0,
         grandTotal: grandTotal,
         deliveryInfo: deliveryType.value == 'store_pickup'
@@ -679,6 +740,10 @@ class CheckoutController extends GetxController {
         pickupLocationId: _pendingPickupLocationId,
         items: _pendingItemsPayload,
         notes: notes.isEmpty ? 'POS Checkout order' : notes,
+        // Backend's orders/create endpoint rejects `manual_discount` as an
+        // unrecognized key (validated 2026-07-31) — only the offline
+        // orders/pos/sync path accepts it for now. Skipped here until the
+        // backend adds support for the online create-order endpoint.
       );
 
       if (!createResponse.isSuccess || createResponse.order == null) {

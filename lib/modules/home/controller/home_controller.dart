@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/modules/bootstrap/controller/bootstrap_controller.dart';
 import 'package:modfirstpos/core/services/customer_display_service.dart';
+import 'package:modfirstpos/core/storage/customer_display_settings_storage.dart';
 import 'package:modfirstpos/modules/setting/storage/pos_device_cache_storage.dart';
 import 'package:modfirstpos/modules/category/model/category_model.dart';
 import 'package:modfirstpos/modules/product/model/product_model.dart';
@@ -75,7 +76,8 @@ class HomeController extends GetxController {
     final device = await PosDeviceCacheStorage.getDevice();
     final ip = device?.customerIp;
     if (ip != null && ip.trim().isNotEmpty) {
-      await _customerDisplay.connect(ip);
+      final code = await CustomerDisplaySettingsStorage.getPairingCode();
+      await _customerDisplay.connect(ip, pairingCode: code);
     }
   }
 
@@ -147,6 +149,113 @@ class HomeController extends GetxController {
     return categoryProducts
         .where((p) => p.displayName.toLowerCase().contains(query))
         .toList();
+  }
+
+  /// Handles the "Scan Product" field — a barcode-gun input or manual
+  /// search that resolves across categories, products, and variants, and
+  /// adds straight to the cart when there's an unambiguous match.
+  void submitScan() {
+    final query = scanController.text.trim();
+    if (query.isEmpty) return;
+    final lower = query.toLowerCase();
+    final allProducts = _bootstrapController.allProducts;
+
+    // 1. Exact variant SKU/barcode match — most specific, adds directly.
+    for (final product in allProducts) {
+      final variant = product.variants.firstWhereOrNull(
+        (v) => v.sku != null && v.sku!.toLowerCase() == lower,
+      );
+      if (variant != null) {
+        _focusProductInCatalogue(product);
+        addToCartFromProduct(product, variant: variant);
+        scanController.clear();
+        return;
+      }
+    }
+
+    // 2. Exact product SKU match.
+    final skuMatch = allProducts.firstWhereOrNull(
+      (p) => p.sku != null && p.sku!.toLowerCase() == lower,
+    );
+    if (skuMatch != null) {
+      _focusProductInCatalogue(skuMatch);
+      onProductTap(skuMatch);
+      scanController.clear();
+      return;
+    }
+
+    // 3. Exact product name match.
+    final nameMatches = allProducts
+        .where((p) => p.displayName.toLowerCase() == lower)
+        .toList();
+    if (nameMatches.length == 1) {
+      _focusProductInCatalogue(nameMatches.first);
+      onProductTap(nameMatches.first);
+      scanController.clear();
+      return;
+    }
+
+    // 4. Exact category name match — jump straight into that category.
+    final categoryMatch = categories.firstWhereOrNull(
+      (c) => c.displayName.toLowerCase() == lower,
+    );
+    if (categoryMatch != null) {
+      onCategoryTap(categoryMatch);
+      scanController.clear();
+      return;
+    }
+
+    // 5. Fallback: partial match across category/product/variant name & SKU
+    // — shown as a filtered product list rather than guessed at.
+    final matches = allProducts.where((p) {
+      if (p.displayName.toLowerCase().contains(lower)) return true;
+      if (p.sku != null && p.sku!.toLowerCase().contains(lower)) return true;
+      final category =
+          categories.firstWhereOrNull((c) => c.id == p.categoryId);
+      if (category != null &&
+          category.displayName.toLowerCase().contains(lower)) {
+        return true;
+      }
+      return p.variants
+          .any((v) => v.sku != null && v.sku!.toLowerCase().contains(lower));
+    }).toList();
+
+    if (matches.isEmpty) {
+      customSnackBar(
+        'Scan',
+        'No product found for "$query"',
+        snackBarType: SnackBarType.warning,
+      );
+      return;
+    }
+
+    if (matches.length == 1) {
+      _focusProductInCatalogue(matches.first);
+      onProductTap(matches.first);
+      scanController.clear();
+      return;
+    }
+
+    selectedCategory.value = null;
+    selectedProduct.value = null;
+    categoryProducts.assignAll(matches);
+    productSearchController.text = query;
+    productSearchQuery.value = query;
+  }
+
+  /// Puts [product]'s category in view (so the catalogue panel shows where
+  /// it came from) before adding/selecting it.
+  void _focusProductInCatalogue(ProductModel product) {
+    final category =
+        categories.firstWhereOrNull((c) => c.id == product.categoryId);
+    selectedCategory.value = category;
+    categoryProducts.assignAll(
+      product.categoryId != null
+          ? _bootstrapController.productsForCategory(product.categoryId!)
+          : [product],
+    );
+    productSearchController.clear();
+    productSearchQuery.value = '';
   }
 
   void onCategorySearchChanged(String val) => categorySearchQuery.value = val;

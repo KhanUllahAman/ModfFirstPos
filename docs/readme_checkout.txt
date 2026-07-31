@@ -1,1 +1,0 @@
-flutter build apk --release --flavor cashier -t lib/main_cashier.dart

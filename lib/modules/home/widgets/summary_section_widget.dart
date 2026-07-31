@@ -21,23 +21,6 @@ class SummarySection extends StatelessWidget {
         children: [
           Expanded(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _SummaryRow(
-                  'Discount:',
-                  CurrencyUtils.format(controller.discount, decimals: 2),
-                ),
-                _SummaryRow('GST:', CurrencyUtils.format(0)),
-                _SummaryRow('C.Voucher:', CurrencyUtils.format(0)),
-                _SummaryRow('G.Voucher:', CurrencyUtils.format(0)),
-                _SummaryRow('Service:', CurrencyUtils.format(0)),
-              ],
-            ),
-          ),
-          SizedBox(width: context.responsiveWidth(0.03)),
-          Expanded(
-            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _SummaryRow(

@@ -1,13 +1,36 @@
 import 'dart:developer';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:modfirstpos/core/connectivity/connectivity_service.dart';
 import 'package:modfirstpos/core/network/api_endpoints.dart';
 import 'package:modfirstpos/core/network/api_interceptor.dart';
 import 'package:modfirstpos/core/network/app_config_apikey.dart';
+import 'package:modfirstpos/core/network/cert_pinning.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import '../exceptions/app_exceptions.dart';
 import '../exceptions/exception_handler.dart';
+
+/// Debug-only logging — never prints in release/profile builds, so tokens
+/// and API keys can't end up in a shipped app's logcat.
+void _log(String message) {
+  if (kDebugMode) log(message);
+}
+
+/// Headers containing credentials, with secrets masked — safe to log even
+/// in debug (screenshots/screen recordings/log aggregators can still leak
+/// a full token otherwise).
+Map<String, dynamic> _redactedHeaders(Map<String, dynamic> headers) {
+  const sensitiveKeys = {'authorization', 'x-api-key', 'x-api-password'};
+  return headers.map((key, value) {
+    if (sensitiveKeys.contains(key.toLowerCase()) && value is String && value.isNotEmpty) {
+      final visible = value.length > 10 ? value.substring(0, 10) : value;
+      return MapEntry(key, '$visible...(redacted)');
+    }
+    return MapEntry(key, value);
+  });
+}
 
 class NetworkClient {
   late Dio _dio;
@@ -27,6 +50,17 @@ class NetworkClient {
     );
 
     _dio.interceptors.add(ApiInterceptor());
+
+    // Certificate pinning: reject any connection to our API host whose
+    // certificate's public key isn't in the pinned set, even if the OS
+    // trust store considers it valid (defends against a rogue/compelled CA
+    // or a MITM proxy with an installed trusted root). See cert_pinning.dart
+    // for the pinned values and how to update them when the cert rotates.
+    (_dio.httpClientAdapter as IOHttpClientAdapter).validateCertificate =
+        (cert, host, port) {
+      if (cert == null) return false;
+      return validatePinnedCertificate(cert, host, port);
+    };
   }
 
   Future<Response> postFormData({
@@ -46,10 +80,10 @@ class NetworkClient {
         data: formData,
         options: options,
       );
-      log("POST FormData Response [$endpoint]: $response");
+      _log("POST FormData Response [$endpoint]: $response");
       return response;
     } catch (e) {
-      log("POST FormData Error [$endpoint]: $e");
+      _log("POST FormData Error [$endpoint]: $e");
       throw ExceptionHandler.handleError(e, showSnackbar: showErrorSnackbar);
     }
   }
@@ -67,10 +101,10 @@ class NetworkClient {
         headers: await _buildHeaders(headers, isLoginRequest: isLoginRequest),
       );
       final response = await _dio.post(endpoint, data: body, options: options);
-      log("POST Response [$endpoint]: $response");
+      _log("POST Response [$endpoint]: $response");
       return response;
     } catch (e) {
-      log("POST Error [$endpoint]: $e");
+      _log("POST Error [$endpoint]: $e");
       throw ExceptionHandler.handleError(e, showSnackbar: showErrorSnackbar);
     }
   }
@@ -91,10 +125,10 @@ class NetworkClient {
         queryParameters: queryParameters,
         options: options,
       );
-      log("PATCH Response [$endpoint]: $response");
+      _log("PATCH Response [$endpoint]: $response");
       return response;
     } catch (e) {
-      log("PATCH Error [$endpoint]: $e");
+      _log("PATCH Error [$endpoint]: $e");
       throw ExceptionHandler.handleError(e, showSnackbar: showErrorSnackbar);
     }
   }
@@ -115,10 +149,10 @@ class NetworkClient {
         queryParameters: queryParameters,
         options: options,
       );
-      log("GET Response [$endpoint]: $response");
+      _log("GET Response [$endpoint]: $response");
       return response;
     } catch (e) {
-      log("GET Error [$endpoint]: $e");
+      _log("GET Error [$endpoint]: $e");
       throw ExceptionHandler.handleError(e, showSnackbar: showErrorSnackbar);
     }
   }
@@ -133,10 +167,10 @@ class NetworkClient {
       if (!_connectivityService.isConnected) throw NoInternetException();
       final options = Options(headers: await _buildHeaders(headers));
       final response = await _dio.put(endpoint, data: body, options: options);
-      log("PUT Response [$endpoint]: $response");
+      _log("PUT Response [$endpoint]: $response");
       return response;
     } catch (e) {
-      log("PUT Error [$endpoint]: $e");
+      _log("PUT Error [$endpoint]: $e");
       throw ExceptionHandler.handleError(e, showSnackbar: showErrorSnackbar);
     }
   }
@@ -160,10 +194,10 @@ class NetworkClient {
         data: body,
         options: options,
       );
-      log("POST Bytes Response [$endpoint]: ${response.statusCode}");
+      _log("POST Bytes Response [$endpoint]: ${response.statusCode}");
       return response;
     } catch (e) {
-      log("POST Bytes Error [$endpoint]: $e");
+      _log("POST Bytes Error [$endpoint]: $e");
       throw ExceptionHandler.handleError(e, showSnackbar: showErrorSnackbar);
     }
   }
@@ -182,10 +216,10 @@ class NetworkClient {
         data: body,
         options: options,
       );
-      log("DELETE Response [$endpoint]: $response");
+      _log("DELETE Response [$endpoint]: $response");
       return response;
     } catch (e) {
-      log("DELETE Error [$endpoint]: $e");
+      _log("DELETE Error [$endpoint]: $e");
       throw ExceptionHandler.handleError(e, showSnackbar: showErrorSnackbar);
     }
   }
@@ -210,7 +244,7 @@ class NetworkClient {
       headers.addAll(customHeaders);
     }
 
-    log("Built headers: $headers");
+    _log("Built headers: ${_redactedHeaders(headers)}");
     return headers;
   }
 }

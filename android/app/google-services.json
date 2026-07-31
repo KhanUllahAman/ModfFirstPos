@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "561678695795",
+    "project_id": "modfirstpos-b910e",
+    "storage_bucket": "modfirstpos-b910e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:561678695795:android:17c51811eae78707d95906",
+        "android_client_info": {
+          "package_name": "com.app.modfirstpos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBUOfh222tIajIdouTyscGWiO4tezICLE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:561678695795:android:7e52099adca70d94d95906",
+        "android_client_info": {
+          "package_name": "com.app.modfirstpos.customer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBUOfh222tIajIdouTyscGWiO4tezICLE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

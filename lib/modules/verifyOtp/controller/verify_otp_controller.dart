@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/exceptions/app_exceptions.dart';
+import 'package:modfirstpos/core/services/push_notification_service.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/modules/auth/service/send_otp_service.dart';
 import 'package:modfirstpos/modules/profile/service/get_profile_service.dart';
@@ -80,9 +81,14 @@ class VerifyOtpController extends GetxController {
 
     CustomLoadingDialog.show();
     try {
+      String? fcmToken;
+      if (Get.isRegistered<PushNotificationService>()) {
+        fcmToken = await Get.find<PushNotificationService>().getToken();
+      }
       final response = await _verifyOtpService.verifyOtp(
         email: email.value,
         otp: otp,
+        fcmToken: fcmToken,
       );
       CustomLoadingDialog.hide();
 

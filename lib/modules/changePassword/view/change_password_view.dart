@@ -98,7 +98,7 @@ class ChangePasswordView extends GetView<ChangePasswordController> {
                     SizedBox(height: context.spacingXL),
                     Obx(
                       () => AppButton(
-                        backgroundColor: theme.secondaryColor.value,
+                        backgroundColor: theme.primaryColor.value,
                         onPressed: controller.isLoading.value
                             ? () {}
                             : controller.changePassword,
@@ -111,7 +111,7 @@ class ChangePasswordView extends GetView<ChangePasswordController> {
                           style: AppFonts.geistMono(
                             fontSize: context.fontSM,
                             fontWeight: FontWeight.w500,
-                            color: theme.onSecondaryColor,
+                            color: theme.onPrimaryColor,
                             letterSpacing: 0.5,
                           ),
                         ),

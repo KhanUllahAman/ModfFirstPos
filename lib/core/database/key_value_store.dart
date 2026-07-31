@@ -3,7 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:modfirstpos/core/database/app_database.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 
 /// SQLite-backed key/value store for cached API responses and non-secret
 /// configuration. Transparently migrates values previously kept in Flutter

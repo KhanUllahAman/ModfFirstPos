@@ -2,6 +2,36 @@ import 'package:modfirstpos/core/models/pagination_model.dart';
 import 'package:modfirstpos/core/utils/json_utils.dart';
 import 'package:modfirstpos/core/utils/url_utils.dart';
 
+class CustomerDiscountTierModel {
+  final int? id;
+  final String? name;
+  final String? discountType;
+  final String? discountValue;
+
+  CustomerDiscountTierModel({
+    this.id,
+    this.name,
+    this.discountType,
+    this.discountValue,
+  });
+
+  factory CustomerDiscountTierModel.fromJson(Map<String, dynamic> json) {
+    return CustomerDiscountTierModel(
+      id: JsonUtils.asIntOrNull(json['id']),
+      name: JsonUtils.asStringOrNull(json['name']),
+      discountType: JsonUtils.asStringOrNull(json['discount_type']),
+      discountValue: JsonUtils.asStringOrNull(json['discount_value']),
+    );
+  }
+
+  String get label {
+    if (discountType == 'percentage' && discountValue != null) {
+      return '${name ?? 'Discount Tier'} (${discountValue}%)';
+    }
+    return name ?? 'Discount Tier';
+  }
+}
+
 class CustomerModel {
   final int id;
   final String? fullName;
@@ -16,6 +46,8 @@ class CustomerModel {
   final String? createdAt;
   final String? updatedAt;
   final bool emailVerified;
+  final String? accountType;
+  final CustomerDiscountTierModel? discountTier;
 
   /// True when the customer was created on this device and has not been
   /// pushed to the backend yet (offline-first support).
@@ -36,6 +68,8 @@ class CustomerModel {
     this.updatedAt,
     this.emailVerified = false,
     this.isLocalOnly = false,
+    this.accountType,
+    this.discountTier,
   });
 
   factory CustomerModel.fromJson(Map<String, dynamic> json) {
@@ -46,10 +80,11 @@ class CustomerModel {
       phone: JsonUtils.asStringOrNull(json['phone']),
       address: JsonUtils.asStringOrNull(json['address']),
       role: JsonUtils.asStringOrNull(json['role']),
-      image: UrlUtils.resolveImageUrl(
-        JsonUtils.asStringOrNull(json['image']),
-        baseHost: 'http://13.62.114.94:3000',
-      ),
+      // Matches ProfileModel/ReceiptCompanyModel's URL resolution — the old
+      // hardcoded 13.62.114.94 media host was stale and broke any customer
+      // whose `image` was a relative upload path (not a full URL or the
+      // `default-user.png` sentinel).
+      image: UrlUtils.resolveImageUrl(JsonUtils.asStringOrNull(json['image'])),
       isActive: JsonUtils.asBool(json['is_active'], fallback: true),
       isLocked: JsonUtils.asBool(json['is_locked']),
       lastLoginDate: JsonUtils.asStringOrNull(json['last_login_date']),
@@ -57,6 +92,11 @@ class CustomerModel {
       updatedAt: JsonUtils.asStringOrNull(json['updated_at']),
       emailVerified: JsonUtils.asBool(json['email_verified']),
       isLocalOnly: JsonUtils.asBool(json['is_local_only']),
+      accountType: JsonUtils.asStringOrNull(json['account_type']),
+      discountTier: JsonUtils.asMapOrNull(json['discountTier']) != null
+          ? CustomerDiscountTierModel.fromJson(
+              JsonUtils.asMap(json['discountTier']))
+          : null,
     );
   }
 
@@ -76,6 +116,14 @@ class CustomerModel {
       'updated_at': updatedAt,
       'email_verified': emailVerified,
       'is_local_only': isLocalOnly,
+      'account_type': accountType,
+      if (discountTier != null)
+        'discountTier': {
+          'id': discountTier!.id,
+          'name': discountTier!.name,
+          'discount_type': discountTier!.discountType,
+          'discount_value': discountTier!.discountValue,
+        },
     };
   }
 
@@ -97,6 +145,8 @@ class CustomerModel {
       image: image,
       isActive: isActive,
       isLocked: isLocked,
+      accountType: accountType,
+      discountTier: discountTier,
       lastLoginDate: lastLoginDate,
       createdAt: createdAt,
       updatedAt: updatedAt,

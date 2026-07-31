@@ -312,11 +312,13 @@ class OrderController extends GetxController {
     }
   }
 
-  Future<void> printReceipt(int? orderId) async {
-    if (orderId == null || isPrintingReceipt.value) return;
+  /// Builds and prints the receipt entirely from [order] (already on
+  /// screen) — no API call, works offline for any order.
+  Future<void> printReceipt(OrderModel order) async {
+    if (isPrintingReceipt.value) return;
     isPrintingReceipt.value = true;
     try {
-      await PrintReceiptHelper.printOrderReceipt(orderId);
+      await PrintReceiptHelper.printOrderReceiptLocally(order);
     } finally {
       isPrintingReceipt.value = false;
     }

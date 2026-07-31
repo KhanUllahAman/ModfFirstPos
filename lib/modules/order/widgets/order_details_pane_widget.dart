@@ -518,12 +518,32 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
               'Shipping Fee',
               '\$${shipping.toStringAsFixed(2)}',
             ),
-            if (discount > 0)
-              _buildPricingRow(
-                'Discount (${order.discountSource?.replaceAll('_', ' ') ?? 'coupon'})',
-                '-\$${discount.toStringAsFixed(2)}',
-                valueColor: ColorResources.gradientRed,
-              ),
+            if (discount > 0) ...[
+              if (order.discountBreakdown?.auto.applied == true)
+                for (final line in order.discountBreakdown!.auto.lines)
+                  _buildPricingRow(
+                    line.label ?? line.source?.replaceAll('_', ' ') ?? 'Discount',
+                    '-\$${line.amount.toStringAsFixed(2)}',
+                    valueColor: ColorResources.gradientRed,
+                  )
+              else if (order.discountBreakdown == null)
+                _buildPricingRow(
+                  order.discountLabel ??
+                      order.discountSource?.replaceAll('_', ' ') ??
+                      'Discount',
+                  '-\$${discount.toStringAsFixed(2)}',
+                  valueColor: ColorResources.gradientRed,
+                ),
+              if (order.discountBreakdown?.manual.applied == true)
+                _buildPricingRow(
+                  order.discountBreakdown!.manual.reason != null &&
+                          order.discountBreakdown!.manual.reason!.isNotEmpty
+                      ? 'Staff Discount (${order.discountBreakdown!.manual.reason})'
+                      : 'Staff Discount',
+                  '-\$${order.discountBreakdown!.manual.amount.toStringAsFixed(2)}',
+                  valueColor: ColorResources.gradientRed,
+                ),
+            ],
             _buildPricingRow('Tax Amount', '\$${tax.toStringAsFixed(2)}'),
             const Divider(),
             _buildPricingRow(
@@ -597,7 +617,7 @@ class OrderDetailsPaneWidget extends GetView<OrderController> {
               OutlinedButton.icon(
                 onPressed: controller.isPrintingReceipt.value
                     ? null
-                    : () => controller.printReceipt(order.id),
+                    : () => controller.printReceipt(order),
                 icon: controller.isPrintingReceipt.value
                     ? const SizedBox(
                         width: 16,

@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:modfirstpos/core/connectivity/connectivity_service.dart';
 import 'package:modfirstpos/core/network/network_client.dart';
 import 'package:modfirstpos/core/services/customer_display_service.dart';
+import 'package:modfirstpos/core/services/push_notification_service.dart';
 import 'package:modfirstpos/core/services/stripe_terminal_service.dart';
 import 'package:modfirstpos/core/services/sync_service.dart';
 import 'package:modfirstpos/modules/pin/controller/pin_controller.dart';
@@ -15,6 +16,13 @@ class InitialBinding extends Bindings {
     Get.put<NetworkClient>(NetworkClient(), permanent: true);
 
     Get.put<SyncService>(SyncService(), permanent: true);
+
+    // Needs ConnectivityService/NetworkClient above — fire-and-forget is
+    // fine, everything that reads it later guards with Get.isRegistered.
+    Get.putAsync<PushNotificationService>(
+      () => PushNotificationService().init(),
+      permanent: true,
+    );
 
     Get.put<CustomerDisplayClientService>(
       CustomerDisplayClientService(),

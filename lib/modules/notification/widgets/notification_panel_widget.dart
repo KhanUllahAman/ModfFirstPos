@@ -125,7 +125,7 @@ class NotificationPanelWidget extends GetView<NotificationController> {
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
-                onPressed: () => controller.loadStaticNotifications(),
+                onPressed: () => controller.loadNotifications(),
                 icon: const Icon(Icons.refresh_rounded, size: 18),
                 label: Text(
                   'Reload Notifications',

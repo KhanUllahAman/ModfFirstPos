@@ -249,6 +249,20 @@ class SettingView extends GetView<SettingController> {
                                           ),
                                           SizedBox(height: context.spacingMD),
                                           CustomTextFormField(
+                                            controller: controller
+                                                .customerPairingCodeController,
+                                            labelText: 'Customer Pairing Code',
+                                            hintText:
+                                                '6-digit code shown on the customer-facing tab',
+                                            keyboardType: TextInputType.number,
+                                            borderRadius: 12,
+                                            customFocusedBorderColor:
+                                                theme.secondaryColor.value,
+                                            customEnabledBorderColor:
+                                                ColorResources.cardBorderColor,
+                                          ),
+                                          SizedBox(height: context.spacingMD),
+                                          CustomTextFormField(
                                             controller:
                                                 controller.locationController,
                                             labelText: 'Location',

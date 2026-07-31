@@ -96,7 +96,7 @@ class SetPinController extends GetxController {
         return;
       }
 
-      await SecureStorageService.savePinHash(PinHashUtil.hash(firstPin.value));
+      await SecureStorageService.savePinHash(await PinHashUtil.hash(firstPin.value));
       await Get.find<PinController>().fetchPinStatus();
       Get.back();
       customSnackBar(

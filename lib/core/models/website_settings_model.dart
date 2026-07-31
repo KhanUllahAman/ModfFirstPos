@@ -6,6 +6,8 @@ class WebsiteSettingsModel {
   final String? siteTagline;
   final String? siteDescription;
   final String? logoUrl;
+  final String? logoWhiteUrl;
+  final String? logoBlackUrl;
   final String? faviconUrl;
   final String? footerLogoUrl;
   final String? primaryColor;
@@ -61,6 +63,8 @@ class WebsiteSettingsModel {
     this.siteTagline,
     this.siteDescription,
     this.logoUrl,
+    this.logoWhiteUrl,
+    this.logoBlackUrl,
     this.faviconUrl,
     this.footerLogoUrl,
     this.primaryColor,
@@ -118,6 +122,8 @@ class WebsiteSettingsModel {
       siteTagline: JsonUtils.asStringOrNull(json['site_tagline']),
       siteDescription: JsonUtils.asStringOrNull(json['site_description']),
       logoUrl: JsonUtils.asStringOrNull(json['logo_url']),
+      logoWhiteUrl: JsonUtils.asStringOrNull(json['logo_white_url']),
+      logoBlackUrl: JsonUtils.asStringOrNull(json['logo_black_url']),
       faviconUrl: JsonUtils.asStringOrNull(json['favicon_url']),
       footerLogoUrl: JsonUtils.asStringOrNull(json['footer_logo_url']),
       primaryColor: JsonUtils.asStringOrNull(json['primary_color']),
@@ -176,6 +182,8 @@ class WebsiteSettingsModel {
       'site_tagline': siteTagline,
       'site_description': siteDescription,
       'logo_url': logoUrl,
+      'logo_white_url': logoWhiteUrl,
+      'logo_black_url': logoBlackUrl,
       'favicon_url': faviconUrl,
       'footer_logo_url': footerLogoUrl,
       'primary_color': primaryColor,

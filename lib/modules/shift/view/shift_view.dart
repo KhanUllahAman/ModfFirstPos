@@ -321,22 +321,20 @@ class _ActiveShiftDetails extends StatelessWidget {
                 ],
               ),
               SizedBox(height: context.spacingSM),
-              // The server print-receipt API needs a real shift id.
-              if (shift.id > 0)
-                AppButton(
-                  backgroundColor: theme.primaryColor.value,
-                  isLoading: controller.isPrinting.value,
-                  borderRadius: 10,
-                  onPressed: controller.printReceipt,
-                  child: Text(
-                    'Print Shift Receipt',
-                    style: AppFonts.geistMono(
-                      color: theme.onPrimaryColor,
-                      fontWeight: FontWeight.w700,
-                      fontSize: context.fontXS,
-                    ),
+              AppButton(
+                backgroundColor: theme.primaryColor.value,
+                isLoading: controller.isPrinting.value,
+                borderRadius: 10,
+                onPressed: controller.printReceipt,
+                child: Text(
+                  'Print Shift Receipt',
+                  style: AppFonts.geistMono(
+                    color: theme.onPrimaryColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: context.fontXS,
                   ),
                 ),
+              ),
             ],
           ),
         ),

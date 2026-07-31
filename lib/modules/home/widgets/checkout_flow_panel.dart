@@ -6,6 +6,7 @@ import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/core/utils/currency_utils.dart';
 import 'package:modfirstpos/modules/checkout/controller/checkout_controller.dart';
+import 'package:modfirstpos/modules/checkout/widgets/manual_discount_dialog.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/sync_button_widget.dart';
@@ -84,7 +85,11 @@ class CheckoutFlowPanel extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, color: Colors.grey, size: 20),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: Colors.grey,
+                    size: 20,
+                  ),
                   onPressed: () {
                     homeController.showCheckoutPanel.value = false;
                   },
@@ -116,8 +121,7 @@ class CheckoutFlowPanel extends StatelessWidget {
                       // resizeToAvoidBottomInset: false).
                       padding: EdgeInsets.only(
                         right: 6.0,
-                        bottom:
-                            MediaQuery.of(context).viewInsets.bottom + 12,
+                        bottom: MediaQuery.of(context).viewInsets.bottom + 12,
                       ),
                       child: body,
                     ),
@@ -182,7 +186,9 @@ class CheckoutFlowPanel extends StatelessWidget {
                 : ColorResources.backgroundColor.withOpacity(0.4),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? theme.secondaryColor.value : ColorResources.cardBorderColor,
+              color: isSelected
+                  ? theme.secondaryColor.value
+                  : ColorResources.cardBorderColor,
               width: 1.5,
             ),
           ),
@@ -191,7 +197,9 @@ class CheckoutFlowPanel extends StatelessWidget {
               Icon(
                 icon,
                 size: 32,
-                color: isSelected ? theme.secondaryColor.value : ColorResources.labelColor.withOpacity(0.6),
+                color: isSelected
+                    ? theme.secondaryColor.value
+                    : ColorResources.labelColor.withOpacity(0.6),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -217,7 +225,11 @@ class CheckoutFlowPanel extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: Colors.grey,
+              ),
             ],
           ),
         ),
@@ -267,7 +279,11 @@ class CheckoutFlowPanel extends StatelessWidget {
                   onPressed: () {
                     checkoutController.showNewAddressForm.value = true;
                   },
-                  icon: Icon(Icons.add_location_alt_rounded, size: 14, color: theme.secondaryColor.value),
+                  icon: Icon(
+                    Icons.add_location_alt_rounded,
+                    size: 14,
+                    color: theme.secondaryColor.value,
+                  ),
                   label: Text(
                     'Add New',
                     style: AppFonts.geistMono(
@@ -276,7 +292,10 @@ class CheckoutFlowPanel extends StatelessWidget {
                       color: theme.secondaryColor.value,
                     ),
                   ),
-                  style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                  ),
                 ),
               ],
             ),
@@ -292,22 +311,38 @@ class CheckoutFlowPanel extends StatelessWidget {
             ),
             child: Column(
               children: [
-                const Icon(Icons.location_off_rounded, size: 32, color: Colors.grey),
+                const Icon(
+                  Icons.location_off_rounded,
+                  size: 32,
+                  color: Colors.grey,
+                ),
                 const SizedBox(height: 8),
                 Text(
                   'No saved addresses found.',
-                  style: AppFonts.geistMono(fontSize: 10, color: Colors.grey[600]),
+                  style: AppFonts.geistMono(
+                    fontSize: 10,
+                    color: Colors.grey[600],
+                  ),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
                   height: 38,
                   child: ElevatedButton(
-                    onPressed: () => checkoutController.showNewAddressForm.value = true,
+                    onPressed: () =>
+                        checkoutController.showNewAddressForm.value = true,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.secondaryColor.value,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                    child: Text('Create Address', style: AppFonts.geistMono(fontSize: 10, color: Colors.white)),
+                    child: Text(
+                      'Create Address',
+                      style: AppFonts.geistMono(
+                        fontSize: 10,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -329,11 +364,18 @@ class CheckoutFlowPanel extends StatelessWidget {
                 },
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: isSelected ? theme.secondaryColor.value.withOpacity(0.04) : Colors.transparent,
+                    color: isSelected
+                        ? theme.secondaryColor.value.withOpacity(0.04)
+                        : Colors.transparent,
                     border: Border.all(
-                      color: isSelected ? theme.secondaryColor.value : ColorResources.cardBorderColor,
+                      color: isSelected
+                          ? theme.secondaryColor.value
+                          : ColorResources.cardBorderColor,
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -369,14 +411,22 @@ class CheckoutFlowPanel extends StatelessWidget {
                                 if (addr.isDefault)
                                   Container(
                                     margin: const EdgeInsets.only(left: 4),
-                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 1,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: theme.primaryColor.value.withOpacity(0.2),
+                                      color: theme.primaryColor.value
+                                          .withOpacity(0.2),
                                       borderRadius: BorderRadius.circular(3),
                                     ),
                                     child: Text(
                                       'Default',
-                                      style: AppFonts.geistMono(fontSize: 7, fontWeight: FontWeight.bold, color: Colors.black87),
+                                      style: AppFonts.geistMono(
+                                        fontSize: 7,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                      ),
                                     ),
                                   ),
                               ],
@@ -384,7 +434,10 @@ class CheckoutFlowPanel extends StatelessWidget {
                             const SizedBox(height: 2),
                             Text(
                               addr.summaryLine,
-                              style: AppFonts.geistMono(fontSize: 9, color: Colors.grey[600]),
+                              style: AppFonts.geistMono(
+                                fontSize: 9,
+                                color: Colors.grey[600],
+                              ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -392,7 +445,10 @@ class CheckoutFlowPanel extends StatelessWidget {
                               const SizedBox(height: 2),
                               Text(
                                 'Phone: ${addr.phone}',
-                                style: AppFonts.geistMono(fontSize: 8, color: Colors.grey[500]),
+                                style: AppFonts.geistMono(
+                                  fontSize: 8,
+                                  color: Colors.grey[500],
+                                ),
                               ),
                             ],
                           ],
@@ -410,14 +466,14 @@ class CheckoutFlowPanel extends StatelessWidget {
         AppButton(
           onPressed: () => checkoutController.createOrder(homeController),
           isLoading: checkoutController.isLoading.value,
-          backgroundColor: theme.secondaryColor.value,
+          backgroundColor: theme.primaryColor.value,
           borderRadius: 8,
           child: Text(
             'Confirm Address & Create Order',
             style: AppFonts.geistMono(
               fontSize: 11,
               fontWeight: FontWeight.bold,
-              color: theme.onSecondaryColor,
+              color: theme.onPrimaryColor,
             ),
           ),
         ),
@@ -430,7 +486,6 @@ class CheckoutFlowPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         CustomTextFormField(
-        
           controller: checkoutController.fullNameController,
           labelText: 'Full Name *',
           hintText: 'Enter receiver name',
@@ -521,11 +576,16 @@ class CheckoutFlowPanel extends StatelessWidget {
                   checkoutController.showNewAddressForm.value = false;
                 },
                 style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   side: const BorderSide(color: ColorResources.cardBorderColor),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                child: Text('Cancel', style: AppFonts.geistMono(fontSize: 11, color: Colors.black)),
+                child: Text(
+                  'Cancel',
+                  style: AppFonts.geistMono(fontSize: 11, color: Colors.black),
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -556,7 +616,8 @@ class CheckoutFlowPanel extends StatelessWidget {
   Widget _buildPickupLocationStep(BuildContext context, AppThemeService theme) {
     final locationList = checkoutController.pickupLocations;
     // Track the selection inside the Obx build scope (see address step note).
-    final selectedPickupId = checkoutController.selectedPickupLocation.value?.id;
+    final selectedPickupId =
+        checkoutController.selectedPickupLocation.value?.id;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -594,7 +655,10 @@ class CheckoutFlowPanel extends StatelessWidget {
             child: Center(
               child: Text(
                 'No locations configured.',
-                style: AppFonts.geistMono(fontSize: 10, color: Colors.grey[600]),
+                style: AppFonts.geistMono(
+                  fontSize: 10,
+                  color: Colors.grey[600],
+                ),
               ),
             ),
           )
@@ -614,11 +678,18 @@ class CheckoutFlowPanel extends StatelessWidget {
                 },
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: isSelected ? theme.secondaryColor.value.withOpacity(0.04) : Colors.transparent,
+                    color: isSelected
+                        ? theme.secondaryColor.value.withOpacity(0.04)
+                        : Colors.transparent,
                     border: Border.all(
-                      color: isSelected ? theme.secondaryColor.value : ColorResources.cardBorderColor,
+                      color: isSelected
+                          ? theme.secondaryColor.value
+                          : ColorResources.cardBorderColor,
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -648,13 +719,19 @@ class CheckoutFlowPanel extends StatelessWidget {
                             const SizedBox(height: 2),
                             Text(
                               loc.address ?? '',
-                              style: AppFonts.geistMono(fontSize: 9, color: Colors.grey[600]),
+                              style: AppFonts.geistMono(
+                                fontSize: 9,
+                                color: Colors.grey[600],
+                              ),
                             ),
                             if (loc.phone != null) ...[
                               const SizedBox(height: 2),
                               Text(
                                 'Phone: ${loc.phone}',
-                                style: AppFonts.geistMono(fontSize: 8, color: Colors.grey[500]),
+                                style: AppFonts.geistMono(
+                                  fontSize: 8,
+                                  color: Colors.grey[500],
+                                ),
                               ),
                             ],
                           ],
@@ -711,13 +788,19 @@ class CheckoutFlowPanel extends StatelessWidget {
                 children: [
                   Text(
                     'Order ID: #${order.id}',
-                    style: AppFonts.geistMono(fontSize: 10, fontWeight: FontWeight.bold),
+                    style: AppFonts.geistMono(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   if (order.orderNumber != null)
                     Expanded(
                       child: Text(
                         order.orderNumber!,
-                        style: AppFonts.geistMono(fontSize: 9, color: Colors.grey[600]),
+                        style: AppFonts.geistMono(
+                          fontSize: 9,
+                          color: Colors.grey[600],
+                        ),
                         textAlign: TextAlign.end,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -730,18 +813,45 @@ class CheckoutFlowPanel extends StatelessWidget {
               _buildAmountRow('Tax', order.taxAmount),
               _buildAmountRow('Shipping Fee', order.shippingFee),
               if (checkoutController.couponDiscount > 0)
-                _buildAmountRow('Coupon Discount', -checkoutController.couponDiscount, isDiscount: true),
+                _buildAmountRow(
+                  'Coupon Discount',
+                  -checkoutController.couponDiscount,
+                  isDiscount: true,
+                ),
+              if (checkoutController.manualDiscountAmount > 0 &&
+                  checkoutController.manualDiscountAppliesToCurrentMethod)
+                _buildAmountRow(
+                  checkoutController.manualDiscount.value?['reason'] != null &&
+                          (checkoutController.manualDiscount.value!['reason']
+                                  as String)
+                              .isNotEmpty
+                      ? 'Discount (${checkoutController.manualDiscount.value!['reason']})'
+                      : 'Manual Discount',
+                  -checkoutController.manualDiscountAmount,
+                  isDiscount: true,
+                ),
               const Divider(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'Total Payable',
-                    style: AppFonts.geistMono(fontSize: 12, fontWeight: FontWeight.bold, color: ColorResources.labelColor),
+                    style: AppFonts.geistMono(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: ColorResources.labelColor,
+                    ),
                   ),
                   Text(
-                    CurrencyUtils.format(checkoutController.payableAmount, decimals: 2),
-                    style: AppFonts.geistMono(fontSize: 13, fontWeight: FontWeight.bold, color: theme.secondaryColor.value),
+                    CurrencyUtils.format(
+                      checkoutController.payableAmount,
+                      decimals: 2,
+                    ),
+                    style: AppFonts.geistMono(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: theme.secondaryColor.value,
+                    ),
                   ),
                 ],
               ),
@@ -759,28 +869,38 @@ class CheckoutFlowPanel extends StatelessWidget {
                 controller: checkoutController.couponController,
                 labelText: 'Coupon / Promo Code',
                 hintText: 'Apply coupon code',
-                readOnly: validation != null || checkoutController.isCouponLoading.value,
+                readOnly:
+                    validation != null ||
+                    checkoutController.isCouponLoading.value,
                 borderRadius: 10,
               ),
             ),
             const SizedBox(width: 8),
             if (validation != null)
               IconButton(
-                icon: const Icon(Icons.delete_forever_rounded, color: ColorResources.gradientRed),
+                icon: const Icon(
+                  Icons.delete_forever_rounded,
+                  color: ColorResources.gradientRed,
+                ),
                 onPressed: () => checkoutController.removeCoupon(),
               )
             else
               SizedBox(
                 width: 80,
                 child: AppButton(
-                  onPressed: () => checkoutController.validateCoupon(order.totalAmount),
+                  onPressed: () =>
+                      checkoutController.validateCoupon(order.totalAmount),
                   isLoading: checkoutController.isCouponLoading.value,
-                  backgroundColor: theme.primaryColor.value,
+                  backgroundColor: theme.secondaryColor.value,
                   borderRadius: 10,
                   height: 48,
                   child: Text(
                     'Apply',
-                    style: AppFonts.geistMono(fontSize: 11, fontWeight: FontWeight.bold, color: theme.onPrimaryColor),
+                    style: AppFonts.geistMono(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: theme.onSecondaryColor,
+                    ),
                   ),
                 ),
               ),
@@ -792,7 +912,60 @@ class CheckoutFlowPanel extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 4.0),
             child: Text(
               checkoutController.couponError.value,
-              style: AppFonts.geistMono(fontSize: 9, color: ColorResources.gradientRed, fontWeight: FontWeight.bold),
+              style: AppFonts.geistMono(
+                fontSize: 9,
+                color: ColorResources.gradientRed,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+        const SizedBox(height: 12),
+
+        // Manual/Staff Discount Section
+        Row(
+          children: [
+            Icon(Icons.local_offer_rounded, size: 14, color: theme.secondaryColor.value),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                checkoutController.manualDiscount.value != null
+                    ? 'Discount applied: ${checkoutController.manualDiscount.value!['type'] == 'percentage' ? '${checkoutController.manualDiscount.value!['value']}%' : CurrencyUtils.format((checkoutController.manualDiscount.value!['value'] as num).toDouble(), decimals: 2)}'
+                    : 'No manual discount applied',
+                style: AppFonts.geistMono(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: ColorResources.labelColor,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            TextButton(
+              onPressed: () => ManualDiscountDialog.show(context),
+              style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
+              child: Text(
+                checkoutController.manualDiscount.value != null ? 'Edit' : 'Add Discount',
+                style: AppFonts.geistMono(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: theme.secondaryColor.value,
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (checkoutController.manualDiscount.value != null &&
+            !checkoutController.manualDiscountAppliesToCurrentMethod) ...[
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: Text(
+              'Not applied — manual discount only works with Cash / Bank Transfer / Manual payment right now.',
+              style: AppFonts.geistMono(
+                fontSize: 9,
+                color: ColorResources.gradientRed,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -801,7 +974,11 @@ class CheckoutFlowPanel extends StatelessWidget {
         // Payment Method Selector (themed tiles)
         Text(
           'Select Payment Method:',
-          style: AppFonts.geistMono(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey[700]),
+          style: AppFonts.geistMono(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey[700],
+          ),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -852,7 +1029,9 @@ class CheckoutFlowPanel extends StatelessWidget {
                     Text(
                       'Cash',
                       style: AppFonts.geistMono(
-                          fontSize: 10, color: Colors.grey[600]),
+                        fontSize: 10,
+                        color: Colors.grey[600],
+                      ),
                     ),
                     Text(
                       checkoutController.splitCashInput.value.isEmpty
@@ -873,7 +1052,9 @@ class CheckoutFlowPanel extends StatelessWidget {
                     Text(
                       'Other (auto)',
                       style: AppFonts.geistMono(
-                          fontSize: 10, color: Colors.grey[600]),
+                        fontSize: 10,
+                        color: Colors.grey[600],
+                      ),
                     ),
                     Text(
                       CurrencyUtils.format(
@@ -925,14 +1106,14 @@ class CheckoutFlowPanel extends StatelessWidget {
         AppButton(
           onPressed: () => checkoutController.submitCheckout(homeController),
           isLoading: checkoutController.isLoading.value,
-          backgroundColor: theme.secondaryColor.value,
+          backgroundColor: theme.primaryColor.value,
           borderRadius: 8,
           child: Text(
             'Confirm & Pay',
             style: AppFonts.geistMono(
               fontSize: 11,
               fontWeight: FontWeight.bold,
-              color: theme.onSecondaryColor,
+              color: theme.onPrimaryColor,
             ),
           ),
         ),
@@ -941,19 +1122,26 @@ class CheckoutFlowPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildAmountRow(String label, double amount, {bool isDiscount = false}) {
+  Widget _buildAmountRow(
+    String label,
+    double amount, {
+    bool isDiscount = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: AppFonts.geistMono(fontSize: 9, color: Colors.grey[700])),
+          Text(
+            label,
+            style: AppFonts.geistMono(fontSize: 9, color: Colors.grey[700]),
+          ),
           Text(
             isDiscount
                 ? '-\$${(-amount).toStringAsFixed(2)}'
                 : amount >= 0
-                    ? '\$${amount.toStringAsFixed(2)}'
-                    : '-\$${(-amount).toStringAsFixed(2)}',
+                ? '\$${amount.toStringAsFixed(2)}'
+                : '-\$${(-amount).toStringAsFixed(2)}',
             style: AppFonts.geistMono(
               fontSize: 9,
               fontWeight: FontWeight.bold,
@@ -1078,11 +1266,8 @@ class _PaymentMethodChoiceTile extends StatelessWidget {
                   label,
                   style: AppFonts.geistMono(
                     fontSize: 10,
-                    fontWeight:
-                        isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected
-                        ? accent
-                        : ColorResources.labelColor,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected ? accent : ColorResources.labelColor,
                   ),
                 ),
                 if (isSelected) ...[

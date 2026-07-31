@@ -269,24 +269,70 @@ class _CustomerListCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.blueGrey[50],
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          customer.role?.replaceAll('_', ' ').toUpperCase() ??
-                              'CUSTOMER',
-                          style: AppFonts.geistMono(
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blueGrey[700],
+                      Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blueGrey[50],
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              customer.role?.replaceAll('_', ' ').toUpperCase() ??
+                                  'CUSTOMER',
+                              style: AppFonts.geistMono(
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blueGrey[700],
+                              ),
+                            ),
                           ),
-                        ),
+                          if (customer.accountType != null &&
+                              customer.accountType!.isNotEmpty &&
+                              customer.accountType != 'retail')
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.secondaryColor.value.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                customer.accountType!.toUpperCase(),
+                                style: AppFonts.geistMono(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.secondaryColor.value,
+                                ),
+                              ),
+                            ),
+                          if (customer.discountTier != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: ColorResources.successGreen.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                customer.discountTier!.label.toUpperCase(),
+                                style: AppFonts.geistMono(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                  color: ColorResources.successGreen,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ],
                   ),

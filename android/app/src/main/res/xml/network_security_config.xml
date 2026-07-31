@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Blocks plain-HTTP for anything going through Android's own HTTP stack
+  (i.e. our backend API calls via Dio) — the API is HTTPS-only, so there's
+  no legitimate reason to allow cleartext there.
+
+  Note: the printer (ESC/POS), Customer Display WebSocket server/client and
+  Stripe Terminal simulated-reader traffic all use raw dart:io Socket /
+  HttpServer / WebSocket connections directly, which are NOT covered by
+  this policy (it only applies to Android's managed HTTP stack) — so
+  tightening this does not break local-network printing or pairing.
+-->
 <network-security-config>
-    <base-config cleartextTrafficPermitted="true" />
+    <base-config cleartextTrafficPermitted="false" />
 </network-security-config>

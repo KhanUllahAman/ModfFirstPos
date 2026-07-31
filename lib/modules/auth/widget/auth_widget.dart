@@ -55,7 +55,10 @@ class LoginFormCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      DynamicAppLogo(height: context.responsiveHeight(0.10)),
+                      DynamicAppLogo(
+                        height: context.responsiveHeight(0.10),
+                        variant: LogoVariant.black,
+                      ),
                       Text(
                         'Sign in to your store',
                         textAlign: TextAlign.center,
@@ -103,7 +106,7 @@ class LoginFormCard extends StatelessWidget {
                       SizedBox(height: context.spacingMD),
                       Obx(
                         () => AppButton(
-                          backgroundColor: theme.secondaryColor.value,
+                          backgroundColor: theme.primaryColor.value,
                           onPressed: () {
                             controller.login(controller.formKey);
                           },
@@ -114,7 +117,7 @@ class LoginFormCard extends StatelessWidget {
                             style: AppFonts.geistMono(
                               fontSize: context.fontMD,
                               fontWeight: FontWeight.w500,
-                              color: theme.onSecondaryColor,
+                              color: theme.onPrimaryColor,
                               letterSpacing: 0.5,
                             ),
                           ),

@@ -79,6 +79,7 @@ class CheckoutService {
     int? pickupLocationId,
     required List<Map<String, dynamic>> items,
     String? notes,
+    Map<String, dynamic>? manualDiscount,
   }) async {
     try {
       final body = <String, dynamic>{
@@ -89,6 +90,7 @@ class CheckoutService {
         'delivery_type': deliveryType,
         'items': items,
         if (notes != null && notes.isNotEmpty) 'notes': notes,
+        if (manualDiscount != null) 'manual_discount': manualDiscount,
       };
       if (shippingAddressId != null) {
         body['shipping_address_id'] = shippingAddressId;

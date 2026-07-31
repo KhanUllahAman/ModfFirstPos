@@ -13,6 +13,8 @@ class StorageKeys {
   static const String keySiteTagline = 'site_tagline';
   static const String keySiteDescription = 'site_description';
   static const String keyLogoUrl = 'logo_url';
+  static const String keyLogoWhiteUrl = 'logo_white_url';
+  static const String keyLogoBlackUrl = 'logo_black_url';
   static const String keyFaviconUrl = 'favicon_url';
   static const String keyFooterLogoUrl = 'footer_logo_url';
   static const String keyPrimaryColor = 'primary_color';
@@ -66,4 +68,13 @@ class StorageKeys {
   /// simulated-reader card payments can be tested without a backend
   /// endpoint. Never synced to the server, never in source control.
   static const String keyStripeTestSecretKey = 'stripe_test_secret_key';
+
+  /// SQLCipher passphrase for the local SQLite database — generated once
+  /// per device install and kept only in secure storage (Keystore/Keychain).
+  static const String keyDbEncryptionKey = 'db_encryption_key';
+
+  /// Per-device random salt for the offline PIN hash (see PinHashUtil) —
+  /// replaces a fixed app-wide salt so a leaked hash can't be attacked with
+  /// a precomputed rainbow table shared across every install.
+  static const String keyPinSalt = 'pin_salt';
 }

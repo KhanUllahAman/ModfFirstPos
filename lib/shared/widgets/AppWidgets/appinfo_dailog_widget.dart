@@ -222,10 +222,7 @@ class AppDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildTitle(context),
-            _buildBody(context),
-          ],
+          children: [_buildTitle(context), _buildBody(context)],
         ),
       ),
     );
@@ -273,7 +270,10 @@ class AppDialog extends StatelessWidget {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (confirmImage != null) ...[confirmImage!, SizedBox(height: context.responsiveHeight(0.02))],
+          if (confirmImage != null) ...[
+            confirmImage!,
+            SizedBox(height: context.responsiveHeight(0.02)),
+          ],
           Text(
             confirmMessage ?? '',
             style: AppFonts.geistMono(
@@ -285,10 +285,14 @@ class AppDialog extends StatelessWidget {
           ),
           if (confirmSubMessage != null) ...[
             SizedBox(height: context.responsiveHeight(0.006)),
-            Text(confirmSubMessage!,
-                style: AppFonts.geistMono(
-                    fontSize: 13, color: ColorResources.labelColor),
-                textAlign: TextAlign.center),
+            Text(
+              confirmSubMessage!,
+              style: AppFonts.geistMono(
+                fontSize: 13,
+                color: ColorResources.labelColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ],
           SizedBox(height: context.responsiveHeight(0.025)),
           _buildTwoButtons(
@@ -309,35 +313,38 @@ class AppDialog extends StatelessWidget {
 
   Widget _buildInfo(BuildContext context) {
     final theme = Get.find<AppThemeService>();
-    return Obx(() => Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              content ?? '',
-              style: AppFonts.geistMono(
-                  fontSize: 14, color: ColorResources.labelColor),
-              textAlign: TextAlign.center,
+    return Obx(
+      () => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            content ?? '',
+            style: AppFonts.geistMono(
+              fontSize: 14,
+              color: ColorResources.labelColor,
             ),
-            SizedBox(height: context.responsiveHeight(0.025)),
-            SizedBox(
-              width: context.responsiveWidth(0.10),
-              child: AppButton(
-                backgroundColor: theme.secondaryColor.value,
-                onPressed:
-                    onButtonPressed ?? () => Navigator.of(context).pop(),
-                isLoading: false,
-                child: Text(
-                  buttonText ?? 'OK',
-                  style: AppFonts.geistMono(
-                    color: theme.onSecondaryColor,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: context.responsiveHeight(0.025)),
+          SizedBox(
+            width: context.responsiveWidth(0.10),
+            child: AppButton(
+              backgroundColor: theme.primaryColor.value,
+              onPressed: onButtonPressed ?? () => Navigator.of(context).pop(),
+              isLoading: false,
+              child: Text(
+                buttonText ?? 'OK',
+                style: AppFonts.geistMono(
+                  color: theme.onPrimaryColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-          ],
-        ));
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildTwoButtons(
@@ -349,41 +356,43 @@ class AppDialog extends StatelessWidget {
     VoidCallback? onConfirm,
   }) {
     final theme = Get.find<AppThemeService>();
-    return Obx(() => Row(
-          children: [
-            Expanded(
-              child: AppButton(
-                backgroundColor: theme.primaryColor.value,
-                onPressed: onCancel ?? () => Navigator.of(context).pop(),
-                isLoading: false,
-                child: Text(
-                  cancelText,
-                  style: AppFonts.geistMono(
-                    color: theme.onPrimaryColor,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
+    return Obx(
+      () => Row(
+        children: [
+          Expanded(
+            child: AppButton(
+              backgroundColor: theme.primaryColor.value,
+              onPressed: onCancel ?? () => Navigator.of(context).pop(),
+              isLoading: false,
+              child: Text(
+                cancelText,
+                style: AppFonts.geistMono(
+                  color: theme.onPrimaryColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            SizedBox(width: context.responsiveWidth(0.02)),
-            Expanded(
-              child: AppButton(
-                backgroundColor: confirmColor ?? theme.secondaryColor.value,
-                onPressed: onConfirm ?? () => Navigator.of(context).pop(),
-                isLoading: false,
-                child: Text(
-                  confirmText,
-                  style: AppFonts.geistMono(
-                    color: theme.onSecondaryColor,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
+          ),
+          SizedBox(width: context.responsiveWidth(0.02)),
+          Expanded(
+            child: AppButton(
+              backgroundColor: confirmColor ?? theme.secondaryColor.value,
+              onPressed: onConfirm ?? () => Navigator.of(context).pop(),
+              isLoading: false,
+              child: Text(
+                confirmText,
+                style: AppFonts.geistMono(
+                  color: theme.onSecondaryColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-          ],
-        ));
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -566,24 +575,34 @@ class _SearchListBodyState extends State<_SearchListBody> {
                 },
                 child: Padding(
                   padding: EdgeInsets.symmetric(
-                      vertical: context.responsiveHeight(0.012)),
+                    vertical: context.responsiveHeight(0.012),
+                  ),
                   child: Row(
                     children: [
-                      Text(item.id,
-                          style: AppFonts.geistMono(
-                              fontSize: 13,
-                              color: ColorResources.labelColor)),
+                      Text(
+                        item.id,
+                        style: AppFonts.geistMono(
+                          fontSize: 13,
+                          color: ColorResources.labelColor,
+                        ),
+                      ),
                       SizedBox(width: context.responsiveWidth(0.015)),
                       Expanded(
-                        child: Text(item.name,
-                            style: AppFonts.geistMono(
-                                fontSize: 13,
-                                color: ColorResources.labelColor)),
-                      ),
-                      Text(item.trailing,
+                        child: Text(
+                          item.name,
                           style: AppFonts.geistMono(
-                              fontSize: 13,
-                              color: ColorResources.labelColor)),
+                            fontSize: 13,
+                            color: ColorResources.labelColor,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        item.trailing,
+                        style: AppFonts.geistMono(
+                          fontSize: 13,
+                          color: ColorResources.labelColor,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -731,34 +750,36 @@ class AppActionChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Get.find<AppThemeService>();
-    return Obx(() => GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: context.responsiveWidth(0.008),
-          vertical: context.responsiveHeight(0.005),
-        ),
-        decoration: BoxDecoration(
-          border: Border.all(color: ColorResources.backgroundColor),
-          borderRadius: BorderRadius.circular(6),
-          color: ColorResources.backgroundColor,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 11, color: theme.secondaryColor.value),
-            SizedBox(width: context.responsiveWidth(0.004)),
-            Text(
-              label,
-              style: AppFonts.geistMono(
-                fontSize: 10,
-                color: ColorResources.labelColor,
-                fontWeight: FontWeight.w500,
+    return Obx(
+      () => GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: context.responsiveWidth(0.008),
+            vertical: context.responsiveHeight(0.005),
+          ),
+          decoration: BoxDecoration(
+            border: Border.all(color: ColorResources.backgroundColor),
+            borderRadius: BorderRadius.circular(6),
+            color: ColorResources.backgroundColor,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 11, color: theme.secondaryColor.value),
+              SizedBox(width: context.responsiveWidth(0.004)),
+              Text(
+                label,
+                style: AppFonts.geistMono(
+                  fontSize: 10,
+                  color: ColorResources.labelColor,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ));
+    );
   }
 }

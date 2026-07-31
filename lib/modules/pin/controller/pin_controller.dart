@@ -110,7 +110,7 @@ class PinController extends GetxController with WidgetsBindingObserver {
       verifyError.value = '';
       final response = await _pinService.verifyPin(pin: pin);
       if (response.isSuccess) {
-        await SecureStorageService.savePinHash(PinHashUtil.hash(pin));
+        await SecureStorageService.savePinHash(await PinHashUtil.hash(pin));
         _completeUnlock();
         return true;
       } else {
@@ -139,7 +139,7 @@ class PinController extends GetxController with WidgetsBindingObserver {
           'No internet connection. Connect once to enable offline unlock.';
       return false;
     }
-    if (PinHashUtil.hash(pin) != savedHash) {
+    if (await PinHashUtil.hash(pin) != savedHash) {
       verifyError.value = 'Incorrect PIN';
       return false;
     }

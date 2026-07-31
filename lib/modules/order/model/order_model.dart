@@ -24,6 +24,14 @@ class OrderModel {
   final String? paidAmount;
   final String? totalAmount;
   final String? discountSource;
+  final String? discountLabel;
+  final List<OrderDiscountComponentModel> discountComponents;
+  final String? manualDiscountType;
+  final String? manualDiscountValue;
+  final String? manualDiscountAmount;
+  final String? manualDiscountReason;
+  final int? manualDiscountBy;
+  final OrderDiscountBreakdownModel? discountBreakdown;
   final String? onlineAmount;
   final String? cashAmount;
   final String? notes;
@@ -67,6 +75,14 @@ class OrderModel {
     this.paidAmount,
     this.totalAmount,
     this.discountSource,
+    this.discountLabel,
+    this.discountComponents = const [],
+    this.manualDiscountType,
+    this.manualDiscountValue,
+    this.manualDiscountAmount,
+    this.manualDiscountReason,
+    this.manualDiscountBy,
+    this.discountBreakdown,
     this.onlineAmount,
     this.cashAmount,
     this.notes,
@@ -112,6 +128,23 @@ class OrderModel {
       paidAmount: json['paid_amount']?.toString(),
       totalAmount: json['total_amount']?.toString(),
       discountSource: JsonUtils.asStringOrNull(json['discount_source']),
+      discountLabel: JsonUtils.asStringOrNull(json['discount_label']),
+      discountComponents: json['discount_components'] is List
+          ? (json['discount_components'] as List)
+              .whereType<Map>()
+              .map((e) => OrderDiscountComponentModel.fromJson(
+                  Map<String, dynamic>.from(e)))
+              .toList()
+          : const [],
+      manualDiscountType: JsonUtils.asStringOrNull(json['manual_discount_type']),
+      manualDiscountValue: json['manual_discount_value']?.toString(),
+      manualDiscountAmount: json['manual_discount_amount']?.toString(),
+      manualDiscountReason: JsonUtils.asStringOrNull(json['manual_discount_reason']),
+      manualDiscountBy: JsonUtils.asIntOrNull(json['manual_discount_by']),
+      discountBreakdown: JsonUtils.asMapOrNull(json['discount_breakdown']) != null
+          ? OrderDiscountBreakdownModel.fromJson(
+              JsonUtils.asMap(json['discount_breakdown']))
+          : null,
       onlineAmount: json['online_amount']?.toString(),
       cashAmount: json['cash_amount']?.toString(),
       notes: JsonUtils.asStringOrNull(json['notes']),
@@ -131,6 +164,110 @@ class OrderModel {
       shipments: json['shipments'] is List ? json['shipments'] as List : const [],
       pickupLoc: JsonUtils.asMapOrNull(json['pickupLoc']),
       paymentLogs: JsonUtils.asModelList(json['paymentLogs'], OrderPaymentLogModel.fromJson),
+    );
+  }
+}
+
+class OrderDiscountComponentModel {
+  final String? label;
+  final double amount;
+  final String? source;
+
+  OrderDiscountComponentModel({this.label, this.amount = 0, this.source});
+
+  factory OrderDiscountComponentModel.fromJson(Map<String, dynamic> json) {
+    return OrderDiscountComponentModel(
+      label: JsonUtils.asStringOrNull(json['label']),
+      amount: JsonUtils.asDouble(json['amount']),
+      source: JsonUtils.asStringOrNull(json['source']),
+    );
+  }
+}
+
+class OrderDiscountAutoModel {
+  final bool applied;
+  final String? sourceLabel;
+  final String? label;
+  final double amount;
+  final String? couponCode;
+  final List<OrderDiscountComponentModel> lines;
+
+  OrderDiscountAutoModel({
+    this.applied = false,
+    this.sourceLabel,
+    this.label,
+    this.amount = 0,
+    this.couponCode,
+    this.lines = const [],
+  });
+
+  factory OrderDiscountAutoModel.fromJson(Map<String, dynamic> json) {
+    return OrderDiscountAutoModel(
+      applied: JsonUtils.asBool(json['applied']),
+      sourceLabel: JsonUtils.asStringOrNull(json['source_label']),
+      label: JsonUtils.asStringOrNull(json['label']),
+      amount: JsonUtils.asDouble(json['amount']),
+      couponCode: JsonUtils.asStringOrNull(json['coupon_code']),
+      lines: json['lines'] is List
+          ? (json['lines'] as List)
+              .whereType<Map>()
+              .map((e) => OrderDiscountComponentModel.fromJson(
+                  Map<String, dynamic>.from(e)))
+              .toList()
+          : const [],
+    );
+  }
+}
+
+class OrderDiscountManualModel {
+  final bool applied;
+  final String? label;
+  final String? type;
+  final double? value;
+  final double amount;
+  final String? reason;
+  final int? appliedBy;
+
+  OrderDiscountManualModel({
+    this.applied = false,
+    this.label,
+    this.type,
+    this.value,
+    this.amount = 0,
+    this.reason,
+    this.appliedBy,
+  });
+
+  factory OrderDiscountManualModel.fromJson(Map<String, dynamic> json) {
+    return OrderDiscountManualModel(
+      applied: JsonUtils.asBool(json['applied']),
+      label: JsonUtils.asStringOrNull(json['label']),
+      type: JsonUtils.asStringOrNull(json['type']),
+      value: JsonUtils.asDoubleOrNull(json['value']),
+      amount: JsonUtils.asDouble(json['amount']),
+      reason: JsonUtils.asStringOrNull(json['reason']),
+      appliedBy: JsonUtils.asIntOrNull(json['applied_by']),
+    );
+  }
+}
+
+class OrderDiscountBreakdownModel {
+  final double totalDiscount;
+  final OrderDiscountAutoModel auto;
+  final OrderDiscountManualModel manual;
+
+  OrderDiscountBreakdownModel({
+    this.totalDiscount = 0,
+    required this.auto,
+    required this.manual,
+  });
+
+  factory OrderDiscountBreakdownModel.fromJson(Map<String, dynamic> json) {
+    return OrderDiscountBreakdownModel(
+      totalDiscount: JsonUtils.asDouble(json['total_discount']),
+      auto: OrderDiscountAutoModel.fromJson(JsonUtils.asMap(json['auto'])),
+      manual:
+          OrderDiscountManualModel.fromJson(JsonUtils.asMap(json['manual'])),
     );
   }
 }

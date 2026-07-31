@@ -62,4 +62,17 @@ class ApiConstants {
   static final String terminalCaptureEndpoint = '${baseUrl}terminal/capture';
   static final String terminalCancelActionEndpoint =
       '${baseUrl}terminal/cancel-action';
+
+  // -- Notifications (FCM + in-app feed) --
+  static final String notificationDeviceTokenEndpoint =
+      '${baseUrl}notifications/device-tokens';
+  static final String notificationMyEndpoint = '${baseUrl}notifications/my';
+  static String notificationMarkReadEndpoint(int id) =>
+      '${baseUrl}notifications/$id/read';
+  static final String notificationMarkAllReadEndpoint =
+      '${baseUrl}notifications/read-all';
+  static final String notificationUnreadCountEndpoint =
+      '${baseUrl}notifications/unread-count';
+  static String notificationDeleteEndpoint(int id) =>
+      '${baseUrl}notifications/$id';
 }
