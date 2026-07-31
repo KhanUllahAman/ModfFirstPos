@@ -36,8 +36,35 @@ class AppDatabase {
       // plain (unencrypted) database file — opening it with a password
       // fails. Fall back to a one-time migration instead of losing data.
       log('AppDatabase: encrypted open failed ($e), trying legacy-plain migration...');
-      return _migrateLegacyPlainDatabase(dbPath, password);
+      try {
+        return await _migrateLegacyPlainDatabase(dbPath, password);
+      } catch (e2) {
+        // Neither the current key nor a plaintext read works — the file is
+        // genuinely unrecoverable (e.g. the device's Keystore lost/rotated
+        // the encryption key independently of app data, so the on-disk file
+        // is real ciphertext for a key we no longer have). This is a local
+        // cache/offline-queue database, not the system of record, so the
+        // safe recovery is to drop it and start fresh rather than leave the
+        // app permanently unable to start.
+        log('AppDatabase: legacy-plain migration also failed ($e2), recreating database.');
+        return _recreateDatabase(dbPath, password);
+      }
     }
+  }
+
+  static Future<Database> _recreateDatabase(String dbPath, String password) async {
+    for (final suffix in ['', '-wal', '-shm', '.encrypting']) {
+      final file = File('$dbPath$suffix');
+      if (await file.exists()) await file.delete();
+    }
+    return openDatabase(
+      dbPath,
+      password: password,
+      version: _version,
+      onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
+      onCreate: _createSchema,
+      onUpgrade: _onUpgrade,
+    );
   }
 
   /// Opens the existing unencrypted database file, exports it into a new
@@ -63,7 +90,10 @@ class AppDatabase {
     if (await tempFile.exists()) await tempFile.delete();
 
     await plainDb.execute("ATTACH DATABASE '$tempPath' AS encrypted KEY '$password'");
-    await plainDb.execute("SELECT sqlcipher_export('encrypted')");
+    // `execute()` maps to Android's execSQL, which rejects any statement
+    // that returns a result set (including sqlcipher_export, which is a
+    // SELECT) — must go through rawQuery instead.
+    await plainDb.rawQuery("SELECT sqlcipher_export('encrypted')");
     await plainDb.execute('DETACH DATABASE encrypted');
     await plainDb.close();
 
@@ -123,7 +153,7 @@ class AppDatabase {
 
   static Future<void> _createSchema(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE api_cache (
+      CREATE TABLE IF NOT EXISTS api_cache (
         cache_key TEXT PRIMARY KEY,
         payload TEXT NOT NULL,
         updated_at TEXT NOT NULL
@@ -131,14 +161,14 @@ class AppDatabase {
     ''');
 
     await db.execute('''
-      CREATE TABLE app_config (
+      CREATE TABLE IF NOT EXISTS app_config (
         key TEXT PRIMARY KEY,
         value TEXT
       )
     ''');
 
     await db.execute('''
-      CREATE TABLE local_customers (
+      CREATE TABLE IF NOT EXISTS local_customers (
         local_id INTEGER PRIMARY KEY AUTOINCREMENT,
         server_id INTEGER,
         data TEXT NOT NULL,
@@ -149,7 +179,7 @@ class AppDatabase {
     ''');
 
     await db.execute('''
-      CREATE TABLE suspended_orders (
+      CREATE TABLE IF NOT EXISTS suspended_orders (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         data TEXT NOT NULL,
         created_at TEXT NOT NULL
@@ -157,7 +187,7 @@ class AppDatabase {
     ''');
 
     await db.execute('''
-      CREATE TABLE pending_sales (
+      CREATE TABLE IF NOT EXISTS pending_sales (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         invoice_number TEXT NOT NULL,
         data TEXT NOT NULL,

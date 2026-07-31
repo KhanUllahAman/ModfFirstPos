@@ -105,10 +105,6 @@ flutter:
   assets:
     - assets/images/
     - assets/svgs/
-    - assets/svgs/menuSvgs/
-    - assets/svgs/dailogSvgs/
-    - assets/svgs/updateModuleSvgs/
-    - assets/svgs/orderSvgs/
     - assets/videos/
     - .env
 
