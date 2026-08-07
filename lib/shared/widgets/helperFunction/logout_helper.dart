@@ -1,8 +1,10 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/services/push_notification_service.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/core/utils/images_constant.dart';
+import 'package:modfirstpos/modules/auth/service/auth_service.dart';
 import 'package:modfirstpos/modules/shift/controller/shift_controller.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
 import 'package:modfirstpos/shared/widgets/AppWidgets/appinfo_dailog_widget.dart';
@@ -39,8 +41,16 @@ class AppLogout {
         width: context.responsiveWidth(0.20),
       ),
       onYes: () async {
-        if (Get.isRegistered<PushNotificationService>()) {
-          await Get.find<PushNotificationService>().removeToken();
+        // Best-effort — a failed/offline logout call shouldn't block the
+        // local logout; the device just keeps receiving push until the
+        // token naturally expires or the next successful call.
+        try {
+          final fcmToken = Get.isRegistered<PushNotificationService>()
+              ? await Get.find<PushNotificationService>().getToken()
+              : null;
+          await AuthService().logout(fcmToken: fcmToken);
+        } catch (e) {
+          log('AppLogout: logout API call failed: $e');
         }
         await SecureStorageService.clearAll();
         if (Get.isRegistered<ShiftController>()) {

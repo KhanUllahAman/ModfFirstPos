@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/modules/customer/model/customer_model.dart';
+import 'package:modfirstpos/modules/customer/model/discount_tier_model.dart';
 import 'package:modfirstpos/modules/customer/repository/customer_local_repository.dart';
 import 'package:modfirstpos/modules/customer/service/customer_service.dart';
 import 'package:modfirstpos/routes/app_routes.dart';
@@ -119,16 +120,35 @@ class CustomerController extends GetxController {
     required String phone,
     required String email,
     String? address,
+    String? accountType,
+    DiscountTierModel? discountTier,
   }) async {
     try {
       final response = await _service.createCustomer(
         fullName: fullName,
         email: email,
         phone: phone,
+        accountType: accountType,
+        discountTierId: discountTier?.id,
       );
 
       if (response.isSuccess && response.payload != null) {
-        final customer = response.payload!.copyWith(address: address);
+        // The create response doesn't always echo `discountTier` back yet
+        // (only the follow-up list fetch reliably includes it) — attach
+        // the tier the cashier just picked directly so checkout math and
+        // badges are correct immediately, without waiting for a refresh.
+        final customer = response.payload!.copyWith(
+          address: address,
+          accountType: accountType,
+          discountTier: accountType == 'wholesale' && discountTier != null
+              ? CustomerDiscountTierModel(
+                  id: discountTier.id,
+                  name: discountTier.name,
+                  discountType: discountTier.discountType,
+                  discountValue: discountTier.discountValue,
+                )
+              : null,
+        );
         customers.insert(0, customer);
         selectedCustomer.value = customer;
         return customer;

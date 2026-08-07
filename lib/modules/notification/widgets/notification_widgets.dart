@@ -10,13 +10,11 @@ import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 class NotificationCard extends StatelessWidget {
   final NotificationItem notification;
   final VoidCallback onTap;
-  final VoidCallback onDismiss;
 
   const NotificationCard({
     super.key,
     required this.notification,
     required this.onTap,
-    required this.onDismiss,
   });
 
   @override
@@ -97,29 +95,17 @@ class NotificationCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (!isRead)
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: ColorResources.gradientRed,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded,
-                        size: 16, color: Colors.grey),
-                    onPressed: onDismiss,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+              if (!isRead) ...[
+                const SizedBox(width: 12),
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: ColorResources.gradientRed,
+                    shape: BoxShape.circle,
                   ),
-                ],
-              ),
+                ),
+              ],
             ],
           ),
         ),
@@ -162,45 +148,5 @@ class NotificationCard extends StatelessWidget {
     if (difference.inMinutes < 60) return '${difference.inMinutes}m ago';
     if (difference.inHours < 24) return '${difference.inHours}h ago';
     return DateFormat('MMM d, h:mm a').format(timestamp);
-  }
-}
-
-class NotificationFilterBadge extends StatelessWidget {
-  final NotificationController controller;
-  final String filter;
-  const NotificationFilterBadge(
-      {super.key, required this.controller, required this.filter});
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      int count = 0;
-      if (filter == 'All') {
-        count =
-            controller.notifications.where((n) => !n.isRead.value).length;
-      } else {
-        count = controller.notifications
-            .where((n) =>
-                n.type.toLowerCase() == filter.toLowerCase() &&
-                !n.isRead.value)
-            .length;
-      }
-      if (count == 0) return const SizedBox.shrink();
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: ColorResources.gradientRed.withOpacity(0.12),
-          shape: BoxShape.circle,
-        ),
-        child: Text(
-          '$count',
-          style: const TextStyle(
-            color: ColorResources.gradientRed,
-            fontSize: 9,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
-    });
   }
 }

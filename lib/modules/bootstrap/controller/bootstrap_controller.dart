@@ -155,42 +155,66 @@ class BootstrapController extends GetxController {
       }
 
       var matched = false;
+      var productFound = false;
 
       for (final productJson in products) {
         if (productJson is! Map<String, dynamic>) continue;
         if (JsonUtils.asIntOrNull(productJson['id']) != productId) continue;
+        productFound = true;
 
-        if (variantId == null) {
+        // Product-level `stock` only applies to variant-less products.
+        // `variantId` here is the stock push's `entity_id` — meaningful
+        // only when the product actually has variants; for a variant-less
+        // product it doesn't correspond to anything and is ignored.
+        final variants = productJson['variants'];
+        final hasVariants = variants is List && variants.isNotEmpty;
+
+        if (!hasVariants) {
           productJson['stock'] = newQuantity;
           matched = true;
-        } else {
-          final variants = productJson['variants'];
-          if (variants is List) {
-            for (final variantJson in variants) {
-              if (variantJson is! Map<String, dynamic>) continue;
-              if (JsonUtils.asIntOrNull(variantJson['id']) != variantId) {
-                continue;
-              }
-              variantJson['stock'] = newQuantity;
-              final inventory = variantJson['inventory'];
-              if (inventory is Map<String, dynamic>) {
-                inventory['quantity'] = newQuantity;
-              } else {
-                variantJson['inventory'] = {'quantity': newQuantity};
-              }
-              matched = true;
+        } else if (variantId != null) {
+          for (final variantJson in variants) {
+            if (variantJson is! Map<String, dynamic>) continue;
+            if (JsonUtils.asIntOrNull(variantJson['id']) != variantId) continue;
+            variantJson['stock'] = newQuantity;
+            final inventory = variantJson['inventory'];
+            if (inventory is Map<String, dynamic>) {
+              inventory['quantity'] = newQuantity;
+            } else {
+              variantJson['inventory'] = {'quantity': newQuantity};
             }
+            matched = true;
+          }
+        } else if (variants.length == 1) {
+          // No variant id given, but unambiguous — only one it could be.
+          final variantJson = variants.first;
+          if (variantJson is Map<String, dynamic>) {
+            variantJson['stock'] = newQuantity;
+            final inventory = variantJson['inventory'];
+            if (inventory is Map<String, dynamic>) {
+              inventory['quantity'] = newQuantity;
+            } else {
+              variantJson['inventory'] = {'quantity': newQuantity};
+            }
+            matched = true;
           }
         }
+        // Genuinely ambiguous (no variant id, more than one variant) —
+        // nothing safe to patch, and no API call either. Left stale until
+        // the next manual/periodic sync.
         break;
       }
 
       if (!matched) {
-        // Product/variant isn't in the cached catalogue (new since last
-        // sync, or catalogue never included it) — fall back to a full
-        // re-sync so the local snapshot catches up instead of quietly
-        // dropping the stock change.
-        await syncBootstrap(showSnackbar: false);
+        // Genuinely ambiguous (product has multiple variants and the push
+        // didn't say which one) is left as-is, no API call. Only a truly
+        // unknown product (not in the cached catalogue at all) falls back
+        // to a full re-sync, so the local snapshot catches up instead of
+        // quietly dropping a change for something it doesn't even know
+        // about.
+        if (!productFound) {
+          await syncBootstrap(showSnackbar: false);
+        }
         return;
       }
 
@@ -199,6 +223,114 @@ class BootstrapController extends GetxController {
     } catch (e) {
       log("BootstrapController patchInventory error: $e");
       await syncBootstrap(showSnackbar: false);
+    }
+  }
+
+  /// Patches a product's base price in place from a `product.price_increased`
+  /// / `product.price_decreased` push notification — no API call, the
+  /// notification payload already carries the new price.
+  Future<void> patchProductPrice({
+    required int productId,
+    required double newPrice,
+  }) async {
+    final raw = _rawPayload;
+    if (raw == null) return;
+    try {
+      final products = raw['products'];
+      if (products is! List) return;
+
+      for (final productJson in products) {
+        if (productJson is! Map<String, dynamic>) continue;
+        if (JsonUtils.asIntOrNull(productJson['id']) != productId) continue;
+        productJson['base_price'] = newPrice;
+        data.value = BootstrapPayload.fromJson(raw);
+        await BootstrapCacheStorage.saveBootstrap(raw);
+        return;
+      }
+    } catch (e) {
+      log("BootstrapController patchProductPrice error: $e");
+    }
+  }
+
+  /// Same as [patchProductPrice] but for a variant — the push doesn't give
+  /// us `product_id` for variant events, so this searches every product's
+  /// variant list for a matching variant id.
+  Future<void> patchVariantPrice({
+    required int variantId,
+    required double newPrice,
+  }) async {
+    final raw = _rawPayload;
+    if (raw == null) return;
+    try {
+      final products = raw['products'];
+      if (products is! List) return;
+
+      for (final productJson in products) {
+        if (productJson is! Map<String, dynamic>) continue;
+        final variants = productJson['variants'];
+        if (variants is! List) continue;
+        for (final variantJson in variants) {
+          if (variantJson is! Map<String, dynamic>) continue;
+          if (JsonUtils.asIntOrNull(variantJson['id']) != variantId) continue;
+          variantJson['price'] = newPrice;
+          data.value = BootstrapPayload.fromJson(raw);
+          await BootstrapCacheStorage.saveBootstrap(raw);
+          return;
+        }
+      }
+    } catch (e) {
+      log("BootstrapController patchVariantPrice error: $e");
+    }
+  }
+
+  /// Removes a product from the cached catalogue in place — used for
+  /// `product.deleted` pushes, which carry no data beyond the id.
+  Future<void> removeProductLocally(int productId) async {
+    final raw = _rawPayload;
+    if (raw == null) return;
+    try {
+      final products = raw['products'];
+      if (products is! List) return;
+      final removed = products.any(
+        (p) => p is Map<String, dynamic> && JsonUtils.asIntOrNull(p['id']) == productId,
+      );
+      if (!removed) return;
+      products.removeWhere(
+        (p) => p is Map<String, dynamic> && JsonUtils.asIntOrNull(p['id']) == productId,
+      );
+      data.value = BootstrapPayload.fromJson(raw);
+      await BootstrapCacheStorage.saveBootstrap(raw);
+    } catch (e) {
+      log("BootstrapController removeProductLocally error: $e");
+    }
+  }
+
+  /// Removes a variant from its parent product's cached variant list — used
+  /// for `variant.deleted` pushes (no `product_id` in the payload, so every
+  /// product's variants are searched).
+  Future<void> removeVariantLocally(int variantId) async {
+    final raw = _rawPayload;
+    if (raw == null) return;
+    try {
+      final products = raw['products'];
+      if (products is! List) return;
+      for (final productJson in products) {
+        if (productJson is! Map<String, dynamic>) continue;
+        final variants = productJson['variants'];
+        if (variants is! List) continue;
+        final removed = variants.any(
+          (v) => v is Map<String, dynamic> && JsonUtils.asIntOrNull(v['id']) == variantId,
+        );
+        if (!removed) continue;
+        variants.removeWhere(
+          (v) => v is Map<String, dynamic> && JsonUtils.asIntOrNull(v['id']) == variantId,
+        );
+        data.value = BootstrapPayload.fromJson(raw);
+        await BootstrapCacheStorage.saveBootstrap(raw);
+        return;
+      }
+    } catch (e) {
+      log("BootstrapController removeVariantLocally error: $e");
     }
   }
 }

@@ -30,6 +30,8 @@ class PushData {
 
   int? get quantity => int.tryParse(raw['quantity'] ?? '');
   int? get productId => int.tryParse(raw['product_id'] ?? '');
+  int? get entityIdInt => int.tryParse(entityId ?? '');
+  double? get newPrice => double.tryParse(raw['new_price'] ?? '');
 }
 
 const AndroidNotificationChannel _defaultChannel = AndroidNotificationChannel(
@@ -119,10 +121,15 @@ class PushNotificationService extends GetxService {
   void _handle(RemoteMessage message, {required bool tapped}) {
     final data = PushData(message.data);
 
-    // Keep the offline catalogue cache fresh — matches
-    // docs/NOTIFICATIONS_FLUTTER.md section 5.3.
-    if (data.sync == 'catalogue' && Get.isRegistered<BootstrapController>()) {
-      unawaited(Get.find<BootstrapController>().syncBootstrap(showSnackbar: false));
+    // Keep the offline catalogue cache fresh WITHOUT hitting the API —
+    // every event below carries enough in the push payload itself to patch
+    // the cached bootstrap snapshot in place (see docs/notification.md).
+    // `product.created/updated` and `variant.created/updated` carry no
+    // fields beyond the id, so there's nothing to patch locally; those are
+    // left for the next manual/periodic sync rather than triggering a
+    // network call on every push.
+    if (Get.isRegistered<BootstrapController>()) {
+      unawaited(_applyLocally(data, Get.find<BootstrapController>()));
     }
 
     unawaited(refreshUnreadCount());
@@ -141,6 +148,65 @@ class PushNotificationService extends GetxService {
           body: notification.body ?? '',
         );
       }
+    }
+  }
+
+  /// Patches the cached bootstrap snapshot in place from a push's own
+  /// payload — see docs/notification.md section 4 for which events carry
+  /// which fields. Never calls `GET /pos/bootstrap`.
+  Future<void> _applyLocally(PushData data, BootstrapController bootstrap) async {
+    switch (data.event) {
+      case 'stock.increased':
+      case 'stock.decreased':
+      case 'stock.adjusted':
+      case 'stock.low':
+        final productId = data.productId;
+        final quantity = data.quantity;
+        // `entity_id` on stock.* events is NOT the variant id — verified
+        // against real traffic: it stays constant (e.g. always "2" for
+        // product 1) across pushes for different variants of the same
+        // product, including one explicitly adjusted with variant_id: 1 on
+        // the dashboard where entity_id still came back "2". It's some
+        // fixed per-product inventory-record id, not a variant reference —
+        // do not use it to pick a variant.
+        if (productId != null && quantity != null) {
+          await bootstrap.patchInventory(productId: productId, newQuantity: quantity);
+        }
+        break;
+
+      case 'product.price_increased':
+      case 'product.price_decreased':
+        final productId = data.entityIdInt;
+        final newPrice = data.newPrice;
+        if (productId != null && newPrice != null) {
+          await bootstrap.patchProductPrice(productId: productId, newPrice: newPrice);
+        }
+        break;
+
+      case 'variant.price_increased':
+      case 'variant.price_decreased':
+        final variantId = data.entityIdInt;
+        final newPrice = data.newPrice;
+        if (variantId != null && newPrice != null) {
+          await bootstrap.patchVariantPrice(variantId: variantId, newPrice: newPrice);
+        }
+        break;
+
+      case 'product.deleted':
+        final productId = data.entityIdInt;
+        if (productId != null) await bootstrap.removeProductLocally(productId);
+        break;
+
+      case 'variant.deleted':
+        final variantId = data.entityIdInt;
+        if (variantId != null) await bootstrap.removeVariantLocally(variantId);
+        break;
+
+      // 'product.created' / 'product.updated' / 'variant.created' /
+      // 'variant.updated' carry no fields beyond the id (see
+      // docs/notification.md section 4) — there's nothing to patch locally
+      // without a network call, so these are intentionally left for the
+      // next manual/periodic sync.
     }
   }
 

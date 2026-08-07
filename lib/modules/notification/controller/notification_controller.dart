@@ -66,11 +66,8 @@ class NotificationController extends GetxController {
   final NotificationService _service = NotificationService();
 
   final RxList<NotificationItem> notifications = <NotificationItem>[].obs;
-  final RxString selectedFilter = 'All'.obs;
   final RxBool isLoading = false.obs;
   final RxInt unreadCountFromServer = 0.obs;
-
-  final List<String> filterOptions = ['All', 'Orders', 'Inventory', 'System Alert', 'Diagnostics'];
 
   late ScrollController scrollController;
 
@@ -105,16 +102,6 @@ class NotificationController extends GetxController {
 
   int get unreadCount => notifications.where((n) => !n.isRead.value).length;
 
-  List<NotificationItem> get filteredNotifications {
-    final filter = selectedFilter.value;
-    if (filter == 'All') return notifications;
-    return notifications.where((n) => n.type.toLowerCase() == filter.toLowerCase()).toList();
-  }
-
-  void selectFilter(String filter) {
-    selectedFilter.value = filter;
-  }
-
   Future<void> markAsRead(NotificationItem item) async {
     if (item.isRead.value) return;
     item.isRead.value = true;
@@ -135,19 +122,6 @@ class NotificationController extends GetxController {
   void _refreshBellBadge() {
     if (Get.isRegistered<PushNotificationService>()) {
       Get.find<PushNotificationService>().refreshUnreadCount();
-    }
-  }
-
-  Future<void> removeNotification(NotificationItem item) async {
-    notifications.remove(item);
-    await _service.deleteNotification(item.id);
-  }
-
-  Future<void> clearAll() async {
-    final items = List<NotificationItem>.from(notifications);
-    notifications.clear();
-    for (final item in items) {
-      await _service.deleteNotification(item.id);
     }
   }
 }

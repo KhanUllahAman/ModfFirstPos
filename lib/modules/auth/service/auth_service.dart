@@ -26,4 +26,20 @@ class AuthService {
       rethrow;
     }
   }
+
+  /// Removes this device's FCM token server-side so it stops receiving
+  /// push after logout. Best-effort — a failure here shouldn't block the
+  /// local logout flow, so callers should swallow errors.
+  Future<AuthLoginModel> logout({String? fcmToken}) async {
+    final body = <String, dynamic>{
+      if (fcmToken != null && fcmToken.isNotEmpty) 'fcm_token': fcmToken,
+    };
+    final response = await _networkClient.post(
+      endpoint: ApiConstants.logoutEndpoint,
+      body: body,
+      showErrorSnackbar: false,
+    );
+    log("Logout response: ${response.data}");
+    return AuthLoginModel.fromJson(response.data);
+  }
 }

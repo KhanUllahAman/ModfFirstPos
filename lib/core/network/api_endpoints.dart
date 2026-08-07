@@ -5,6 +5,7 @@ class ApiConstants {
   static final String xApiKey = AppConfig.xApiKey;  
   static final String xApiPassword = AppConfig.xApiPassword;  
   static final String loginEndpoint = '${baseUrl}auth/login';
+  static final String logoutEndpoint = '${baseUrl}auth/logout';
   static final String sendOtpEndpoint = '${baseUrl}auth/send-otp';
   static final String verifyOtpEndpoint = '${baseUrl}auth/verify-otp';
   static final String refreshTokenEndpoint = '${baseUrl}auth/refresh-token';
@@ -23,7 +24,9 @@ class ApiConstants {
   static final String orderListEndpoint = '${baseUrl}orders/list';
   static final String userListEndpoint = '${baseUrl}users/list';
   static final String userCreateEndpoint = '${baseUrl}users';
-  static final String orderCreateEndpoint = '${baseUrl}orders';
+  static final String discountTierListEndpoint = '${baseUrl}discount-tiers/list';
+  static final String discountTierCreateEndpoint = '${baseUrl}discount-tiers';
+  static final String orderCreateEndpoint = '${baseUrl}orders/pos';
   static final String addressListEndpoint = '${baseUrl}addresses/admin/list';
   static final String pickupLocationListEndpoint =
       '${baseUrl}pickup-locations/list';
@@ -73,6 +76,4 @@ class ApiConstants {
       '${baseUrl}notifications/read-all';
   static final String notificationUnreadCountEndpoint =
       '${baseUrl}notifications/unread-count';
-  static String notificationDeleteEndpoint(int id) =>
-      '${baseUrl}notifications/$id';
 }

@@ -103,19 +103,6 @@ class NotificationService {
     }
   }
 
-  Future<bool> deleteNotification(int id) async {
-    try {
-      final response = await _client.delete(
-        endpoint: ApiConstants.notificationDeleteEndpoint(id),
-        showErrorSnackbar: false,
-      );
-      return JsonUtils.asBool(_asMap(response)['success']);
-    } catch (e) {
-      log('NotificationService deleteNotification error: $e');
-      return false;
-    }
-  }
-
   /// Removes this device's token so it stops receiving push — call on
   /// logout.
   Future<void> removeDeviceToken(String token) async {

@@ -28,7 +28,7 @@ class NotificationPanelWidget extends GetView<NotificationController> {
               Row(
                 children: [
                   Obx(() => Text(
-                        'All Messages (${controller.filteredNotifications.length})',
+                        'All Messages (${controller.notifications.length})',
                         style: AppFonts.geistMono(
                           fontSize: context.fontMD,
                           fontWeight: FontWeight.bold,
@@ -58,34 +58,16 @@ class NotificationPanelWidget extends GetView<NotificationController> {
                   }),
                 ],
               ),
-              Row(
-                children: [
-                  TextButton.icon(
-                    onPressed: controller.markAllAsRead,
-                    icon: const Icon(Icons.done_all_rounded, size: 16),
-                    label: Text(
-                      'Mark all read',
-                      style: AppFonts.geistMono(
-                          fontSize: context.fontXS,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    style: TextButton.styleFrom(
-                        foregroundColor: ColorResources.blueColor),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton.icon(
-                    onPressed: controller.clearAll,
-                    icon: const Icon(Icons.delete_sweep_rounded, size: 16),
-                    label: Text(
-                      'Clear all',
-                      style: AppFonts.geistMono(
-                          fontSize: context.fontXS,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    style: TextButton.styleFrom(
-                        foregroundColor: ColorResources.gradientRed),
-                  ),
-                ],
+              TextButton.icon(
+                onPressed: controller.markAllAsRead,
+                icon: const Icon(Icons.done_all_rounded, size: 16),
+                label: Text(
+                  'Mark all read',
+                  style: AppFonts.geistMono(
+                      fontSize: context.fontXS, fontWeight: FontWeight.bold),
+                ),
+                style: TextButton.styleFrom(
+                    foregroundColor: ColorResources.blueColor),
               ),
             ],
           ),
@@ -98,7 +80,7 @@ class NotificationPanelWidget extends GetView<NotificationController> {
 
   Widget _buildNotificationsList(BuildContext context) {
     return Obx(() {
-      final list = controller.filteredNotifications;
+      final list = controller.notifications;
       if (list.isEmpty) {
         return Center(
           child: Column(
@@ -163,8 +145,6 @@ class NotificationPanelWidget extends GetView<NotificationController> {
             return NotificationCard(
               notification: notification,
               onTap: () => controller.markAsRead(notification),
-              onDismiss: () =>
-                  controller.removeNotification(notification),
             );
           },
         ),

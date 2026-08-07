@@ -56,33 +56,16 @@ class CheckoutController extends GetxController {
   final RxString paymentMethod = 'without_payment'.obs;
   final RxDouble customOnlineAmount = 0.0.obs;
   final RxDouble customCashAmount = 0.0.obs;
-
-  /// Manual/staff discount applied by the cashier — `{type: 'percentage' |
-  /// 'fixed_amount', value: <num>, reason: <String?>}`. Sent as-is to the
-  /// backend (`manual_discount`) for the online path, and folded into the
-  /// local total for the offline path.
   final Rxn<Map<String, dynamic>> manualDiscount = Rxn<Map<String, dynamic>>();
-
-  /// Live status text shown while a Stripe Terminal payment is in flight
-  /// (connecting reader / waiting for card / capturing), so the "Confirm &
-  /// Pay" spinner isn't a silent black box.
   final RxString terminalStatusMessage = ''.obs;
-
-  // Resolved delivery details captured by createOrder(), reused by
-  // submitCheckout() — for offline payment methods there's no server order
-  // yet to carry these, so they're held here until final submit.
   List<Map<String, dynamic>> _pendingItemsPayload = [];
   int? _pendingAddressId;
   NewAddressInput? _pendingInlineAddress;
   int? _pendingPickupLocationId;
-
-  /// Cash portion of a split payment, typed on the POS keypad (kept as a
-  /// string for display control — no device keyboard involved).
   final RxString splitCashInput = ''.obs;
 
   double get splitCash => double.tryParse(splitCashInput.value) ?? 0.0;
 
-  /// Online portion = remainder of the payable amount after cash.
   double get splitOnline {
     final remainder = payableAmount - splitCash;
     return remainder > 0 ? remainder : 0.0;
@@ -110,8 +93,7 @@ class CheckoutController extends GetxController {
 
   void splitKeypadClear() => splitCashInput.value = '';
 
-  /// Dedicated controller for the checkout panel scrollbar (a Scrollbar
-  /// without its own controller crashes on this multi-scrollable layout).
+
   late final ScrollController panelScrollController;
 
   static String _addressCacheKey(int userId) => 'cache_addresses_user_$userId';
@@ -167,8 +149,7 @@ class CheckoutController extends GetxController {
     manualDiscount.value = null;
   }
 
-  /// Applies a manual/staff discount for the order being checked out.
-  /// [type] is `'percentage'` or `'fixed_amount'`.
+
   void applyManualDiscount({
     required String type,
     required double value,
@@ -193,13 +174,27 @@ class CheckoutController extends GetxController {
     return value;
   }
 
-  double get totalDiscount => couponDiscount + manualDiscountAmount;
+  /// Automatic wholesale discount from the selected customer's discount
+  /// tier (`account_type: wholesale`) — applied the same way for every
+  /// payment method, since it comes from the customer's own record, not a
+  /// manual entry. Backend applies this itself for online orders; this is
+  /// only a local estimate so the checkout preview matches, and it's the
+  /// real calculation used for offline orders (no server involved there).
+  double get customerTierDiscountAmount {
+    if (createdOrder.value == null) return 0.0;
+    final tier = Get.isRegistered<HomeController>()
+        ? Get.find<HomeController>().selectedCartCustomer.value?.discountTier
+        : null;
+    if (tier == null) return 0.0;
+    final value = JsonUtils.asDouble(tier.discountValue);
+    if (tier.discountType == 'percentage') {
+      return createdOrder.value!.subtotal * value / 100;
+    }
+    return value;
+  }
 
-  /// Backend only accepts `manual_discount` on the offline `orders/pos/sync`
-  /// path right now — Stripe Terminal / split payment methods go through
-  /// the online `orders/create` API, which rejects the field.
-  bool get manualDiscountAppliesToCurrentMethod =>
-      _offlinePaymentMethods.contains(paymentMethod.value);
+  double get totalDiscount =>
+      couponDiscount + manualDiscountAmount + customerTierDiscountAmount;
 
   Future<void> startCheckoutFlow(int userId) async {
     resetCheckoutState();
@@ -212,14 +207,7 @@ class CheckoutController extends GetxController {
         emailController.text = customer.email ?? '';
         phoneController.text = customer.phone ?? '';
       }
-
-      // Pickup locations are offline-first via the bootstrap snapshot —
-      // instant, no network call.
       _applyPickupLocations(_bootstrapController.pickupLocations);
-
-      // Addresses are per-customer and not part of bootstrap — hydrate from
-      // the local cache first so the cashier never waits, then refresh from
-      // the network in the background.
       final hadCache = await _hydrateAddressesFromCache(userId);
       if (hadCache) {
         isLoading.value = false;
@@ -234,7 +222,6 @@ class CheckoutController extends GetxController {
     }
   }
 
-  /// Loads cached addresses. Returns true when anything usable was found.
   Future<bool> _hydrateAddressesFromCache(int userId) async {
     try {
       final cachedAddresses =
@@ -278,7 +265,6 @@ class CheckoutController extends GetxController {
     }
   }
 
-  /// Force-refreshes addresses from the server, bypassing the local cache.
   Future<void> syncAddresses() async {
     final customer = Get.find<HomeController>().selectedCartCustomer.value;
     if (customer == null) return;
@@ -295,8 +281,7 @@ class CheckoutController extends GetxController {
     }
   }
 
-  /// Re-syncs the full offline bootstrap snapshot (pickup locations are
-  /// part of it), then re-applies the refreshed list.
+
   Future<void> syncPickupLocations() async {
     isLoading.value = true;
     try {
@@ -408,11 +393,7 @@ class CheckoutController extends GetxController {
     return true;
   }
 
-  /// Resolves delivery details + cart items and moves to the payment step.
-  /// Entirely local/instant — no network call. The real online order (for
-  /// Stripe Terminal / split methods) or the offline queue entry (for
-  /// cash/bank_transfer/without_payment) is only created at
-  /// [submitCheckout] once the payment method is actually known.
+
   Future<bool> createOrder(HomeController homeController) async {
     final customer = homeController.selectedCartCustomer.value;
     if (customer == null) {
@@ -467,8 +448,6 @@ class CheckoutController extends GetxController {
         customSnackBar('Pickup Location Required', 'Please select a pickup location.', snackBarType: SnackBarType.warning);
         return false;
       }
-      // Backend links shipping_address_id even for pickup orders; send the
-      // customer's saved address when one exists to avoid FK errors.
       addressId = selectedAddress.value?.id;
     }
 
@@ -476,10 +455,6 @@ class CheckoutController extends GetxController {
     _pendingAddressId = addressId;
     _pendingInlineAddress = inlineAddress;
     _pendingPickupLocationId = selectedPickupLocation.value?.id;
-
-    // Local estimate for the payment-step preview — the real total (tax,
-    // shipping) is only known once the real order is created online, or is
-    // computed exactly the same way for the offline receipt at submit time.
     final subtotal = homeController.productTotal;
     final taxPercent =
         double.tryParse(_bootstrapController.data.value?.store.taxPercentage ?? '') ?? 0;
@@ -502,11 +477,9 @@ class CheckoutController extends GetxController {
     final base = couponValidation.value != null
         ? couponValidation.value!.finalAmount
         : createdOrder.value!.totalAmount;
-    // Only reflect the manual discount when it will actually be honored —
-    // the backend currently only accepts it on the offline sync path.
-    if (!manualDiscountAppliesToCurrentMethod) return base;
-    final afterManualDiscount = base - manualDiscountAmount;
-    return afterManualDiscount > 0 ? afterManualDiscount : 0.0;
+    final afterDiscounts =
+        base - manualDiscountAmount - customerTierDiscountAmount;
+    return afterDiscounts > 0 ? afterDiscounts : 0.0;
   }
 
   double get couponDiscount {
@@ -530,9 +503,7 @@ class CheckoutController extends GetxController {
     }
   }
 
-  /// Cash / bank_transfer / without_payment — entirely local, no network
-  /// call. Queued for `orders/pos/sync`, receipt printed immediately from
-  /// local data.
+
   Future<void> _submitOfflineSale(
     HomeController homeController,
     String method,
@@ -551,12 +522,6 @@ class CheckoutController extends GetxController {
           customer.email != null && customer.email!.isNotEmpty;
 
       final syncPayload = <String, dynamic>{
-        // Prefer email/phone/full_name — the sync endpoint finds-or-creates
-        // the customer from these, which self-heals if the cached customer
-        // record is stale (e.g. synced before a backend reset). A locally
-        // cached `user_id` can't be verified without a network round trip
-        // (defeating the point of offline mode), so it's only sent as a
-        // last resort when we have no contact info to identify them by.
         if (customerHasEmail) ...{
           'email': customer.email,
           if (customer.phone != null && customer.phone!.isNotEmpty)
@@ -601,10 +566,6 @@ class CheckoutController extends GetxController {
         shiftClientReference: syncPayload['shift_client_reference'] as String?,
         orderJson: {'sync': syncPayload, 'local': localPayload},
       );
-
-      // Reflect the sale in the cached stock immediately — otherwise a
-      // second offline sale on this device (before the next sync) would
-      // still see the pre-sale quantity and could oversell.
       for (final item in _pendingItemsPayload) {
         final productId = JsonUtils.asIntOrNull(item['product_id']);
         if (productId == null) continue;
@@ -623,7 +584,6 @@ class CheckoutController extends GetxController {
         snackBarType: SnackBarType.success,
       );
 
-      // Fire-and-forget: printing/sync must never block clearing the cart.
       final bootstrap = _bootstrapController.data.value;
       if (bootstrap != null) {
         unawaited(_printLocalReceipt(
@@ -705,24 +665,12 @@ class CheckoutController extends GetxController {
     }
   }
 
-  /// `stripe_terminal` / `cash_bank_transfer` / `cash_stripe_terminal` — real
-  /// online order create, then the single POS payment API
-  /// (`POST /payments/pos/pay`, docs/POS_PAYMENT_FLUTTER.md). Card-present
-  /// parts continue through [_runTerminalCaptureFlow]; everything else
-  /// settles instantly.
   Future<void> _submitPosPayment(
     HomeController homeController,
     String method,
   ) async {
     final customer = homeController.selectedCartCustomer.value;
     if (customer == null) return;
-
-    // The cash amount the cashier typed on the split keypad is fixed and
-    // must be preserved exactly; only the "other" part is derived — and it
-    // must be derived from the REAL server-side total (which includes
-    // shipping/tax the local pre-order estimate doesn't have), not from
-    // [payableAmount], which still reflects that stale local estimate until
-    // the real order below is created.
     final splitCashAmount = isSplitPayment ? splitCash : null;
 
     isLoading.value = true;
@@ -740,10 +688,7 @@ class CheckoutController extends GetxController {
         pickupLocationId: _pendingPickupLocationId,
         items: _pendingItemsPayload,
         notes: notes.isEmpty ? 'POS Checkout order' : notes,
-        // Backend's orders/create endpoint rejects `manual_discount` as an
-        // unrecognized key (validated 2026-07-31) — only the offline
-        // orders/pos/sync path accepts it for now. Skipped here until the
-        // backend adds support for the online create-order endpoint.
+        manualDiscount: manualDiscount.value,
       );
 
       if (!createResponse.isSuccess || createResponse.order == null) {
@@ -762,8 +707,7 @@ class CheckoutController extends GetxController {
         return;
       }
 
-      // Real, server-computed total (includes shipping fee) — the amounts
-      // sent to /payments/pos/pay must sum to exactly this.
+
       final realTotal =
           double.parse(createdOrder.value!.totalAmount.toStringAsFixed(2));
 
@@ -832,10 +776,7 @@ class CheckoutController extends GetxController {
     }
   }
 
-  /// Reads the manually-configured reader (Settings > Stripe Terminal) and
-  /// makes sure it's connected before the backend tries to push a
-  /// PaymentIntent to it. Returns the reader id, or null (with a snackbar
-  /// already shown) if it isn't ready.
+
   Future<int?> _ensureTerminalReady() async {
     final readerIdText = await StripeTerminalSettingsStorage.getReaderId();
     final readerId = int.tryParse(readerIdText ?? '');
@@ -868,12 +809,7 @@ class CheckoutController extends GetxController {
     return readerId;
   }
 
-  /// TEST ONLY (see Settings > Stripe Terminal): if a Stripe test secret key
-  /// and the reader's Stripe id (tmr_...) are configured, calls Stripe's
-  /// Terminal test helper directly so a simulated reader's "waiting for
-  /// card" state actually progresses. No-ops silently if not configured —
-  /// this only exists to unblock testing without a backend endpoint or
-  /// physical reader.
+
   Future<void> _maybeSimulateCardPresent() async {
     final secretKey = await SecureStorageService.getStripeTestSecretKey();
     final tmrId = await StripeTerminalSettingsStorage.getStripeReaderTmrId();
@@ -889,8 +825,7 @@ class CheckoutController extends GetxController {
     }
   }
 
-  /// Polls the card-present part until Stripe has the card, then captures.
-  /// See docs/POS_PAYMENT_FLUTTER.md section 3.4-3.5.
+
   Future<void> _runTerminalCaptureFlow(
     HomeController homeController,
     int orderId,
@@ -922,9 +857,6 @@ class CheckoutController extends GetxController {
       }
 
       if (status.isCaptured) {
-        // Already fully settled by the backend — no separate /capture call
-        // needed (some readers, especially simulated ones, skip straight
-        // to this state).
         await _completeCheckout(homeController, orderId);
         return;
       }

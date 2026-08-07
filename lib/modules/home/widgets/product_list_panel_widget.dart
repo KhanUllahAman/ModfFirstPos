@@ -1127,6 +1127,31 @@ class _CustomerRowTile extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (customer.discountTier != null) ...[
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: ColorResources.successGreen.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              customer.discountTier!.label.toUpperCase(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppFonts.geistMono(
+                                fontSize: 6,
+                                fontWeight: FontWeight.bold,
+                                color: ColorResources.successGreen,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 2),

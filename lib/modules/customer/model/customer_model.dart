@@ -134,6 +134,8 @@ class CustomerModel {
     String? phone,
     String? address,
     bool? isLocalOnly,
+    String? accountType,
+    CustomerDiscountTierModel? discountTier,
   }) {
     return CustomerModel(
       id: id ?? this.id,
@@ -145,8 +147,8 @@ class CustomerModel {
       image: image,
       isActive: isActive,
       isLocked: isLocked,
-      accountType: accountType,
-      discountTier: discountTier,
+      accountType: accountType ?? this.accountType,
+      discountTier: discountTier ?? this.discountTier,
       lastLoginDate: lastLoginDate,
       createdAt: createdAt,
       updatedAt: updatedAt,

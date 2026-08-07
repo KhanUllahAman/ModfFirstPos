@@ -818,8 +818,13 @@ class CheckoutFlowPanel extends StatelessWidget {
                   -checkoutController.couponDiscount,
                   isDiscount: true,
                 ),
-              if (checkoutController.manualDiscountAmount > 0 &&
-                  checkoutController.manualDiscountAppliesToCurrentMethod)
+              if (checkoutController.customerTierDiscountAmount > 0)
+                _buildAmountRow(
+                  'Wholesale Discount',
+                  -checkoutController.customerTierDiscountAmount,
+                  isDiscount: true,
+                ),
+              if (checkoutController.manualDiscountAmount > 0)
                 _buildAmountRow(
                   checkoutController.manualDiscount.value?['reason'] != null &&
                           (checkoutController.manualDiscount.value!['reason']
@@ -954,21 +959,6 @@ class CheckoutFlowPanel extends StatelessWidget {
             ),
           ],
         ),
-        if (checkoutController.manualDiscount.value != null &&
-            !checkoutController.manualDiscountAppliesToCurrentMethod) ...[
-          const SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-            child: Text(
-              'Not applied — manual discount only works with Cash / Bank Transfer / Manual payment right now.',
-              style: AppFonts.geistMono(
-                fontSize: 9,
-                color: ColorResources.gradientRed,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
         const SizedBox(height: 16),
 
         // Payment Method Selector (themed tiles)

@@ -111,6 +111,23 @@ class HomeController extends GetxController {
     if (categoryId != null) {
       categoryProducts.assignAll(_bootstrapController.productsForCategory(categoryId));
     }
+
+    // Keeps an already-open variant-selection panel live too — otherwise a
+    // stock/price push patching the catalogue in the background wouldn't
+    // show up here until the cashier re-taps the product.
+    final selectedProductId = selectedProduct.value?.id;
+    if (selectedProductId != null) {
+      final refreshed = _bootstrapController.allProducts
+          .firstWhereOrNull((p) => p.id == selectedProductId);
+      if (refreshed != null) {
+        selectedProduct.value = refreshed;
+        final variantId = selectedInlineVariant.value?.id;
+        if (variantId != null) {
+          selectedInlineVariant.value =
+              refreshed.variants.firstWhereOrNull((v) => v.id == variantId);
+        }
+      }
+    }
   }
 
   @override

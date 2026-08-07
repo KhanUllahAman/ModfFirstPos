@@ -26,6 +26,29 @@ class InventoryController extends GetxController {
 
   final RxBool isSubmitting = false.obs;
 
+  @override
+  void onInit() {
+    super.onInit();
+    // Keeps an already-open product/variant panel live too — otherwise a
+    // stock/price push patching the catalogue in the background wouldn't
+    // show up here until the cashier re-taps the product.
+    ever(_bootstrapController.data, (_) => _resyncSelection());
+  }
+
+  void _resyncSelection() {
+    final productId = selectedProduct.value?.id;
+    if (productId == null) return;
+    final refreshed =
+        _bootstrapController.allProducts.firstWhereOrNull((p) => p.id == productId);
+    if (refreshed == null) return;
+    selectedProduct.value = refreshed;
+    final variantId = selectedVariant.value?.id;
+    if (variantId != null) {
+      selectedVariant.value =
+          refreshed.variants.firstWhereOrNull((v) => v.id == variantId);
+    }
+  }
+
   List<ProductModel> get products {
     final query = searchQuery.value.trim().toLowerCase();
     final all = _bootstrapController.allProducts;

@@ -14,6 +14,8 @@ class CustomerService {
     required String fullName,
     required String email,
     required String phone,
+    String? accountType,
+    int? discountTierId,
   }) async {
     try {
       final body = {
@@ -23,6 +25,9 @@ class CustomerService {
         'password': walkinPassword,
         'confirmPassword': walkinPassword,
         'role': 'customer',
+        if (accountType != null) 'account_type': accountType,
+        if (accountType == 'wholesale' && discountTierId != null)
+          'discount_tier_id': discountTierId,
       };
       final response = await _client.post(
         endpoint: ApiConstants.userCreateEndpoint,
