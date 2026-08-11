@@ -963,11 +963,12 @@ class CheckoutFlowPanel extends StatelessWidget {
 
         // Payment Method Selector (themed tiles)
         Text(
-          'Select Payment Method:',
+          'SELECT PAYMENT METHOD',
           style: AppFonts.geistMono(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[700],
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.4,
+            color: ColorResources.labelColor,
           ),
         ),
         const SizedBox(height: 8),
@@ -1233,30 +1234,30 @@ class _PaymentMethodChoiceTile extends StatelessWidget {
     return Tooltip(
       message: subtitle,
       child: Material(
-        color: isSelected ? accent.withOpacity(0.10) : Colors.transparent,
+        color: isSelected ? accent.withOpacity(0.12) : Colors.grey[100],
         borderRadius: BorderRadius.circular(10),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(10),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: isSelected ? accent : ColorResources.cardBorderColor,
-                width: isSelected ? 1.5 : 1,
+                width: isSelected ? 1.8 : 1.2,
               ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 16, color: accent),
+                Icon(icon, size: 18, color: accent),
                 const SizedBox(width: 8),
                 Text(
                   label,
                   style: AppFonts.geistMono(
-                    fontSize: 10,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    fontSize: 11,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                     color: isSelected ? accent : ColorResources.labelColor,
                   ),
                 ),

@@ -87,21 +87,22 @@ class CartSection extends StatelessWidget {
                   onPressed: () {
                     controller.showCustomerPanel.value = true;
                   },
-                  icon: Icon(Iconsax.user_add, size: 16, color: theme.secondaryColor.value),
+                  icon: const Icon(Iconsax.user_add, size: 18, color: Colors.white),
                   label: Text(
                     'Add Customer',
                     style: AppFonts.geistMono(
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: theme.secondaryColor.value,
+                      color: Colors.white,
                     ),
                   ),
                   style: TextButton.styleFrom(
-                    backgroundColor: theme.secondaryColor.value.withOpacity(0.12),
+                    backgroundColor: theme.secondaryColor.value,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    elevation: 1,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   ),
                 ),
               const SizedBox(width: 8),

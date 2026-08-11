@@ -1,8 +1,10 @@
 import 'package:modfirstpos/core/utils/currency_utils.dart';
+import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/modules/bootstrap/controller/bootstrap_controller.dart';
+import 'package:modfirstpos/core/services/app_update_service.dart';
 import 'package:modfirstpos/core/services/customer_display_service.dart';
 import 'package:modfirstpos/core/storage/customer_display_settings_storage.dart';
 import 'package:modfirstpos/modules/setting/storage/pos_device_cache_storage.dart';
@@ -68,6 +70,7 @@ class HomeController extends GetxController {
     _connectCustomerDisplay();
     ever(cartItems, (_) => _pushCustomerDisplay());
     ever(discountInput, (_) => _pushCustomerDisplay());
+    unawaited(AppUpdateService.checkForUpdate());
   }
 
   /// Connects to the customer-facing tab (Settings > Customer IP) so cart

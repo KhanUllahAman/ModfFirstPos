@@ -127,28 +127,21 @@ class ThermalPrinterService {
     if (logo != null) {
       printer.image(logo, align: PosAlign.center);
       printer.feed(0);
+    } else if (data.company.name != null && data.company.name!.isNotEmpty) {
+      printer.text(
+        data.company.name!,
+        styles: _base.copyWith(align: PosAlign.center, bold: true, width: PosTextSize.size2),
+      );
     }
-    printer.text(
-      data.company.name ?? 'Shift Report',
-      styles: const PosStyles(
-        align: PosAlign.center,
-        bold: true,
-        height: PosTextSize.size1,
-        width: PosTextSize.size2,
-      ),
-    );
     if (data.company.fullAddress != null && data.company.fullAddress!.isNotEmpty) {
-      printer.text(data.company.fullAddress!,
-          styles: const PosStyles(align: PosAlign.center, height: PosTextSize.size1));
+      printer.text(data.company.fullAddress!, styles: _base.copyWith(align: PosAlign.center));
     }
     if (data.company.phone != null && data.company.phone!.isNotEmpty) {
-      printer.text(data.company.phone!,
-          styles: const PosStyles(align: PosAlign.center, height: PosTextSize.size1));
+      printer.text(data.company.phone!, styles: _base.copyWith(align: PosAlign.center));
     }
     _divider(printer);
 
-    printer.text('SHIFT CLOSING REPORT',
-        styles: const PosStyles(align: PosAlign.center, bold: true));
+    printer.text('SHIFT CLOSING REPORT', styles: _base.copyWith(align: PosAlign.center, bold: true));
     _divider(printer);
 
     if (data.branch.name != null && data.branch.name!.isNotEmpty) {
@@ -165,13 +158,13 @@ class ThermalPrinterService {
     if (data.shift.duration != null) _smallRow(printer, 'Duration', data.shift.duration!);
     _divider(printer);
 
-    printer.text('ORDERS', styles: const PosStyles(bold: true));
+    printer.text('ORDERS', styles: _base.copyWith(bold: true));
     _summaryRow(printer, 'Total', '${data.orders.total}');
     _summaryRow(printer, 'Completed', '${data.orders.completed}');
     _summaryRow(printer, 'Cancelled', '${data.orders.cancelled}');
     _divider(printer);
 
-    printer.text('SALES', styles: const PosStyles(bold: true));
+    printer.text('SALES', styles: _base.copyWith(bold: true));
     _summaryRow(printer, 'Gross Sales', data.sales.grossSales);
     _summaryRow(printer, 'Discounts', data.sales.discounts);
     _summaryRow(printer, 'Shipping', data.sales.shipping);
@@ -182,13 +175,13 @@ class ThermalPrinterService {
     _divider(printer);
 
     if (data.refunds.count > 0) {
-      printer.text('REFUNDS', styles: const PosStyles(bold: true));
+      printer.text('REFUNDS', styles: _base.copyWith(bold: true));
       _summaryRow(printer, 'Count', '${data.refunds.count}');
       _summaryRow(printer, 'Amount', data.refunds.amount);
       _divider(printer);
     }
 
-    printer.text('CASH RECONCILIATION', styles: const PosStyles(bold: true));
+    printer.text('CASH RECONCILIATION', styles: _base.copyWith(bold: true));
     _summaryRow(printer, 'Opening Float', data.cashReconciliation.openingFloat);
     _summaryRow(printer, 'Cash Collected', data.cashReconciliation.cashCollected);
     _summaryRow(printer, 'Cash Refunded', data.cashReconciliation.cashRefunded);
@@ -198,16 +191,22 @@ class ThermalPrinterService {
 
     if (data.shift.closingNotes != null && data.shift.closingNotes!.isNotEmpty) {
       _divider(printer);
-      printer.text('Notes: ${data.shift.closingNotes}',
-          styles: const PosStyles(height: PosTextSize.size1));
+      printer.text('Notes: ${data.shift.closingNotes}', styles: _base);
     }
     if (data.footer != null && data.footer!.isNotEmpty) {
       printer.feed(1);
-      printer.text(data.footer!,
-          styles: const PosStyles(align: PosAlign.center, height: PosTextSize.size1));
+      printer.text(data.footer!, styles: _base.copyWith(align: PosAlign.center));
     }
     printer.feed(1);
   }
+
+  /// Base style every slip line uses unless overridden. Deliberately plain
+  /// Font A — esc_pos_printer computes `printer.row()` column widths using
+  /// Font A's character metrics, so printing Font B (condensed) text inside
+  /// a row miscalculates the column split and corrupts the layout (headers
+  /// merging together, numbers splitting across lines). Font A is the only
+  /// font that measures correctly in both `row()` and plain `text()`.
+  static const _base = PosStyles(height: PosTextSize.size1);
 
   void _writeReceipt(
     NetworkPrinter printer,
@@ -217,22 +216,22 @@ class ThermalPrinterService {
     if (logo != null) {
       printer.image(logo, align: PosAlign.center);
       printer.feed(0);
+    } else if (data.company.name != null && data.company.name!.isNotEmpty) {
+      // Only print the store name as text when there's no logo to show it —
+      // avoids a redundant/mismatched name line sitting right under the logo.
+      printer.text(
+        data.company.name!,
+        styles: _base.copyWith(align: PosAlign.center, bold: true, width: PosTextSize.size2),
+      );
     }
-    printer.text(
-      data.company.name ?? 'Receipt',
-      styles: const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size1),
-    );
     if (data.company.tagline != null && data.company.tagline!.isNotEmpty) {
-      printer.text(data.company.tagline!,
-          styles: const PosStyles(align: PosAlign.center, height: PosTextSize.size1));
+      printer.text(data.company.tagline!, styles: _base.copyWith(align: PosAlign.center));
     }
     if (data.company.address != null && data.company.address!.isNotEmpty) {
-      printer.text(data.company.address!,
-          styles: const PosStyles(align: PosAlign.center, height: PosTextSize.size1));
+      printer.text(data.company.address!, styles: _base.copyWith(align: PosAlign.center));
     }
     if (data.company.phone != null && data.company.phone!.isNotEmpty) {
-      printer.text(data.company.phone!,
-          styles: const PosStyles(align: PosAlign.center, height: PosTextSize.size1));
+      printer.text(data.company.phone!, styles: _base.copyWith(align: PosAlign.center));
     }
     _divider(printer);
 
@@ -245,45 +244,24 @@ class ThermalPrinterService {
     _divider(printer);
 
     if (data.customer.name != null && data.customer.name!.isNotEmpty) {
-      printer.text(data.customer.name!,
-          styles: const PosStyles(bold: true, height: PosTextSize.size1));
+      _smallRow(printer, 'Customer', data.customer.name!);
     }
     if (data.customer.phone != null && data.customer.phone!.isNotEmpty) {
-      printer.text(data.customer.phone!,
-          styles: const PosStyles(height: PosTextSize.size1));
+      _smallRow(printer, 'Phone', data.customer.phone!);
     }
     if (data.customer.name != null || data.customer.phone != null) {
       _divider(printer);
     }
 
-    printer.row([
-      PosColumn(text: 'Item', width: 6, styles: const PosStyles(bold: true, height: PosTextSize.size1)),
-      PosColumn(
-          text: 'Qty',
-          width: 2,
-          styles: const PosStyles(bold: true, align: PosAlign.center, height: PosTextSize.size1)),
-      PosColumn(
-          text: 'Total',
-          width: 4,
-          styles: const PosStyles(bold: true, align: PosAlign.right, height: PosTextSize.size1)),
-    ]);
+    _itemLine(printer, 'ITEM', 'QTY', 'TOTAL', bold: true);
+    _divider(printer);
     for (final item in data.items) {
       final label = item.variant != null && item.variant!.isNotEmpty
           ? '${item.name ?? ''} (${item.variant})'
           : (item.name ?? '');
-      printer.row([
-        PosColumn(text: label, width: 6, styles: const PosStyles(height: PosTextSize.size1)),
-        PosColumn(
-            text: '${item.quantity}',
-            width: 2,
-            styles: const PosStyles(align: PosAlign.center, height: PosTextSize.size1)),
-        PosColumn(
-            text: item.lineTotal ?? '',
-            width: 4,
-            styles: const PosStyles(align: PosAlign.right, height: PosTextSize.size1)),
-      ]);
+      _itemLine(printer, label, '${item.quantity}', item.lineTotal ?? '');
+      _divider(printer);
     }
-    _divider(printer);
 
     _summaryRow(printer, 'Subtotal', data.summary.subtotal);
     _summaryRow(printer, 'Discount', data.summary.discount);
@@ -296,55 +274,70 @@ class ThermalPrinterService {
 
     if (data.deliveryInfo != null && data.deliveryInfo!.isNotEmpty) {
       _divider(printer);
-      printer.text(data.deliveryInfo!,
-          styles: const PosStyles(align: PosAlign.center, height: PosTextSize.size1));
+      printer.text(data.deliveryInfo!, styles: _base.copyWith(align: PosAlign.center));
     }
-    if (data.notes != null && data.notes!.isNotEmpty) {
-      printer.text('Notes: ${data.notes}',
-          styles: const PosStyles(height: PosTextSize.size1));
+    // 'POS Checkout order' is an internal placeholder the app sends when the
+    // cashier leaves notes blank — not something a customer should see.
+    if (data.notes != null &&
+        data.notes!.isNotEmpty &&
+        data.notes!.trim().toLowerCase() != 'pos checkout order') {
+      printer.text('Notes: ${data.notes}', styles: _base);
     }
     printer.feed(1);
     printer.text('Thank you for your purchase!',
-        styles: const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size1));
-    if (data.footerNote != null && data.footerNote!.isNotEmpty) {
-      printer.text(data.footerNote!,
-          styles: const PosStyles(align: PosAlign.center, height: PosTextSize.size1));
-    }
+        styles: _base.copyWith(align: PosAlign.center, bold: true));
     printer.feed(1);
   }
 
-  /// A tighter, dashed divider instead of `printer.hr()`'s full solid
-  /// line — reads lighter on a compact slip.
+  /// Characters per line for Font A on 80mm paper (576 dots / 12 dots-per-
+  /// char). `printer.row()`'s own column-width math doesn't reliably match
+  /// this on every printer/profile — it's what was corrupting the item
+  /// table and totals (merged headers, numbers splitting mid-value). Every
+  /// two-sided line below is instead built as one plain padded string and
+  /// sent through a single `printer.text()` call, which always prints
+  /// exactly as written.
+  static const int _lineWidth = 48;
+
+  /// Uses the printer's own `hr()` so the rule always spans the full paper
+  /// width — a fixed-length dashed string falls short once the font changes.
   void _divider(NetworkPrinter printer) {
-    printer.text('- - - - - - - - - - - - - - - - - - - -',
-        styles: const PosStyles(align: PosAlign.center, height: PosTextSize.size1));
+    printer.hr(ch: '-');
   }
 
+  /// A single "Label: Value" line rather than a 2-column row — with short
+  /// labels/values a wide row leaves a large empty gap in the middle.
   void _smallRow(NetworkPrinter printer, String label, String value) {
-    printer.row([
-      PosColumn(
-          text: label,
-          width: 4,
-          styles: const PosStyles(height: PosTextSize.size1, align: PosAlign.left)),
-      PosColumn(
-          text: value,
-          width: 8,
-          styles: const PosStyles(height: PosTextSize.size1, align: PosAlign.right)),
-    ]);
+    printer.text('$label: $value', styles: _base);
   }
 
+  /// Label flush left, amount flush right, on one manually-padded line —
+  /// no `printer.row()` involved, so nothing can split across two lines.
   void _summaryRow(NetworkPrinter printer, String label, String? value,
       {bool bold = false}) {
     if (value == null) return;
-    printer.row([
-      PosColumn(
-          text: label,
-          width: 8,
-          styles: PosStyles(bold: bold, height: PosTextSize.size1)),
-      PosColumn(
-          text: value,
-          width: 4,
-          styles: PosStyles(bold: bold, align: PosAlign.right, height: PosTextSize.size1)),
-    ]);
+    final gap = _lineWidth - label.length - value.length;
+    final line = gap > 0 ? '$label${' ' * gap}$value' : '$label $value';
+    printer.text(line, styles: _base.copyWith(bold: bold));
+  }
+
+  /// Item name flush left, qty and amount right-aligned in fixed columns —
+  /// built as plain padded text for the same reason as [_summaryRow]. A
+  /// name too long for one line wraps onto its own line, with qty/total
+  /// printed on the next, still landing under their header columns.
+  void _itemLine(NetworkPrinter printer, String name, String qty, String total,
+      {bool bold = false}) {
+    const qtyWidth = 6;
+    const totalWidth = 10;
+    const nameWidth = _lineWidth - qtyWidth - totalWidth;
+
+    final qtyCell = qty.padLeft((qtyWidth + qty.length) ~/ 2).padRight(qtyWidth);
+    final totalCell = total.padLeft(totalWidth);
+
+    if (name.length <= nameWidth) {
+      printer.text('${name.padRight(nameWidth)}$qtyCell$totalCell', styles: _base.copyWith(bold: bold));
+    } else {
+      printer.text(name, styles: _base.copyWith(bold: bold));
+      printer.text('${' ' * nameWidth}$qtyCell$totalCell', styles: _base.copyWith(bold: bold));
+    }
   }
 }
