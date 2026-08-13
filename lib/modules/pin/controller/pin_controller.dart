@@ -189,6 +189,20 @@ class PinController extends GetxController with WidgetsBindingObserver {
     super.onClose();
   }
 
+  /// Clears the lock overlay and idle-timer state on logout. Without this
+  /// the lock screen (a permanent, app-wide overlay — see
+  /// AppLockWrapper) keeps showing after logout, since `isLocked` is
+  /// otherwise only ever cleared by successfully entering the PIN.
+  void resetForLogout() {
+    _stopIdleWatcher();
+    isLocked.value = false;
+    pinEnabled.value = false;
+    enteredPin.value = '';
+    verifyError.value = '';
+    _lastActiveAt = null;
+    SecureStorageService.saveWasLocked(false);
+  }
+
   void onPinDigit(String digit) {
     if (enteredPin.value.length >= 6) return;
     verifyError.value = '';

@@ -4,14 +4,15 @@ import 'dart:io';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
-/// Wraps Google Play's In-App Update API so cashiers get the same
-/// "update available" prompt other apps show, instead of silently running
-/// a stale build forever (Play never force-updates on its own).
+/// Wraps Google Play's In-App Update API so every POS device is forced
+/// onto the latest build as soon as one is published — a shared,
+/// company-managed cashier device should never be left running a stale
+/// version (Play never force-updates on its own).
 ///
-/// Uses a **flexible** update: downloads in the background while the
-/// cashier keeps working (a POS app can't afford to block on an "update
-/// now or nothing" screen mid-shift), then shows a snackbar prompting them
-/// to restart once it's ready to install.
+/// Uses an **immediate** update: Play shows its own full-screen "Update
+/// now" flow and blocks the app until it's installed. Falls back to a
+/// flexible (background download + restart-to-install) update only on the
+/// rare case Play doesn't allow immediate for a given release.
 class AppUpdateService {
   AppUpdateService._();
 
@@ -32,6 +33,13 @@ class AppUpdateService {
         return;
       }
 
+      if (info.immediateUpdateAllowed) {
+        // Blocks with Play's own full-screen update UI until installed —
+        // the cashier can't dismiss their way back into the stale build.
+        await InAppUpdate.performImmediateUpdate();
+        return;
+      }
+
       if (info.flexibleUpdateAllowed) {
         final result = await InAppUpdate.startFlexibleUpdate();
         if (result == AppUpdateResult.success) {
@@ -49,11 +57,6 @@ class AppUpdateService {
             },
           );
         }
-      } else if (info.immediateUpdateAllowed) {
-        // Flexible isn't offered for this update (e.g. it's marked
-        // priority/critical on the Play Console side) — immediate is the
-        // only option Play gives us here.
-        await InAppUpdate.performImmediateUpdate();
       }
     } catch (e) {
       log('AppUpdateService checkForUpdate error: $e');

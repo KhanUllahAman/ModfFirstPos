@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/services/customer_display_service.dart';
@@ -41,7 +42,7 @@ class SettingController extends GetxController {
   // -- Stripe Terminal (card-present) — see docs/POS_PAYMENT_FLUTTER.md --
   final StripeTerminalService _terminal = Get.find<StripeTerminalService>();
   final TextEditingController readerIdController = TextEditingController();
-  final RxBool useSimulatedReader = true.obs;
+  final RxBool useSimulatedReader = kDebugMode.obs;
 
   // Test-only: simulate a card being presented on a simulated reader,
   // bypassing the need for a real physical reader or a backend endpoint.
@@ -108,6 +109,8 @@ class SettingController extends GetxController {
   }
 
   Future<void> saveTerminalSettings({bool showSnackbar = true}) async {
+    final previousSimulated = await StripeTerminalSettingsStorage.getUseSimulated();
+
     await StripeTerminalSettingsStorage.saveReaderId(readerIdController.text.trim());
     await StripeTerminalSettingsStorage.saveUseSimulated(useSimulatedReader.value);
     await StripeTerminalSettingsStorage.saveStripeReaderTmrId(
@@ -116,6 +119,14 @@ class SettingController extends GetxController {
     await SecureStorageService.saveStripeTestSecretKey(
       stripeTestSecretKeyController.text.trim(),
     );
+
+    // A connected reader stays connected in memory regardless of this
+    // setting — without disconnecting here, flipping simulated <-> real
+    // silently keeps using whichever reader was already connected.
+    if (previousSimulated != useSimulatedReader.value && _terminal.isConnected.value) {
+      await _terminal.disconnect();
+    }
+
     if (!showSnackbar) return;
     customSnackBar(
       'Stripe Terminal',

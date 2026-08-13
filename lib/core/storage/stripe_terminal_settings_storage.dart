@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:modfirstpos/core/database/key_value_store.dart';
 
 /// Manually-configured Stripe Terminal reader settings (Settings screen).
@@ -30,8 +31,12 @@ class StripeTerminalSettingsStorage {
   static Future<void> saveUseSimulated(bool useSimulated) =>
       KeyValueStore.setJsonCache(_keySimulated, {'value': useSimulated});
 
+  /// Defaults to simulated in debug builds (so a fresh dev install can test
+  /// without hardware) and to the real reader in release builds — a client
+  /// running a release build always has a physical terminal, never Stripe's
+  /// simulated one.
   static Future<bool> getUseSimulated() async {
     final data = await KeyValueStore.getJsonCache(_keySimulated);
-    return (data?['value'] as bool?) ?? true;
+    return (data?['value'] as bool?) ?? kDebugMode;
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -730,51 +731,60 @@ class SettingView extends GetView<SettingController> {
           customFocusedBorderColor: theme.secondaryColor.value,
           customEnabledBorderColor: ColorResources.cardBorderColor,
         ),
-        SizedBox(height: context.spacingSM),
-        Obx(
-          () => SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            value: controller.useSimulatedReader.value,
-            onChanged: (val) => controller.useSimulatedReader.value = val,
-            activeThumbColor: theme.secondaryColor.value,
-            title: Text(
-              'Use Simulated Reader (testing, no hardware)',
-              style: AppFonts.geistMono(
-                fontSize: context.fontXS,
-                fontWeight: FontWeight.w600,
-                color: ColorResources.labelColor,
+        // Simulated-reader testing tools — dev builds only. A client running
+        // a release build always has a real physical terminal, so none of
+        // this (toggle, Stripe test reader id, test secret key) should be
+        // visible or reachable for them.
+        if (kDebugMode) ...[
+          SizedBox(height: context.spacingSM),
+          Obx(
+            () => SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              value: controller.useSimulatedReader.value,
+              onChanged: (val) {
+                controller.useSimulatedReader.value = val;
+                controller.saveTerminalSettings(showSnackbar: false);
+              },
+              activeThumbColor: theme.secondaryColor.value,
+              title: Text(
+                'Use Simulated Reader (testing, no hardware)',
+                style: AppFonts.geistMono(
+                  fontSize: context.fontXS,
+                  fontWeight: FontWeight.w600,
+                  color: ColorResources.labelColor,
+                ),
               ),
             ),
           ),
-        ),
-        SizedBox(height: context.spacingSM),
-        Text(
-          'TEST ONLY — simulate a card tap on a simulated reader '
-          '(bypasses needing a real Stripe Terminal to test)',
-          style: AppFonts.geistMono(
-            fontSize: 9,
-            color: Colors.grey[600],
+          SizedBox(height: context.spacingSM),
+          Text(
+            'TEST ONLY — simulate a card tap on a simulated reader '
+            '(bypasses needing a real Stripe Terminal to test)',
+            style: AppFonts.geistMono(
+              fontSize: 9,
+              color: Colors.grey[600],
+            ),
           ),
-        ),
-        SizedBox(height: context.spacingSM),
-        CustomTextFormField(
-          controller: controller.stripeReaderTmrIdController,
-          labelText: 'Stripe Reader ID (tmr_...)',
-          hintText: 'From POST /terminal/readers/list',
-          borderRadius: 12,
-          customFocusedBorderColor: theme.secondaryColor.value,
-          customEnabledBorderColor: ColorResources.cardBorderColor,
-        ),
-        SizedBox(height: context.spacingSM),
-        CustomTextFormField(
-          controller: controller.stripeTestSecretKeyController,
-          labelText: 'Stripe Test Secret Key (sk_test_...)',
-          hintText: 'Stored on this device only — never sent to our server',
-          obscureText: true,
-          borderRadius: 12,
-          customFocusedBorderColor: theme.secondaryColor.value,
-          customEnabledBorderColor: ColorResources.cardBorderColor,
-        ),
+          SizedBox(height: context.spacingSM),
+          CustomTextFormField(
+            controller: controller.stripeReaderTmrIdController,
+            labelText: 'Stripe Reader ID (tmr_...)',
+            hintText: 'From POST /terminal/readers/list',
+            borderRadius: 12,
+            customFocusedBorderColor: theme.secondaryColor.value,
+            customEnabledBorderColor: ColorResources.cardBorderColor,
+          ),
+          SizedBox(height: context.spacingSM),
+          CustomTextFormField(
+            controller: controller.stripeTestSecretKeyController,
+            labelText: 'Stripe Test Secret Key (sk_test_...)',
+            hintText: 'Stored on this device only — never sent to our server',
+            obscureText: true,
+            borderRadius: 12,
+            customFocusedBorderColor: theme.secondaryColor.value,
+            customEnabledBorderColor: ColorResources.cardBorderColor,
+          ),
+        ],
         SizedBox(height: context.spacingSM),
         Obx(() {
           final connecting = controller.isTerminalConnecting.value;

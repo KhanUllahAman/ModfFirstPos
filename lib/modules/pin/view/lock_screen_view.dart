@@ -6,6 +6,7 @@ import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/modules/pin/controller/pin_controller.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
+import 'package:modfirstpos/shared/widgets/helperFunction/logout_helper.dart';
 import 'package:modfirstpos/shared/widgets/numpad/pin_numpad.dart';
 
 class LockScreenView extends GetView<PinController> {
@@ -130,6 +131,30 @@ class LockScreenView extends GetView<PinController> {
                                   onBackspacePressed:
                                       controller.onPinBackspace,
                                 ),
+                        ),
+                        SizedBox(height: context.spacingSM),
+                        TextButton(
+                          onPressed: () =>
+                              // LockScreenView is rendered outside the app's
+                              // Navigator (AppLockWrapper overlays it above
+                              // `child`), so the local `context` has no
+                              // Navigator ancestor for showDialog() to find —
+                              // use GetX's root navigator context instead.
+                              // No dialogs here at all (not even the active
+                              // shift check) — from a locked screen this must
+                              // log out immediately, every time.
+                              AppLogout.attemptInstant(
+                                Get.context!,
+                                checkActiveShift: false,
+                              ),
+                          child: Text(
+                            'Logout Instantly',
+                            style: AppFonts.geistMono(
+                              fontSize: context.fontXS,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.redAccent.shade100,
+                            ),
+                          ),
                         ),
                       ],
                     ),
