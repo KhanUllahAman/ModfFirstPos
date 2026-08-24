@@ -22,7 +22,8 @@ import 'package:modfirstpos/core/utils/json_utils.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
 class HomeController extends GetxController {
-  final BootstrapController _bootstrapController = Get.find<BootstrapController>();
+  final BootstrapController _bootstrapController =
+      Get.find<BootstrapController>();
   final CustomerDisplayClientService _customerDisplay =
       Get.find<CustomerDisplayClientService>();
 
@@ -54,7 +55,8 @@ class HomeController extends GetxController {
   final RxBool isProductsLoading = false.obs;
   final RxString productSearchQuery = ''.obs;
   final Rxn<ProductModel> selectedProduct = Rxn<ProductModel>();
-  final Rxn<ProductVariantModel> selectedInlineVariant = Rxn<ProductVariantModel>();
+  final Rxn<ProductVariantModel> selectedInlineVariant =
+      Rxn<ProductVariantModel>();
   final RxInt inlineQuantity = 1.obs;
 
   @override
@@ -64,7 +66,9 @@ class HomeController extends GetxController {
     productScrollController = ScrollController();
     customerListScrollController = ScrollController();
     variantPanelScrollController = ScrollController();
-    _bootstrapController.hydrateFromCache().then((_) => _refreshFromBootstrap());
+    _bootstrapController.hydrateFromCache().then(
+      (_) => _refreshFromBootstrap(),
+    );
     ever(_bootstrapController.data, (_) => _refreshFromBootstrap());
     _loadPinnedProducts();
     _connectCustomerDisplay();
@@ -112,7 +116,9 @@ class HomeController extends GetxController {
     categories.assignAll(_bootstrapController.categories);
     final categoryId = selectedCategory.value?.id;
     if (categoryId != null) {
-      categoryProducts.assignAll(_bootstrapController.productsForCategory(categoryId));
+      categoryProducts.assignAll(
+        _bootstrapController.productsForCategory(categoryId),
+      );
     }
 
     // Keeps an already-open variant-selection panel live too — otherwise a
@@ -120,14 +126,16 @@ class HomeController extends GetxController {
     // show up here until the cashier re-taps the product.
     final selectedProductId = selectedProduct.value?.id;
     if (selectedProductId != null) {
-      final refreshed = _bootstrapController.allProducts
-          .firstWhereOrNull((p) => p.id == selectedProductId);
+      final refreshed = _bootstrapController.allProducts.firstWhereOrNull(
+        (p) => p.id == selectedProductId,
+      );
       if (refreshed != null) {
         selectedProduct.value = refreshed;
         final variantId = selectedInlineVariant.value?.id;
         if (variantId != null) {
-          selectedInlineVariant.value =
-              refreshed.variants.firstWhereOrNull((v) => v.id == variantId);
+          selectedInlineVariant.value = refreshed.variants.firstWhereOrNull(
+            (v) => v.id == variantId,
+          );
         }
       }
     }
@@ -145,7 +153,6 @@ class HomeController extends GetxController {
     super.onClose();
   }
 
-
   /// Full re-sync of the offline bootstrap snapshot (categories, products,
   /// variants, inventory, pickup locations, etc — one call refreshes all of
   /// it). Kept under both names since existing UI wires "Sync Categories"
@@ -153,7 +160,6 @@ class HomeController extends GetxController {
   Future<void> syncCategories() => _bootstrapController.syncBootstrap();
 
   Future<void> syncCategoryProducts() => _bootstrapController.syncBootstrap();
-
 
   List<CategoryModel> get filteredCategories {
     final query = categorySearchQuery.value.trim().toLowerCase();
@@ -230,14 +236,14 @@ class HomeController extends GetxController {
     final matches = allProducts.where((p) {
       if (p.displayName.toLowerCase().contains(lower)) return true;
       if (p.sku != null && p.sku!.toLowerCase().contains(lower)) return true;
-      final category =
-          categories.firstWhereOrNull((c) => c.id == p.categoryId);
+      final category = categories.firstWhereOrNull((c) => c.id == p.categoryId);
       if (category != null &&
           category.displayName.toLowerCase().contains(lower)) {
         return true;
       }
-      return p.variants
-          .any((v) => v.sku != null && v.sku!.toLowerCase().contains(lower));
+      return p.variants.any(
+        (v) => v.sku != null && v.sku!.toLowerCase().contains(lower),
+      );
     }).toList();
 
     if (matches.isEmpty) {
@@ -266,8 +272,9 @@ class HomeController extends GetxController {
   /// Puts [product]'s category in view (so the catalogue panel shows where
   /// it came from) before adding/selecting it.
   void _focusProductInCatalogue(ProductModel product) {
-    final category =
-        categories.firstWhereOrNull((c) => c.id == product.categoryId);
+    final category = categories.firstWhereOrNull(
+      (c) => c.id == product.categoryId,
+    );
     selectedCategory.value = category;
     categoryProducts.assignAll(
       product.categoryId != null
@@ -361,6 +368,43 @@ class HomeController extends GetxController {
     );
   }
 
+  /// Adds a cashier-created line without linking it to catalogue stock.
+  void addCustomSale({
+    required double price,
+    required int quantity,
+    String? title,
+    required bool applyTax,
+  }) {
+    final customTitle = title?.trim();
+    final name = (customTitle == null || customTitle.isEmpty)
+        ? 'Custom Sale'
+        : customTitle;
+
+    cartItems.add(
+      CartItemModel(
+        product: CartProduct(
+          name: name,
+          skuCode: 'CUSTOM-${DateTime.now().microsecondsSinceEpoch}',
+          imageUrl: null,
+          amount: price,
+          unitPrice: price,
+          customText: (customTitle == null || customTitle.isEmpty)
+              ? null
+              : customTitle,
+          isAppliedTax: applyTax,
+          customPrice: price,
+        ),
+        quantity: quantity,
+      ),
+    );
+
+    customSnackBar(
+      'Added to Cart',
+      '$name added successfully',
+      snackBarType: SnackBarType.success,
+    );
+  }
+
   /// Current stock for a product/variant from the cached bootstrap
   /// catalogue (kept in sync with inventory adjustments), or null when it
   /// can't be resolved — treated as unlimited/untracked so it never blocks
@@ -392,13 +436,13 @@ class HomeController extends GetxController {
     int? productId,
     int? variantId,
   }) {
-    final existingIndex =
-        cartItems.indexWhere((c) => c.product.skuCode == sku);
+    final existingIndex = cartItems.indexWhere((c) => c.product.skuCode == sku);
 
     final stock = _liveStock(productId: productId, variantId: variantId);
     if (stock != null) {
-      final alreadyInCart =
-          existingIndex != -1 ? cartItems[existingIndex].quantity : 0;
+      final alreadyInCart = existingIndex != -1
+          ? cartItems[existingIndex].quantity
+          : 0;
       if (stock <= 0) {
         customSnackBar(
           'Out of Stock',
@@ -742,8 +786,9 @@ class HomeController extends GetxController {
       return;
     }
     if (current.replaceAll('.', '').length >= 9) return;
-    cashReceivedInput.value =
-        (current == '0' && digit != '.') ? digit : current + digit;
+    cashReceivedInput.value = (current == '0' && digit != '.')
+        ? digit
+        : current + digit;
   }
 
   void keypadBackspace() {
@@ -754,8 +799,7 @@ class HomeController extends GetxController {
 
   void keypadClear() => cashReceivedInput.value = '';
 
-  void setExactCash() =>
-      cashReceivedInput.value = balance.toStringAsFixed(2);
+  void setExactCash() => cashReceivedInput.value = balance.toStringAsFixed(2);
 
   void addQuickAmount(double amount) {
     cashReceivedInput.value = (cashReceived + amount).toStringAsFixed(2);
@@ -781,13 +825,15 @@ class HomeController extends GetxController {
         'customer_name': customer?.fullName,
         'customer_email': customer?.email,
         'items': cartItems
-            .map((item) => {
-                  'name': item.product.name,
-                  'sku': item.product.skuCode,
-                  'quantity': item.quantity,
-                  'unit_price': item.product.unitPrice,
-                  'total': item.total,
-                })
+            .map(
+              (item) => {
+                'name': item.product.name,
+                'sku': item.product.skuCode,
+                'quantity': item.quantity,
+                'unit_price': item.product.unitPrice,
+                'total': item.total,
+              },
+            )
             .toList(),
         'subtotal': productTotal,
         'discount_amount': discount,
@@ -802,7 +848,7 @@ class HomeController extends GetxController {
       customSnackBar(
         'Payment Complete',
         'Invoice $invoiceNumber'
-        '${change > 0 ? ' • Change ${CurrencyUtils.format(change, decimals: 2)}' : ''}',
+            '${change > 0 ? ' • Change ${CurrencyUtils.format(change, decimals: 2)}' : ''}',
         snackBarType: SnackBarType.success,
       );
 

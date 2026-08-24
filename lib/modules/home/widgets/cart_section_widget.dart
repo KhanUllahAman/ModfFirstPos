@@ -9,6 +9,7 @@ import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/core/utils/images_constant.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
 import 'package:modfirstpos/modules/home/model/cart_item_model.dart';
+import 'package:modfirstpos/modules/home/widgets/add_custom_sale_dialog.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -32,11 +33,16 @@ class CartSection extends StatelessWidget {
               if (hasCustomer)
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: theme.secondaryColor.value.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: theme.secondaryColor.value.withOpacity(0.2)),
+                      border: Border.all(
+                        color: theme.secondaryColor.value.withOpacity(0.2),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -71,7 +77,11 @@ class CartSection extends StatelessWidget {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close_rounded, size: 16, color: Colors.grey),
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
                           onPressed: () {
                             controller.selectedCartCustomer.value = null;
                           },
@@ -87,7 +97,11 @@ class CartSection extends StatelessWidget {
                   onPressed: () {
                     controller.showCustomerPanel.value = true;
                   },
-                  icon: const Icon(Iconsax.user_add, size: 18, color: Colors.white),
+                  icon: const Icon(
+                    Iconsax.user_add,
+                    size: 18,
+                    color: Colors.white,
+                  ),
                   label: Text(
                     'Add Customer',
                     style: AppFonts.geistMono(
@@ -102,16 +116,51 @@ class CartSection extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     elevation: 1,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                   ),
                 ),
               const SizedBox(width: 8),
+              TextButton.icon(
+                onPressed: () => AddCustomSaleDialog.show(context),
+                icon: const Icon(
+                  Icons.add_shopping_cart_rounded,
+                  size: 17,
+                  color: Colors.white,
+                ),
+                label: Text(
+                  'Add Custom Sale',
+                  style: AppFonts.geistMono(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  backgroundColor: theme.secondaryColor.value,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 1,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                ),
+              ),
+              if (controller.cartItems.isNotEmpty) const SizedBox(width: 8),
               if (controller.cartItems.isNotEmpty)
                 TextButton.icon(
                   onPressed: () {
                     controller.clearCart();
                   },
-                  icon: const Icon(Icons.delete_sweep_rounded, size: 16, color: ColorResources.gradientRed),
+                  icon: const Icon(
+                    Icons.delete_sweep_rounded,
+                    size: 16,
+                    color: ColorResources.gradientRed,
+                  ),
                   label: Text(
                     'Delete All',
                     style: AppFonts.geistMono(
@@ -121,11 +170,16 @@ class CartSection extends StatelessWidget {
                     ),
                   ),
                   style: TextButton.styleFrom(
-                    backgroundColor: ColorResources.gradientRed.withOpacity(0.12),
+                    backgroundColor: ColorResources.gradientRed.withOpacity(
+                      0.12,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                   ),
                 ),
             ],
@@ -142,7 +196,9 @@ class CartSection extends StatelessWidget {
                     scrollbarOrientation: ScrollbarOrientation.right,
                     child: ListView.separated(
                       controller: controller.cartScrollController,
-                      padding: EdgeInsets.only(right: context.responsiveWidth(0.018)),
+                      padding: EdgeInsets.only(
+                        right: context.responsiveWidth(0.018),
+                      ),
                       itemCount: controller.cartItems.length,
                       separatorBuilder: (_, __) =>
                           SizedBox(height: context.responsiveHeight(0.010)),
@@ -169,11 +225,13 @@ class _EmptyCart extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Obx(() => SvgPicture.asset(
-            color: theme.secondaryColor.value,
-            ImagesConstant.emptyCartSvg,
-            height: context.responsiveHeight(0.18),
-          )),
+          Obx(
+            () => SvgPicture.asset(
+              color: theme.secondaryColor.value,
+              ImagesConstant.emptyCartSvg,
+              height: context.responsiveHeight(0.18),
+            ),
+          ),
           SizedBox(height: context.spacingMD),
           Text(
             'Empty Cart',
@@ -282,7 +340,10 @@ class _CartItemTileState extends State<_CartItemTile> {
                       color: Colors.grey[200],
                       width: imgSize,
                       height: imgSize,
-                      child: const Icon(Icons.image_not_supported_outlined, size: 20),
+                      child: const Icon(
+                        Icons.image_not_supported_outlined,
+                        size: 20,
+                      ),
                     ),
                   )
                 : Container(
@@ -332,7 +393,10 @@ class _CartItemTileState extends State<_CartItemTile> {
                     Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.remove_circle_outline, size: 16),
+                          icon: const Icon(
+                            Icons.remove_circle_outline,
+                            size: 16,
+                          ),
                           onPressed: () => controller.decrementQty(item),
                           constraints: const BoxConstraints(),
                           padding: EdgeInsets.zero,
@@ -346,7 +410,9 @@ class _CartItemTileState extends State<_CartItemTile> {
                             color: theme.secondaryColor.value.withOpacity(0.08),
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(
-                              color: theme.secondaryColor.value.withOpacity(0.3),
+                              color: theme.secondaryColor.value.withOpacity(
+                                0.3,
+                              ),
                             ),
                           ),
                           child: TextField(
@@ -376,7 +442,10 @@ class _CartItemTileState extends State<_CartItemTile> {
                           color: ColorResources.successGreen,
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            size: 16,
+                          ),
                           onPressed: () => controller.removeFromCart(item),
                           constraints: const BoxConstraints(),
                           padding: const EdgeInsets.only(left: 6.0),

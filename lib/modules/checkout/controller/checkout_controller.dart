@@ -25,12 +25,12 @@ import 'package:modfirstpos/modules/setting/storage/pos_device_cache_storage.dar
 import 'package:modfirstpos/modules/shift/controller/shift_controller.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
-
 const _offlinePaymentMethods = {'cash', 'bank_transfer', 'without_payment'};
 
 class CheckoutController extends GetxController {
   final CheckoutService _service = CheckoutService();
-  final BootstrapController _bootstrapController = Get.find<BootstrapController>();
+  final BootstrapController _bootstrapController =
+      Get.find<BootstrapController>();
   final RxBool isLoading = false.obs;
   final RxBool isCouponLoading = false.obs;
   final RxString deliveryType = ''.obs;
@@ -45,12 +45,17 @@ class CheckoutController extends GetxController {
   final TextEditingController cityController = TextEditingController();
   final TextEditingController stateController = TextEditingController();
   final TextEditingController postalCodeController = TextEditingController();
-  final TextEditingController countryController = TextEditingController(text: 'United States');
-  final RxList<PickupLocationModel> pickupLocations = <PickupLocationModel>[].obs;
-  final Rxn<PickupLocationModel> selectedPickupLocation = Rxn<PickupLocationModel>();
+  final TextEditingController countryController = TextEditingController(
+    text: 'United States',
+  );
+  final RxList<PickupLocationModel> pickupLocations =
+      <PickupLocationModel>[].obs;
+  final Rxn<PickupLocationModel> selectedPickupLocation =
+      Rxn<PickupLocationModel>();
   final TextEditingController couponController = TextEditingController();
   final TextEditingController notesController = TextEditingController();
-  final Rxn<CouponValidationResponse> couponValidation = Rxn<CouponValidationResponse>();
+  final Rxn<CouponValidationResponse> couponValidation =
+      Rxn<CouponValidationResponse>();
   final RxString couponError = ''.obs;
   final Rxn<CreatedOrder> createdOrder = Rxn<CreatedOrder>();
   final RxString paymentMethod = 'without_payment'.obs;
@@ -81,8 +86,9 @@ class CheckoutController extends GetxController {
     final dotIndex = current.indexOf('.');
     if (dotIndex != -1 && digit != '.' && current.length - dotIndex > 2) return;
     if (current.replaceAll('.', '').length >= 9) return;
-    splitCashInput.value =
-        (current == '0' && digit != '.') ? digit : current + digit;
+    splitCashInput.value = (current == '0' && digit != '.')
+        ? digit
+        : current + digit;
   }
 
   void splitKeypadBackspace() {
@@ -92,7 +98,6 @@ class CheckoutController extends GetxController {
   }
 
   void splitKeypadClear() => splitCashInput.value = '';
-
 
   late final ScrollController panelScrollController;
 
@@ -148,7 +153,6 @@ class CheckoutController extends GetxController {
     splitCashInput.value = '';
     manualDiscount.value = null;
   }
-
 
   void applyManualDiscount({
     required String type,
@@ -224,8 +228,9 @@ class CheckoutController extends GetxController {
 
   Future<bool> _hydrateAddressesFromCache(int userId) async {
     try {
-      final cachedAddresses =
-          await KeyValueStore.getJsonCache(_addressCacheKey(userId));
+      final cachedAddresses = await KeyValueStore.getJsonCache(
+        _addressCacheKey(userId),
+      );
       if (cachedAddresses != null) {
         _applyAddresses(AddressListResponse.fromJson(cachedAddresses).payload);
         return true;
@@ -281,7 +286,6 @@ class CheckoutController extends GetxController {
     }
   }
 
-
   Future<void> syncPickupLocations() async {
     isLoading.value = true;
     try {
@@ -301,22 +305,24 @@ class CheckoutController extends GetxController {
       await KeyValueStore.setJsonCache(_addressCacheKey(userId), {
         'success': true,
         'payload': response.payload
-            .map((a) => {
-                  'id': a.id,
-                  'user_id': a.userId,
-                  'full_name': a.fullName,
-                  'phone': a.phone,
-                  'email': a.email,
-                  'address_line1': a.addressLine1,
-                  'address_line2': a.addressLine2,
-                  'city': a.city,
-                  'state': a.state,
-                  'postal_code': a.postalCode,
-                  'country': a.country,
-                  'is_default': a.isDefault,
-                  'type': a.type,
-                  'is_active': a.isActive,
-                })
+            .map(
+              (a) => {
+                'id': a.id,
+                'user_id': a.userId,
+                'full_name': a.fullName,
+                'phone': a.phone,
+                'email': a.email,
+                'address_line1': a.addressLine1,
+                'address_line2': a.addressLine2,
+                'city': a.city,
+                'state': a.state,
+                'postal_code': a.postalCode,
+                'country': a.country,
+                'is_default': a.isDefault,
+                'type': a.type,
+                'is_active': a.isActive,
+              },
+            )
             .toList(),
       });
     } else if (addresses.isEmpty) {
@@ -334,7 +340,10 @@ class CheckoutController extends GetxController {
     isCouponLoading.value = true;
     couponError.value = '';
     try {
-      final response = await _service.validateCoupon(code: code, orderAmount: orderAmount);
+      final response = await _service.validateCoupon(
+        code: code,
+        orderAmount: orderAmount,
+      );
       if (response.isSuccess) {
         couponValidation.value = response;
         customSnackBar(
@@ -367,15 +376,27 @@ class CheckoutController extends GetxController {
 
   bool validateNewAddressForm() {
     if (fullNameController.text.trim().isEmpty) {
-      customSnackBar('Validation Error', 'Full Name is required', snackBarType: SnackBarType.warning);
+      customSnackBar(
+        'Validation Error',
+        'Full Name is required',
+        snackBarType: SnackBarType.warning,
+      );
       return false;
     }
     if (phoneController.text.trim().isEmpty) {
-      customSnackBar('Validation Error', 'Phone is required', snackBarType: SnackBarType.warning);
+      customSnackBar(
+        'Validation Error',
+        'Phone is required',
+        snackBarType: SnackBarType.warning,
+      );
       return false;
     }
     if (address1Controller.text.trim().isEmpty) {
-      customSnackBar('Validation Error', 'Address Line 1 is required', snackBarType: SnackBarType.warning);
+      customSnackBar(
+        'Validation Error',
+        'Address Line 1 is required',
+        snackBarType: SnackBarType.warning,
+      );
       return false;
     }
     if (address1Controller.text.trim().length < 5) {
@@ -387,33 +408,52 @@ class CheckoutController extends GetxController {
       return false;
     }
     if (cityController.text.trim().isEmpty) {
-      customSnackBar('Validation Error', 'City is required', snackBarType: SnackBarType.warning);
+      customSnackBar(
+        'Validation Error',
+        'City is required',
+        snackBarType: SnackBarType.warning,
+      );
       return false;
     }
     return true;
   }
 
-
   Future<bool> createOrder(HomeController homeController) async {
     final customer = homeController.selectedCartCustomer.value;
     if (customer == null) {
-      customSnackBar('Error', 'No customer selected', snackBarType: SnackBarType.error);
+      customSnackBar(
+        'Error',
+        'No customer selected',
+        snackBarType: SnackBarType.error,
+      );
       return false;
     }
 
     if (homeController.cartItems.isEmpty) {
-      customSnackBar('Error', 'Cart is empty', snackBarType: SnackBarType.error);
+      customSnackBar(
+        'Error',
+        'Cart is empty',
+        snackBarType: SnackBarType.error,
+      );
       return false;
     }
 
     final itemsPayload = homeController.cartItems.map((item) {
       return {
         'product_id': item.product.productId ?? 0,
-        if (item.product.variantId != null) 'variant_id': item.product.variantId,
+        if (item.product.variantId != null)
+          'variant_id': item.product.variantId,
         'quantity': item.quantity,
         'print_method': 'dtf',
-        'custom_text': '',
-        'design_upload_ids': <int>[]
+        // These values are sent only for a cashier-created custom sale.
+        if (item.product.customText != null)
+          'custom_text': item.product.customText,
+        if (item.product.isAppliedTax != null)
+          'is_applied_tax': item.product.isAppliedTax,
+        // The backend contract uses this spelling intentionally.
+        if (item.product.customPrice != null)
+          'cutome_price': item.product.customPrice,
+        'design_upload_ids': <int>[],
       };
     }).toList();
 
@@ -428,24 +468,42 @@ class CheckoutController extends GetxController {
         inlineAddress = NewAddressInput(
           fullName: fullNameController.text.trim(),
           phone: phoneController.text.trim(),
-          email: emailController.text.trim().isEmpty ? null : emailController.text.trim(),
+          email: emailController.text.trim().isEmpty
+              ? null
+              : emailController.text.trim(),
           addressLine1: address1Controller.text.trim(),
-          addressLine2: address2Controller.text.trim().isEmpty ? null : address2Controller.text.trim(),
+          addressLine2: address2Controller.text.trim().isEmpty
+              ? null
+              : address2Controller.text.trim(),
           city: cityController.text.trim(),
-          state: stateController.text.trim().isEmpty ? null : stateController.text.trim(),
-          postalCode: postalCodeController.text.trim().isEmpty ? null : postalCodeController.text.trim(),
-          country: countryController.text.trim().isEmpty ? 'United States' : countryController.text.trim(),
+          state: stateController.text.trim().isEmpty
+              ? null
+              : stateController.text.trim(),
+          postalCode: postalCodeController.text.trim().isEmpty
+              ? null
+              : postalCodeController.text.trim(),
+          country: countryController.text.trim().isEmpty
+              ? 'United States'
+              : countryController.text.trim(),
         );
       } else {
         if (selectedAddress.value == null) {
-          customSnackBar('Address Required', 'Please select or add a shipping address.', snackBarType: SnackBarType.warning);
+          customSnackBar(
+            'Address Required',
+            'Please select or add a shipping address.',
+            snackBarType: SnackBarType.warning,
+          );
           return false;
         }
         addressId = selectedAddress.value!.id;
       }
     } else {
       if (selectedPickupLocation.value == null) {
-        customSnackBar('Pickup Location Required', 'Please select a pickup location.', snackBarType: SnackBarType.warning);
+        customSnackBar(
+          'Pickup Location Required',
+          'Please select a pickup location.',
+          snackBarType: SnackBarType.warning,
+        );
         return false;
       }
       addressId = selectedAddress.value?.id;
@@ -457,8 +515,14 @@ class CheckoutController extends GetxController {
     _pendingPickupLocationId = selectedPickupLocation.value?.id;
     final subtotal = homeController.productTotal;
     final taxPercent =
-        double.tryParse(_bootstrapController.data.value?.store.taxPercentage ?? '') ?? 0;
-    final tax = subtotal * taxPercent / 100;
+        double.tryParse(
+          _bootstrapController.data.value?.store.taxPercentage ?? '',
+        ) ??
+        0;
+    final taxableSubtotal = homeController.cartItems
+        .where((item) => item.product.isAppliedTax != false)
+        .fold<double>(0, (sum, item) => sum + item.total);
+    final tax = taxableSubtotal * taxPercent / 100;
     createdOrder.value = CreatedOrder(
       id: 0,
       totalAmount: subtotal + tax,
@@ -491,7 +555,11 @@ class CheckoutController extends GetxController {
 
   Future<void> submitCheckout(HomeController homeController) async {
     if (createdOrder.value == null) {
-      customSnackBar('Error', 'Order not created yet', snackBarType: SnackBarType.error);
+      customSnackBar(
+        'Error',
+        'Order not created yet',
+        snackBarType: SnackBarType.error,
+      );
       return;
     }
 
@@ -502,7 +570,6 @@ class CheckoutController extends GetxController {
       await _submitPosPayment(homeController, method);
     }
   }
-
 
   Future<void> _submitOfflineSale(
     HomeController homeController,
@@ -534,11 +601,13 @@ class CheckoutController extends GetxController {
         'offline_created_at': DateTime.now().toUtc().toIso8601String(),
         'payment_method': method,
         'delivery_type': deliveryType.value,
-        if (deliveryType.value == 'store_pickup' && _pendingPickupLocationId != null)
+        if (deliveryType.value == 'store_pickup' &&
+            _pendingPickupLocationId != null)
           'pickup_location_id': _pendingPickupLocationId,
         if (deliveryType.value == 'home_delivery' && _pendingAddressId != null)
           'shipping_address_id': _pendingAddressId,
-        if (deliveryType.value == 'home_delivery' && _pendingInlineAddress != null)
+        if (deliveryType.value == 'home_delivery' &&
+            _pendingInlineAddress != null)
           'shipping_address': _pendingInlineAddress!.toJson(),
         'items': _pendingItemsPayload,
         if (shift != null && shift.id > 0) 'shift_id': shift.id,
@@ -546,7 +615,8 @@ class CheckoutController extends GetxController {
           'shift_client_reference': shift.shiftCode.startsWith('PENDING-')
               ? shift.shiftCode.substring('PENDING-'.length)
               : null,
-        if (manualDiscount.value != null) 'manual_discount': manualDiscount.value,
+        if (manualDiscount.value != null)
+          'manual_discount': manualDiscount.value,
       };
 
       final grandTotal = payableAmount;
@@ -586,13 +656,15 @@ class CheckoutController extends GetxController {
 
       final bootstrap = _bootstrapController.data.value;
       if (bootstrap != null) {
-        unawaited(_printLocalReceipt(
-          bootstrap: bootstrap,
-          homeController: homeController,
-          customer: customer,
-          receiptId: clientReference,
-          grandTotal: grandTotal,
-        ));
+        unawaited(
+          _printLocalReceipt(
+            bootstrap: bootstrap,
+            homeController: homeController,
+            customer: customer,
+            receiptId: clientReference,
+            grandTotal: grandTotal,
+          ),
+        );
       }
       if (Get.isRegistered<SyncService>()) {
         final sync = Get.find<SyncService>();
@@ -605,7 +677,11 @@ class CheckoutController extends GetxController {
       resetCheckoutState();
     } catch (e) {
       log("CheckoutController _submitOfflineSale error: $e");
-      customSnackBar('Error', 'Could not save the sale: $e', snackBarType: SnackBarType.error);
+      customSnackBar(
+        'Error',
+        'Could not save the sale: $e',
+        snackBarType: SnackBarType.error,
+      );
     } finally {
       isLoading.value = false;
     }
@@ -651,8 +727,10 @@ class CheckoutController extends GetxController {
         return;
       }
 
-      final printed = await ThermalPrinterService()
-          .printReceipt(receipt, printerIp: device.ipAddress);
+      final printed = await ThermalPrinterService().printReceipt(
+        receipt,
+        printerIp: device.ipAddress,
+      );
       if (!printed) {
         customSnackBar(
           'Print Receipt',
@@ -692,7 +770,11 @@ class CheckoutController extends GetxController {
       );
 
       if (!createResponse.isSuccess || createResponse.order == null) {
-        customSnackBar('Order Creation Failed', createResponse.message, snackBarType: SnackBarType.error);
+        customSnackBar(
+          'Order Creation Failed',
+          createResponse.message,
+          snackBarType: SnackBarType.error,
+        );
         return;
       }
       createdOrder.value = createResponse.order;
@@ -707,9 +789,9 @@ class CheckoutController extends GetxController {
         return;
       }
 
-
-      final realTotal =
-          double.parse(createdOrder.value!.totalAmount.toStringAsFixed(2));
+      final realTotal = double.parse(
+        createdOrder.value!.totalAmount.toStringAsFixed(2),
+      );
 
       double? cashAmount;
       double? bankAmount;
@@ -721,14 +803,16 @@ class CheckoutController extends GetxController {
           customSnackBar(
             'Invalid Split Amount',
             'Cash must be more than 0 and less than the order total '
-            '(${realTotal.toStringAsFixed(2)})',
+                '(${realTotal.toStringAsFixed(2)})',
             snackBarType: SnackBarType.warning,
           );
           return;
         }
         // Computed as the remainder so the two parts always sum to exactly
         // realTotal, even with floating-point rounding.
-        final otherPart = double.parse((realTotal - cashAmount).toStringAsFixed(2));
+        final otherPart = double.parse(
+          (realTotal - cashAmount).toStringAsFixed(2),
+        );
         if (method == 'cash_bank_transfer') {
           bankAmount = otherPart;
         } else {
@@ -754,7 +838,11 @@ class CheckoutController extends GetxController {
       );
 
       if (!payResponse.isSuccess) {
-        customSnackBar('Payment Failed', payResponse.message, snackBarType: SnackBarType.error);
+        customSnackBar(
+          'Payment Failed',
+          payResponse.message,
+          snackBarType: SnackBarType.error,
+        );
         return;
       }
 
@@ -769,13 +857,16 @@ class CheckoutController extends GetxController {
       }
     } catch (e) {
       log("CheckoutController _submitPosPayment error: $e");
-      customSnackBar('Error', 'An error occurred during checkout: $e', snackBarType: SnackBarType.error);
+      customSnackBar(
+        'Error',
+        'An error occurred during checkout: $e',
+        snackBarType: SnackBarType.error,
+      );
     } finally {
       isLoading.value = false;
       terminalStatusMessage.value = '';
     }
   }
-
 
   Future<int?> _ensureTerminalReady() async {
     final readerIdText = await StripeTerminalSettingsStorage.getReaderId();
@@ -809,11 +900,13 @@ class CheckoutController extends GetxController {
     return readerId;
   }
 
-
   Future<void> _maybeSimulateCardPresent() async {
     final secretKey = await SecureStorageService.getStripeTestSecretKey();
     final tmrId = await StripeTerminalSettingsStorage.getStripeReaderTmrId();
-    if (secretKey == null || secretKey.isEmpty || tmrId == null || tmrId.isEmpty) {
+    if (secretKey == null ||
+        secretKey.isEmpty ||
+        tmrId == null ||
+        tmrId.isEmpty) {
       return;
     }
     final ok = await StripeTestHelperService().simulateCardPresent(
@@ -824,7 +917,6 @@ class CheckoutController extends GetxController {
       log('CheckoutController _maybeSimulateCardPresent: simulate call failed');
     }
   }
-
 
   Future<void> _runTerminalCaptureFlow(
     HomeController homeController,
@@ -864,7 +956,11 @@ class CheckoutController extends GetxController {
       if (status.canCapture || status.isSucceeded) {
         final capture = await _service.captureTerminalPayment(paymentReference);
         if (!capture.isSuccess) {
-          customSnackBar('Capture Failed', capture.message, snackBarType: SnackBarType.error);
+          customSnackBar(
+            'Capture Failed',
+            capture.message,
+            snackBarType: SnackBarType.error,
+          );
           return;
         }
         await _completeCheckout(homeController, orderId);
@@ -879,7 +975,10 @@ class CheckoutController extends GetxController {
     );
   }
 
-  Future<void> _completeCheckout(HomeController homeController, int orderId) async {
+  Future<void> _completeCheckout(
+    HomeController homeController,
+    int orderId,
+  ) async {
     customSnackBar(
       'Checkout Success',
       'Order paid successfully.',
