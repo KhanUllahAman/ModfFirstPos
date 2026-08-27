@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/exceptions/app_exceptions.dart';
+import 'package:modfirstpos/core/services/app_update_service.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/modules/auth/service/auth_service.dart';
 import 'package:modfirstpos/modules/auth/service/send_otp_service.dart';
@@ -17,6 +19,12 @@ class AuthController extends GetxController {
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final RxBool isPasswordVisible = false.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    unawaited(AppUpdateService.checkForUpdate());
+  }
 
   void togglePasswordVisibility() =>
       isPasswordVisible.value = !isPasswordVisible.value;

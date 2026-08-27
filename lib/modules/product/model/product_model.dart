@@ -153,6 +153,7 @@ class ProductModel {
   final String? description;
   final List<String> printMethods;
   final bool? isCustomizable;
+  final bool? isCustom;
   final bool? isActive;
   final String? status;
   final int? categoryId;
@@ -176,6 +177,7 @@ class ProductModel {
     this.description,
     this.printMethods = const [],
     this.isCustomizable,
+    this.isCustom,
     this.isActive,
     this.status,
     this.categoryId,
@@ -199,6 +201,7 @@ class ProductModel {
       description: JsonUtils.asStringOrNull(json['description']),
       printMethods: JsonUtils.asStringList(json['print_methods']),
       isCustomizable: JsonUtils.asBoolOrNull(json['is_customizable']),
+      isCustom: JsonUtils.asBoolOrNull(json['is_custom']),
       isActive: JsonUtils.asBoolOrNull(json['is_active']),
       status: JsonUtils.asStringOrNull(json['status']),
       categoryId: JsonUtils.asIntOrNull(json['category_id']),

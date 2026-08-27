@@ -12,7 +12,7 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final body = {"email": email, "password": password};
+      final body = {"email": email, "password": password, "user_type": "pos_user"};
       final response = await _networkClient.post(
         endpoint: ApiConstants.loginEndpoint,
         isLoginRequest: true,

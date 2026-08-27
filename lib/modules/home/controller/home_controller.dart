@@ -19,6 +19,7 @@ import 'package:modfirstpos/modules/home/repository/suspended_order_repository.d
 import 'package:modfirstpos/core/database/key_value_store.dart';
 import 'package:modfirstpos/core/services/sync_service.dart';
 import 'package:modfirstpos/core/utils/json_utils.dart';
+import 'package:modfirstpos/modules/checkout/controller/checkout_controller.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
 class HomeController extends GetxController {
@@ -72,7 +73,12 @@ class HomeController extends GetxController {
     ever(_bootstrapController.data, (_) => _refreshFromBootstrap());
     _loadPinnedProducts();
     _connectCustomerDisplay();
-    ever(cartItems, (_) => _pushCustomerDisplay());
+    ever(cartItems, (_) {
+      _pushCustomerDisplay();
+      if (Get.isRegistered<CheckoutController>()) {
+        Get.find<CheckoutController>().syncCartWithCreatedOrder(this);
+      }
+    });
     ever(discountInput, (_) => _pushCustomerDisplay());
     unawaited(AppUpdateService.checkForUpdate());
   }
@@ -374,7 +380,20 @@ class HomeController extends GetxController {
     required int quantity,
     String? title,
     required bool applyTax,
+    int? productId,
+    String? sku,
   }) {
+    if (Get.isRegistered<CheckoutController>() &&
+        Get.find<CheckoutController>().createdOrder.value != null) {
+      showCheckoutPanel.value = true;
+      customSnackBar(
+        'Complete Checkout Active',
+        'Cannot add new items during Complete Checkout. Cancel or complete the checkout first.',
+        snackBarType: SnackBarType.warning,
+      );
+      return;
+    }
+
     final customTitle = title?.trim();
     final name = (customTitle == null || customTitle.isEmpty)
         ? 'Custom Sale'
@@ -384,10 +403,11 @@ class HomeController extends GetxController {
       CartItemModel(
         product: CartProduct(
           name: name,
-          skuCode: 'CUSTOM-${DateTime.now().microsecondsSinceEpoch}',
+          skuCode: sku ?? 'CUSTOM-${DateTime.now().microsecondsSinceEpoch}',
           imageUrl: null,
           amount: price,
           unitPrice: price,
+          productId: productId,
           customText: (customTitle == null || customTitle.isEmpty)
               ? null
               : customTitle,
@@ -437,6 +457,18 @@ class HomeController extends GetxController {
     int? variantId,
   }) {
     final existingIndex = cartItems.indexWhere((c) => c.product.skuCode == sku);
+
+    if (existingIndex == -1 &&
+        Get.isRegistered<CheckoutController>() &&
+        Get.find<CheckoutController>().createdOrder.value != null) {
+      showCheckoutPanel.value = true;
+      customSnackBar(
+        'Complete Checkout Active',
+        'Cannot add new products during Complete Checkout. Cancel or complete the checkout first.',
+        snackBarType: SnackBarType.warning,
+      );
+      return;
+    }
 
     final stock = _liveStock(productId: productId, variantId: variantId);
     if (stock != null) {

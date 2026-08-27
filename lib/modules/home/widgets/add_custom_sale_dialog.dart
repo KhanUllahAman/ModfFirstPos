@@ -3,7 +3,9 @@ import 'package:get/get.dart';
 import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
+import 'package:modfirstpos/modules/bootstrap/controller/bootstrap_controller.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
+import 'package:modfirstpos/modules/product/model/product_model.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 import 'package:modfirstpos/shared/widgets/TextFormFeild/custom_text_form_field.dart';
@@ -27,8 +29,15 @@ class _AddCustomSaleDialogState extends State<AddCustomSaleDialog> {
   final _formKey = GlobalKey<FormState>();
   final _priceController = TextEditingController();
   final _titleController = TextEditingController();
+  ProductModel? _selectedProduct;
   int _quantity = 1;
   bool _applyTax = false;
+
+  List<ProductModel> get _customProducts {
+    if (!Get.isRegistered<BootstrapController>()) return [];
+    final bootstrap = Get.find<BootstrapController>();
+    return bootstrap.allProducts.where((p) => p.isCustom == true).toList();
+  }
 
   @override
   void dispose() {
@@ -45,11 +54,20 @@ class _AddCustomSaleDialogState extends State<AddCustomSaleDialog> {
 
   void _addToCart() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (_selectedProduct == null) return;
+
+    final customTitle = _titleController.text.trim();
+    final itemTitle = customTitle.isNotEmpty
+        ? customTitle
+        : _selectedProduct!.displayName;
+
     Get.find<HomeController>().addCustomSale(
       price: double.parse(_priceController.text.trim()),
       quantity: _quantity,
-      title: _titleController.text,
+      title: itemTitle,
       applyTax: _applyTax,
+      productId: _selectedProduct!.id,
+      sku: _selectedProduct!.sku,
     );
     Navigator.of(context).pop();
   }
@@ -92,6 +110,103 @@ class _AddCustomSaleDialogState extends State<AddCustomSaleDialog> {
                 ),
                 _sectionTitle('Item Detail'),
                 SizedBox(height: spacing * 0.65),
+                DropdownButtonFormField<ProductModel>(
+                  value: _selectedProduct,
+                  icon: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: theme.secondaryColor.value,
+                  ),
+                  dropdownColor: ColorResources.whiteColor,
+                  borderRadius: BorderRadius.circular(10),
+                  isExpanded: true,
+                  style: AppFonts.geistMono(
+                    fontSize: 13,
+                    color: ColorResources.labelColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Select Product *',
+                    hintText: 'Select custom product',
+                    hintStyle: AppFonts.geistMono(
+                      fontSize: 13,
+                      color: Colors.grey.shade400,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 14,
+                    ),
+                    labelStyle: AppFonts.geistMono(
+                      fontSize: 13,
+                      color: ColorResources.labelColor,
+                    ),
+                    floatingLabelStyle: AppFonts.geistMono(
+                      fontSize: 13,
+                      color: theme.secondaryColor.value,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                        color: ColorResources.labelBorderColor,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                        color: ColorResources.labelBorderColor,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: theme.secondaryColor.value,
+                        width: 2.0,
+                      ),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                        color: ColorResources.gradientRed,
+                      ),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                        color: ColorResources.gradientRed,
+                        width: 2.0,
+                      ),
+                    ),
+                  ),
+                  items: _customProducts
+                      .map((product) => DropdownMenuItem<ProductModel>(
+                            value: product,
+                            child: Text(
+                              product.displayName,
+                              style: AppFonts.geistMono(
+                                fontSize: 13,
+                                color: ColorResources.labelColor,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ))
+                      .toList(),
+                  onChanged: (product) {
+                    setState(() {
+                      _selectedProduct = product;
+                      if (product != null &&
+                          _priceController.text.trim().isEmpty) {
+                        if (product.effectivePrice > 0) {
+                          _priceController.text =
+                              product.effectivePrice.toStringAsFixed(2);
+                        }
+                      }
+                    });
+                  },
+                  validator: (value) =>
+                      value == null ? 'Please select a product' : null,
+                ),
+                SizedBox(height: spacing),
                 CustomTextFormField(
                   controller: _priceController,
                   labelText: 'Price *',

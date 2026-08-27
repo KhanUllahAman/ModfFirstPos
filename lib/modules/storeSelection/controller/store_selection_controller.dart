@@ -1,8 +1,10 @@
 // lib/modules/storeSelection/controller/store_selection_controller.dart
 
+import 'dart:async';
 import 'dart:developer';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/services/app_theme_service.dart';
+import 'package:modfirstpos/core/services/app_update_service.dart';
 import 'package:modfirstpos/core/services/website_settings_service.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/modules/storeSelection/model/store_selection_model.dart';
@@ -22,6 +24,7 @@ class StoreSelectionController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    unawaited(AppUpdateService.checkForUpdate());
     fetchStores();
   }
 

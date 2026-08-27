@@ -63,6 +63,8 @@ class CheckoutController extends GetxController {
   final RxDouble customCashAmount = 0.0.obs;
   final Rxn<Map<String, dynamic>> manualDiscount = Rxn<Map<String, dynamic>>();
   final RxString terminalStatusMessage = ''.obs;
+  bool _isTerminalCancelled = false;
+  int? _activeTerminalReaderId;
   List<Map<String, dynamic>> _pendingItemsPayload = [];
   int? _pendingAddressId;
   NewAddressInput? _pendingInlineAddress;
@@ -78,6 +80,10 @@ class CheckoutController extends GetxController {
 
   bool get isSplitPayment =>
       paymentMethod.value == 'cash_bank_transfer' ||
+      paymentMethod.value == 'cash_stripe_terminal';
+
+  bool get isTerminalPayment =>
+      paymentMethod.value == 'stripe_terminal' ||
       paymentMethod.value == 'cash_stripe_terminal';
 
   void splitKeypadAppend(String digit) {
@@ -531,9 +537,83 @@ class CheckoutController extends GetxController {
       shippingFee: 0,
       discountAmount: 0,
     );
-    customOnlineAmount.value = createdOrder.value!.totalAmount;
-    customCashAmount.value = 0.0;
+    if (customCashAmount.value == 0.0 || customOnlineAmount.value > 0) {
+      customOnlineAmount.value = payableAmount;
+    }
     return true;
+  }
+
+  void syncCartWithCreatedOrder(HomeController homeController) {
+    if (createdOrder.value == null) return;
+    if (homeController.cartItems.isEmpty) {
+      createdOrder.value = null;
+      homeController.showCheckoutPanel.value = false;
+      return;
+    }
+
+    _pendingItemsPayload = homeController.cartItems.map((item) {
+      return {
+        'product_id': item.product.productId ?? 0,
+        if (item.product.variantId != null)
+          'variant_id': item.product.variantId,
+        'quantity': item.quantity,
+        'print_method': 'dtf',
+        if (item.product.customText != null)
+          'custom_text': item.product.customText,
+        if (item.product.isAppliedTax != null)
+          'is_applied_tax': item.product.isAppliedTax,
+        if (item.product.customPrice != null)
+          'cutome_price': item.product.customPrice,
+        'design_upload_ids': <int>[],
+      };
+    }).toList();
+
+    final subtotal = homeController.productTotal;
+    final taxPercent =
+        double.tryParse(
+          _bootstrapController.data.value?.store.taxPercentage ?? '',
+        ) ??
+        0;
+    final taxableSubtotal = homeController.cartItems
+        .where((item) => item.product.isAppliedTax != false)
+        .fold<double>(0, (sum, item) => sum + item.total);
+    final tax = taxableSubtotal * taxPercent / 100;
+    final shipping = createdOrder.value?.shippingFee ?? 0.0;
+    final discount = createdOrder.value?.discountAmount ?? 0.0;
+
+    createdOrder.value = CreatedOrder(
+      id: createdOrder.value?.id ?? 0,
+      orderNumber: createdOrder.value?.orderNumber,
+      orderCode: createdOrder.value?.orderCode,
+      totalAmount: subtotal + tax + shipping - discount,
+      subtotal: subtotal,
+      taxAmount: tax,
+      shippingFee: shipping,
+      discountAmount: discount,
+    );
+
+    if (customCashAmount.value == 0.0 || customOnlineAmount.value > 0) {
+      customOnlineAmount.value = payableAmount;
+    }
+  }
+
+  Future<void> cancelTerminal() async {
+    _isTerminalCancelled = true;
+    int? readerId = _activeTerminalReaderId;
+    if (readerId == null) {
+      final readerIdText = await StripeTerminalSettingsStorage.getReaderId();
+      readerId = int.tryParse(readerIdText ?? '');
+    }
+    if (readerId != null) {
+      await _service.cancelTerminalAction(readerId);
+    }
+    terminalStatusMessage.value = '';
+    isLoading.value = false;
+    customSnackBar(
+      'Terminal Cancelled',
+      'Terminal action has been cancelled.',
+      snackBarType: SnackBarType.info,
+    );
   }
 
   double get payableAmount {
@@ -826,6 +906,8 @@ class CheckoutController extends GetxController {
       if (method == 'stripe_terminal' || method == 'cash_stripe_terminal') {
         readerId = await _ensureTerminalReady();
         if (readerId == null) return;
+        _isTerminalCancelled = false;
+        _activeTerminalReaderId = readerId;
       }
 
       final payResponse = await _service.payPos(
@@ -836,6 +918,8 @@ class CheckoutController extends GetxController {
         terminalAmount: terminalAmount,
         readerId: readerId,
       );
+
+      if (_isTerminalCancelled) return;
 
       if (!payResponse.isSuccess) {
         customSnackBar(
@@ -857,11 +941,13 @@ class CheckoutController extends GetxController {
       }
     } catch (e) {
       log("CheckoutController _submitPosPayment error: $e");
-      customSnackBar(
-        'Error',
-        'An error occurred during checkout: $e',
-        snackBarType: SnackBarType.error,
-      );
+      if (!_isTerminalCancelled) {
+        customSnackBar(
+          'Error',
+          'An error occurred during checkout: $e',
+          snackBarType: SnackBarType.error,
+        );
+      }
     } finally {
       isLoading.value = false;
       terminalStatusMessage.value = '';
@@ -930,8 +1016,11 @@ class CheckoutController extends GetxController {
     await _maybeSimulateCardPresent();
 
     for (var attempt = 0; attempt < maxAttempts; attempt++) {
+      if (_isTerminalCancelled) return;
       await Future.delayed(pollInterval);
+      if (_isTerminalCancelled) return;
       final status = await _service.pollTerminalPaymentStatus(paymentReference);
+      if (_isTerminalCancelled) return;
       if (!status.isSuccess) continue;
 
       terminalStatusMessage.value = switch (status.state) {
@@ -955,6 +1044,7 @@ class CheckoutController extends GetxController {
 
       if (status.canCapture || status.isSucceeded) {
         final capture = await _service.captureTerminalPayment(paymentReference);
+        if (_isTerminalCancelled) return;
         if (!capture.isSuccess) {
           customSnackBar(
             'Capture Failed',
@@ -968,11 +1058,13 @@ class CheckoutController extends GetxController {
       }
     }
 
-    customSnackBar(
-      'Card Payment Timed Out',
-      'No card was presented in time. You can retry payment for this order.',
-      snackBarType: SnackBarType.warning,
-    );
+    if (!_isTerminalCancelled) {
+      customSnackBar(
+        'Card Payment Timed Out',
+        'No card was presented in time. You can retry payment for this order.',
+        snackBarType: SnackBarType.warning,
+      );
+    }
   }
 
   Future<void> _completeCheckout(

@@ -11,6 +11,7 @@ import 'package:modfirstpos/modules/home/controller/home_controller.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/sync_button_widget.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
+import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 import 'package:modfirstpos/shared/widgets/TextFormFeild/custom_text_form_field.dart';
 import 'package:modfirstpos/shared/widgets/numpad/pos_numeric_keypad.dart';
 
@@ -55,25 +56,24 @@ class CheckoutFlowPanel extends StatelessWidget {
             // Top Header Bar matching side panel layout
             Row(
               children: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back_rounded,
-                    color: ColorResources.blackColor,
+                if (!isOrderCreated) ...[
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_rounded,
+                      color: ColorResources.blackColor,
+                    ),
+                    onPressed: () {
+                      if (checkoutController.showNewAddressForm.value) {
+                        checkoutController.showNewAddressForm.value = false;
+                      } else if (currentType.isNotEmpty) {
+                        checkoutController.deliveryType.value = '';
+                      } else {
+                        homeController.showCheckoutPanel.value = false;
+                      }
+                    },
                   ),
-                  onPressed: () {
-                    if (isOrderCreated) {
-                      // Once order is created, clicking back takes back to delivery selection
-                      checkoutController.createdOrder.value = null;
-                    } else if (checkoutController.showNewAddressForm.value) {
-                      checkoutController.showNewAddressForm.value = false;
-                    } else if (currentType.isNotEmpty) {
-                      checkoutController.deliveryType.value = '';
-                    } else {
-                      homeController.showCheckoutPanel.value = false;
-                    }
-                  },
-                ),
-                const SizedBox(width: 4),
+                  const SizedBox(width: 4),
+                ],
                 Expanded(
                   child: Text(
                     title,
@@ -84,27 +84,114 @@ class CheckoutFlowPanel extends StatelessWidget {
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.close_rounded,
-                    color: Colors.grey,
-                    size: 20,
+                if (isOrderCreated)
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      homeController.clearCart();
+                      checkoutController.resetCheckoutState();
+                      homeController.showCheckoutPanel.value = false;
+                      customSnackBar(
+                        'Checkout Cancelled',
+                        'Cart items have been cleared.',
+                        snackBarType: SnackBarType.info,
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: ColorResources.gradientRed,
+                      side: const BorderSide(
+                        color: ColorResources.gradientRed,
+                        width: 1.2,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    icon: const Icon(Icons.cancel_outlined, size: 15),
+                    label: Text(
+                      'Cancel Checkout',
+                      style: AppFonts.geistMono(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  )
+                else
+                  IconButton(
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.grey,
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      homeController.showCheckoutPanel.value = false;
+                    },
                   ),
-                  onPressed: () {
-                    homeController.showCheckoutPanel.value = false;
-                  },
-                ),
               ],
             ),
             const Divider(height: 12, color: ColorResources.cardBorderColor),
             const SizedBox(height: 8),
             // Panel Body
             if (checkoutController.isLoading.value)
-              const Expanded(
+              Expanded(
                 child: Center(
-                  child: CircularProgressIndicator(
-                    color: ColorResources.blackColor,
-                    strokeWidth: 3.0,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const CircularProgressIndicator(
+                          color: ColorResources.blackColor,
+                          strokeWidth: 3.0,
+                        ),
+                        if (checkoutController
+                            .terminalStatusMessage.value.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          Text(
+                            checkoutController.terminalStatusMessage.value,
+                            textAlign: TextAlign.center,
+                            style: AppFonts.geistMono(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: ColorResources.labelColor,
+                            ),
+                          ),
+                        ],
+                        if (checkoutController.isTerminalPayment ||
+                            checkoutController
+                                .terminalStatusMessage.value.isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          OutlinedButton.icon(
+                            onPressed: checkoutController.cancelTerminal,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: ColorResources.gradientRed,
+                              side: const BorderSide(
+                                color: ColorResources.gradientRed,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 10,
+                              ),
+                            ),
+                            icon: const Icon(Icons.cancel_outlined, size: 18),
+                            label: Text(
+                              'Cancel Terminal',
+                              style: AppFonts.geistMono(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
               )
