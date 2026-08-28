@@ -18,6 +18,7 @@ import 'package:modfirstpos/modules/home/repository/sales_local_repository.dart'
 import 'package:modfirstpos/modules/home/repository/suspended_order_repository.dart';
 import 'package:modfirstpos/core/database/key_value_store.dart';
 import 'package:modfirstpos/core/services/sync_service.dart';
+import 'package:modfirstpos/core/storage/stripe_terminal_settings_storage.dart';
 import 'package:modfirstpos/core/utils/json_utils.dart';
 import 'package:modfirstpos/modules/checkout/controller/checkout_controller.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
@@ -81,6 +82,7 @@ class HomeController extends GetxController {
     });
     ever(discountInput, (_) => _pushCustomerDisplay());
     unawaited(AppUpdateService.checkForUpdate());
+    unawaited(StripeTerminalSettingsStorage.ensureDefaults());
   }
 
   /// Connects to the customer-facing tab (Settings > Customer IP) so cart

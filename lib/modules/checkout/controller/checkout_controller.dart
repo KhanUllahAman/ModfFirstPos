@@ -6,10 +6,8 @@ import 'package:modfirstpos/core/database/key_value_store.dart';
 import 'package:modfirstpos/core/services/local_receipt_builder.dart';
 import 'package:modfirstpos/core/services/print_receipt_helper.dart';
 import 'package:modfirstpos/core/services/stripe_terminal_service.dart';
-import 'package:modfirstpos/core/services/stripe_test_helper_service.dart';
 import 'package:modfirstpos/core/services/sync_service.dart';
 import 'package:modfirstpos/core/services/thermal_printer_service.dart';
-import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/core/storage/stripe_terminal_settings_storage.dart';
 import 'package:modfirstpos/core/utils/client_reference_generator.dart';
 import 'package:modfirstpos/core/utils/json_utils.dart';
@@ -986,24 +984,6 @@ class CheckoutController extends GetxController {
     return readerId;
   }
 
-  Future<void> _maybeSimulateCardPresent() async {
-    final secretKey = await SecureStorageService.getStripeTestSecretKey();
-    final tmrId = await StripeTerminalSettingsStorage.getStripeReaderTmrId();
-    if (secretKey == null ||
-        secretKey.isEmpty ||
-        tmrId == null ||
-        tmrId.isEmpty) {
-      return;
-    }
-    final ok = await StripeTestHelperService().simulateCardPresent(
-      stripeReaderId: tmrId,
-      secretKey: secretKey,
-    );
-    if (!ok) {
-      log('CheckoutController _maybeSimulateCardPresent: simulate call failed');
-    }
-  }
-
   Future<void> _runTerminalCaptureFlow(
     HomeController homeController,
     int orderId,
@@ -1013,7 +993,6 @@ class CheckoutController extends GetxController {
     const maxAttempts = 60; // ~2 minutes before giving up
 
     terminalStatusMessage.value = 'Present the card on the reader now...';
-    await _maybeSimulateCardPresent();
 
     for (var attempt = 0; attempt < maxAttempts; attempt++) {
       if (_isTerminalCancelled) return;

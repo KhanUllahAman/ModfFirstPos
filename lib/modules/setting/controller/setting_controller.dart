@@ -7,7 +7,6 @@ import 'package:get/get.dart';
 import 'package:modfirstpos/core/services/customer_display_service.dart';
 import 'package:modfirstpos/core/services/stripe_terminal_service.dart';
 import 'package:modfirstpos/core/storage/customer_display_settings_storage.dart';
-import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/core/storage/stripe_terminal_settings_storage.dart';
 import 'package:modfirstpos/modules/setting/model/pos_device_model.dart';
 import 'package:modfirstpos/modules/setting/service/setting_service.dart';
@@ -83,47 +82,35 @@ class SettingController extends GetxController {
     }
   }
 
-  // Test-only defaults so a fresh install/testing device is ready to go
-  // without the cashier having to type these in manually. Only used when
-  // nothing has been saved yet.
-  static const _defaultReaderId = '1';
-  static const _defaultStripeReaderTmrId = 'tmr_Gl78pgX7MSyoIw';
-  static const _defaultStripeTestSecretKey =
-      'sk_test_51Tng6EBuoZOYjaKmiMqwAdBth27RHZI05dEJ7SGhGDKbZJ8OwXGzb9VYz2h4rMIUp23WiSQ0Gr3iodlXbgRdjaDc008KKrJF9R';
-
   Future<void> _hydrateTerminalSettings() async {
     final readerId = await StripeTerminalSettingsStorage.getReaderId();
-    readerIdController.text = readerId ?? _defaultReaderId;
-    useSimulatedReader.value = await StripeTerminalSettingsStorage.getUseSimulated();
+    readerIdController.text =
+        readerId ?? StripeTerminalSettingsStorage.defaultReaderId;
+    useSimulatedReader.value =
+        await StripeTerminalSettingsStorage.getUseSimulated();
 
-    final tmrId = await StripeTerminalSettingsStorage.getStripeReaderTmrId();
-    stripeReaderTmrIdController.text = tmrId ?? _defaultStripeReaderTmrId;
-    final secretKey = await SecureStorageService.getStripeTestSecretKey();
-    stripeTestSecretKeyController.text = secretKey ?? _defaultStripeTestSecretKey;
-
-    // Persist the defaults immediately so testing works without an extra
-    // manual "Save" tap.
-    if (readerId == null || tmrId == null || secretKey == null) {
+    // Persist the default immediately if nothing was saved
+    if (readerId == null) {
       await saveTerminalSettings(showSnackbar: false);
     }
   }
 
   Future<void> saveTerminalSettings({bool showSnackbar = true}) async {
-    final previousSimulated = await StripeTerminalSettingsStorage.getUseSimulated();
+    final previousSimulated =
+        await StripeTerminalSettingsStorage.getUseSimulated();
 
-    await StripeTerminalSettingsStorage.saveReaderId(readerIdController.text.trim());
-    await StripeTerminalSettingsStorage.saveUseSimulated(useSimulatedReader.value);
-    await StripeTerminalSettingsStorage.saveStripeReaderTmrId(
-      stripeReaderTmrIdController.text.trim(),
+    await StripeTerminalSettingsStorage.saveReaderId(
+      readerIdController.text.trim(),
     );
-    await SecureStorageService.saveStripeTestSecretKey(
-      stripeTestSecretKeyController.text.trim(),
+    await StripeTerminalSettingsStorage.saveUseSimulated(
+      useSimulatedReader.value,
     );
 
     // A connected reader stays connected in memory regardless of this
     // setting — without disconnecting here, flipping simulated <-> real
     // silently keeps using whichever reader was already connected.
-    if (previousSimulated != useSimulatedReader.value && _terminal.isConnected.value) {
+    if (previousSimulated != useSimulatedReader.value &&
+        _terminal.isConnected.value) {
       await _terminal.disconnect();
     }
 

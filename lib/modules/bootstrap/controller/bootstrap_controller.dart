@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/storage/stripe_terminal_settings_storage.dart';
 import 'package:modfirstpos/core/utils/json_utils.dart';
 import 'package:modfirstpos/modules/bootstrap/model/bootstrap_model.dart';
 import 'package:modfirstpos/modules/bootstrap/service/bootstrap_service.dart';
@@ -8,6 +9,7 @@ import 'package:modfirstpos/modules/category/model/category_model.dart';
 import 'package:modfirstpos/modules/checkout/model/checkout_models.dart';
 import 'package:modfirstpos/modules/customer/model/customer_model.dart';
 import 'package:modfirstpos/modules/product/model/product_model.dart';
+import 'package:modfirstpos/modules/setting/storage/pos_device_cache_storage.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
 /// Single offline-first source of truth for reference data synced via
@@ -50,6 +52,7 @@ class BootstrapController extends GetxController {
       final payload = BootstrapPayload.fromJson(cached);
       data.value = payload;
       syncedAt.value = _parseSyncedAt(payload.syncedAt);
+      await _autoSyncDeviceAndTerminal(payload);
     } catch (e) {
       log("BootstrapController hydrateFromCache error: $e");
     }
@@ -65,6 +68,7 @@ class BootstrapController extends GetxController {
         data.value = response.payload;
         syncedAt.value = _parseSyncedAt(response.payload!.syncedAt);
         await BootstrapCacheStorage.saveBootstrap(rawPayload);
+        await _autoSyncDeviceAndTerminal(response.payload!);
 
         if (showSnackbar) {
           customSnackBar(
@@ -104,6 +108,22 @@ class BootstrapController extends GetxController {
   DateTime? _parseSyncedAt(String? value) {
     if (value == null) return null;
     return DateTime.tryParse(value)?.toLocal();
+  }
+
+  Future<void> _autoSyncDeviceAndTerminal(BootstrapPayload payload) async {
+    try {
+      if (payload.devices.isNotEmpty) {
+        final device = payload.devices.first;
+        final cached = await PosDeviceCacheStorage.getDevice();
+        if (cached == null) {
+          await PosDeviceCacheStorage.saveDevice(device);
+        }
+        await StripeTerminalSettingsStorage.saveReaderId(device.id.toString());
+      }
+      await StripeTerminalSettingsStorage.ensureDefaults();
+    } catch (e) {
+      log("BootstrapController _autoSyncDeviceAndTerminal error: $e");
+    }
   }
 
   /// Decrements a product/variant's cached stock right after an offline
