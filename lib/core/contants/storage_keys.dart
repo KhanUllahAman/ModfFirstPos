@@ -63,12 +63,6 @@ class StorageKeys {
   static const String keySelectedStoreSlug = 'selected_store_slug';
   static const String keyStoreSelectionDone = 'store_selection_done';
 
-  /// Test-only Stripe secret key, used solely to trigger Stripe's Terminal
-  /// "present_payment_method" test helper directly from the app so
-  /// simulated-reader card payments can be tested without a backend
-  /// endpoint. Never synced to the server, never in source control.
-  static const String keyStripeTestSecretKey = 'stripe_test_secret_key';
-
   /// SQLCipher passphrase for the local SQLite database — generated once
   /// per device install and kept only in secure storage (Keystore/Keychain).
   static const String keyDbEncryptionKey = 'db_encryption_key';

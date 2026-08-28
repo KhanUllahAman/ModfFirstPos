@@ -940,9 +940,15 @@ class CheckoutController extends GetxController {
     } catch (e) {
       log("CheckoutController _submitPosPayment error: $e");
       if (!_isTerminalCancelled) {
+        final errorStr = e.toString().toLowerCase();
+        final friendlyMsg = errorStr.contains('timeout') ||
+                errorStr.contains('socket') ||
+                errorStr.contains('readercommunicationerror')
+            ? 'Card reader is offline or unreachable. Please check that the reader is powered on and connected to Wi-Fi.'
+            : 'An error occurred during payment. Please try again.';
         customSnackBar(
-          'Error',
-          'An error occurred during checkout: $e',
+          'Payment Error',
+          friendlyMsg,
           snackBarType: SnackBarType.error,
         );
       }
@@ -953,30 +959,20 @@ class CheckoutController extends GetxController {
   }
 
   Future<int?> _ensureTerminalReady() async {
-    final readerIdText = await StripeTerminalSettingsStorage.getReaderId();
-    final readerId = int.tryParse(readerIdText ?? '');
-    if (readerId == null) {
-      customSnackBar(
-        'Reader Not Configured',
-        'Set the Stripe Terminal Reader ID in Settings first.',
-        snackBarType: SnackBarType.warning,
-      );
-      return null;
-    }
+    final readerId = 1;
 
     if (!Get.isRegistered<StripeTerminalService>()) return readerId;
     final terminal = Get.find<StripeTerminalService>();
     if (terminal.isConnected.value) return readerId;
 
     terminalStatusMessage.value = 'Connecting to card reader...';
-    final simulated = await StripeTerminalSettingsStorage.getUseSimulated();
-    final connected = await terminal.connect(simulated: simulated);
+    final connected = await terminal.connect();
     if (!connected) {
       customSnackBar(
         'Reader Not Connected',
         terminal.lastError.value.isNotEmpty
             ? terminal.lastError.value
-            : 'Could not connect to the card reader. Check Settings > Stripe Terminal.',
+            : 'Card reader is offline or unreachable. Please make sure the reader is powered on and connected to Wi-Fi.',
         snackBarType: SnackBarType.error,
       );
       return null;

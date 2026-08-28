@@ -1,13 +1,10 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/services/customer_display_service.dart';
-import 'package:modfirstpos/core/services/stripe_terminal_service.dart';
 import 'package:modfirstpos/core/storage/customer_display_settings_storage.dart';
-import 'package:modfirstpos/core/storage/stripe_terminal_settings_storage.dart';
 import 'package:modfirstpos/modules/setting/model/pos_device_model.dart';
 import 'package:modfirstpos/modules/setting/service/setting_service.dart';
 import 'package:modfirstpos/modules/setting/storage/pos_device_cache_storage.dart';
@@ -38,26 +35,10 @@ class SettingController extends GetxController {
   final RxBool isCheckingPrinter = false.obs;
   final RxBool isCheckingCashier = false.obs;
 
-  // -- Stripe Terminal (card-present) — see docs/POS_PAYMENT_FLUTTER.md --
-  final StripeTerminalService _terminal = Get.find<StripeTerminalService>();
-  final TextEditingController readerIdController = TextEditingController();
-  final RxBool useSimulatedReader = kDebugMode.obs;
-
-  // Test-only: simulate a card being presented on a simulated reader,
-  // bypassing the need for a real physical reader or a backend endpoint.
-  // See docs/POS_PAYMENT_FLUTTER.md.
-  final TextEditingController stripeReaderTmrIdController = TextEditingController();
-  final TextEditingController stripeTestSecretKeyController = TextEditingController();
-
-  RxBool get isTerminalConnecting => _terminal.isConnecting;
-  RxBool get isTerminalConnected => _terminal.isConnected;
-  RxString get terminalError => _terminal.lastError;
-
   @override
   void onInit() {
     super.onInit();
     _hydrateFromCache();
-    _hydrateTerminalSettings();
     _hydrateCustomerPairingCode();
   }
 
@@ -78,68 +59,6 @@ class SettingController extends GetxController {
           customerIpController.text.trim(),
           pairingCode: customerPairingCodeController.text.trim(),
         ),
-      );
-    }
-  }
-
-  Future<void> _hydrateTerminalSettings() async {
-    final readerId = await StripeTerminalSettingsStorage.getReaderId();
-    readerIdController.text =
-        readerId ?? StripeTerminalSettingsStorage.defaultReaderId;
-    useSimulatedReader.value =
-        await StripeTerminalSettingsStorage.getUseSimulated();
-
-    // Persist the default immediately if nothing was saved
-    if (readerId == null) {
-      await saveTerminalSettings(showSnackbar: false);
-    }
-  }
-
-  Future<void> saveTerminalSettings({bool showSnackbar = true}) async {
-    final previousSimulated =
-        await StripeTerminalSettingsStorage.getUseSimulated();
-
-    await StripeTerminalSettingsStorage.saveReaderId(
-      readerIdController.text.trim(),
-    );
-    await StripeTerminalSettingsStorage.saveUseSimulated(
-      useSimulatedReader.value,
-    );
-
-    // A connected reader stays connected in memory regardless of this
-    // setting — without disconnecting here, flipping simulated <-> real
-    // silently keeps using whichever reader was already connected.
-    if (previousSimulated != useSimulatedReader.value &&
-        _terminal.isConnected.value) {
-      await _terminal.disconnect();
-    }
-
-    if (!showSnackbar) return;
-    customSnackBar(
-      'Stripe Terminal',
-      'Reader settings saved.',
-      snackBarType: SnackBarType.success,
-    );
-  }
-
-  /// Connects to the reader now (simulated or real, per the toggle) so the
-  /// cashier can confirm the setup works before a live sale.
-  Future<void> testTerminalConnection() async {
-    await saveTerminalSettings();
-    final connected = await _terminal.connect(simulated: useSimulatedReader.value);
-    if (connected) {
-      customSnackBar(
-        'Stripe Terminal',
-        'Reader connected${useSimulatedReader.value ? ' (simulated)' : ''}.',
-        snackBarType: SnackBarType.success,
-      );
-    } else {
-      customSnackBar(
-        'Stripe Terminal',
-        _terminal.lastError.value.isNotEmpty
-            ? _terminal.lastError.value
-            : 'Could not connect to the reader.',
-        snackBarType: SnackBarType.error,
       );
     }
   }
@@ -165,9 +84,6 @@ class SettingController extends GetxController {
     ipAddressController.dispose();
     customerIpController.dispose();
     customerPairingCodeController.dispose();
-    readerIdController.dispose();
-    stripeReaderTmrIdController.dispose();
-    stripeTestSecretKeyController.dispose();
     locationController.dispose();
     super.onClose();
   }

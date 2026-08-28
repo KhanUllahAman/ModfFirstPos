@@ -200,7 +200,8 @@ class CheckoutService {
         body: body,
         showErrorSnackbar: true,
       );
-
+      log("CheckoutService payPos body: $body");
+      log("CheckoutService payPos response: $response");
       return PosPaymentResponse.fromJson(_asMap(response));
     } catch (e) {
       log("CheckoutService payPos error: $e");
