@@ -12,7 +12,6 @@ import 'package:modfirstpos/modules/home/controller/home_controller.dart';
 import 'package:modfirstpos/modules/customer/model/customer_model.dart';
 import 'package:modfirstpos/modules/customer/controller/customer_controller.dart';
 import 'package:modfirstpos/modules/home/widgets/cash_payment_panel.dart';
-import 'package:modfirstpos/modules/home/widgets/checkout_flow_panel.dart';
 import 'package:modfirstpos/shared/widgets/AppWidgets/product_pin_button.dart';
 import 'package:modfirstpos/shared/widgets/AppWidgets/variant_selector.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/sync_button_widget.dart';
@@ -27,12 +26,7 @@ class ProductListPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       final Widget panel;
-      if (controller.showCheckoutPanel.value) {
-        panel = KeyedSubtree(
-          key: const ValueKey('checkout'),
-          child: CheckoutFlowPanel(homeController: controller),
-        );
-      } else if (controller.showCashPanel.value) {
+      if (controller.showCashPanel.value) {
         panel = KeyedSubtree(
           key: const ValueKey('cash'),
           child: CashPaymentPanel(controller: controller),

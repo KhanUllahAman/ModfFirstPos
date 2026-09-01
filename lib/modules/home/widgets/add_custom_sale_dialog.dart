@@ -39,6 +39,22 @@ class _AddCustomSaleDialogState extends State<AddCustomSaleDialog> {
     return bootstrap.allProducts.where((p) => p.isCustom == true).toList();
   }
 
+  ProductModel? get _firstAvailableProduct {
+    final customList = _customProducts;
+    if (customList.isNotEmpty) return customList.first;
+    if (Get.isRegistered<BootstrapController>()) {
+      final bootstrap = Get.find<BootstrapController>();
+      if (bootstrap.allProducts.isNotEmpty) return bootstrap.allProducts.first;
+    }
+    return null;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedProduct = _firstAvailableProduct;
+  }
+
   @override
   void dispose() {
     _priceController.dispose();
@@ -54,6 +70,7 @@ class _AddCustomSaleDialogState extends State<AddCustomSaleDialog> {
 
   void _addToCart() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    _selectedProduct ??= _firstAvailableProduct;
     if (_selectedProduct == null) return;
 
     final customTitle = _titleController.text.trim();
@@ -110,6 +127,8 @@ class _AddCustomSaleDialogState extends State<AddCustomSaleDialog> {
                 ),
                 _sectionTitle('Item Detail'),
                 SizedBox(height: spacing * 0.65),
+                // Dropdown commented out as requested; first available product is used automatically in backend payload
+                /*
                 DropdownButtonFormField<ProductModel>(
                   value: _selectedProduct,
                   icon: Icon(
@@ -207,6 +226,7 @@ class _AddCustomSaleDialogState extends State<AddCustomSaleDialog> {
                       value == null ? 'Please select a product' : null,
                 ),
                 SizedBox(height: spacing),
+                */
                 CustomTextFormField(
                   controller: _priceController,
                   labelText: 'Price *',

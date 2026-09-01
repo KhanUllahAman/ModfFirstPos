@@ -258,7 +258,7 @@ class SyncService extends GetxService {
     final local = JsonUtils.asMap(data['local']);
 
     final email = local['customer_email'];
-    if (email is String && email.isNotEmpty) {
+    if (email is String && email.isNotEmpty) {  
       sync.remove('user_id');
       sync['email'] = email;
       final phone = local['customer_phone'];

@@ -10,6 +10,7 @@ import 'package:modfirstpos/core/services/sync_service.dart';
 import 'package:modfirstpos/core/services/thermal_printer_service.dart';
 import 'package:modfirstpos/core/storage/stripe_terminal_settings_storage.dart';
 import 'package:modfirstpos/core/utils/client_reference_generator.dart';
+import 'package:modfirstpos/core/utils/currency_utils.dart';
 import 'package:modfirstpos/core/utils/json_utils.dart';
 import 'package:modfirstpos/modules/bootstrap/controller/bootstrap_controller.dart';
 import 'package:modfirstpos/modules/bootstrap/model/bootstrap_model.dart';
@@ -68,6 +69,9 @@ class CheckoutController extends GetxController {
   NewAddressInput? _pendingInlineAddress;
   int? _pendingPickupLocationId;
   final RxString splitCashInput = ''.obs;
+  final RxString splitTenderedInput = ''.obs;
+  final RxString splitActiveField = 'portion'.obs; // 'portion' or 'tendered'
+  final RxString cashTenderedInput = ''.obs;
 
   double get splitCash => double.tryParse(splitCashInput.value) ?? 0.0;
 
@@ -76,32 +80,138 @@ class CheckoutController extends GetxController {
     return remainder > 0 ? remainder : 0.0;
   }
 
+  double get splitCashCollect {
+    if (splitTenderedInput.value.isEmpty) {
+      return splitCash;
+    }
+    return double.tryParse(splitTenderedInput.value) ?? splitCash;
+  }
+
+  double get splitCashReturn {
+    if (splitTenderedInput.value.isEmpty) {
+      return 0.0;
+    }
+    final collect = double.tryParse(splitTenderedInput.value) ?? 0.0;
+    final diff = collect - splitCash;
+    return diff > 0 ? double.parse(diff.toStringAsFixed(2)) : 0.0;
+  }
+
+  double get splitCashShortage {
+    if (splitTenderedInput.value.isEmpty) {
+      return 0.0;
+    }
+    final collect = double.tryParse(splitTenderedInput.value) ?? 0.0;
+    final diff = splitCash - collect;
+    return diff > 0 ? double.parse(diff.toStringAsFixed(2)) : 0.0;
+  }
+
+  void setSplitActiveField(String field) {
+    splitActiveField.value = field;
+  }
+
+  void setSplitTenderedExact() {
+    splitTenderedInput.value = splitCash.toStringAsFixed(2);
+  }
+
   bool get isSplitPayment =>
       paymentMethod.value == 'cash_bank_transfer' ||
       paymentMethod.value == 'cash_stripe_terminal';
+
+  bool get isCashPayment => paymentMethod.value == 'cash';
 
   bool get isTerminalPayment =>
       paymentMethod.value == 'stripe_terminal' ||
       paymentMethod.value == 'cash_stripe_terminal';
 
-  void splitKeypadAppend(String digit) {
-    final current = splitCashInput.value;
+  double get cashCollect {
+    if (cashTenderedInput.value.isEmpty) {
+      return payableAmount;
+    }
+    return double.tryParse(cashTenderedInput.value) ?? payableAmount;
+  }
+
+  double get cashReturn {
+    if (cashTenderedInput.value.isEmpty) {
+      return 0.0;
+    }
+    final collect = double.tryParse(cashTenderedInput.value) ?? 0.0;
+    final diff = collect - payableAmount;
+    return diff > 0 ? double.parse(diff.toStringAsFixed(2)) : 0.0;
+  }
+
+  double get cashShortage {
+    if (cashTenderedInput.value.isEmpty) {
+      return 0.0;
+    }
+    final collect = double.tryParse(cashTenderedInput.value) ?? 0.0;
+    final diff = payableAmount - collect;
+    return diff > 0 ? double.parse(diff.toStringAsFixed(2)) : 0.0;
+  }
+
+  void cashKeypadAppend(String digit) {
+    final current = cashTenderedInput.value;
     if (digit == '.' && current.contains('.')) return;
     final dotIndex = current.indexOf('.');
     if (dotIndex != -1 && digit != '.' && current.length - dotIndex > 2) return;
     if (current.replaceAll('.', '').length >= 9) return;
-    splitCashInput.value = (current == '0' && digit != '.')
-        ? digit
-        : current + digit;
+    cashTenderedInput.value =
+        (current == '0' && digit != '.') ? digit : current + digit;
+  }
+
+  void cashKeypadBackspace() {
+    final current = cashTenderedInput.value;
+    if (current.isEmpty) return;
+    cashTenderedInput.value = current.substring(0, current.length - 1);
+  }
+
+  void cashKeypadClear() => cashTenderedInput.value = '';
+
+  void setCashExact() {
+    cashTenderedInput.value = payableAmount.toStringAsFixed(2);
+  }
+
+  void addCashPreset(double amount) {
+    final current = double.tryParse(cashTenderedInput.value) ?? 0.0;
+    cashTenderedInput.value = (current + amount).toStringAsFixed(2);
+  }
+
+  void splitKeypadAppend(String digit) {
+    final isTendered = splitActiveField.value == 'tendered';
+    final current = isTendered ? splitTenderedInput.value : splitCashInput.value;
+
+    if (digit == '.' && current.contains('.')) return;
+    final dotIndex = current.indexOf('.');
+    if (dotIndex != -1 && digit != '.' && current.length - dotIndex > 2) return;
+    if (current.replaceAll('.', '').length >= 9) return;
+    final nextVal = (current == '0' && digit != '.') ? digit : current + digit;
+
+    if (isTendered) {
+      splitTenderedInput.value = nextVal;
+    } else {
+      splitCashInput.value = nextVal;
+    }
   }
 
   void splitKeypadBackspace() {
-    final current = splitCashInput.value;
+    final isTendered = splitActiveField.value == 'tendered';
+    final current = isTendered ? splitTenderedInput.value : splitCashInput.value;
     if (current.isEmpty) return;
-    splitCashInput.value = current.substring(0, current.length - 1);
+    final nextVal = current.substring(0, current.length - 1);
+    if (isTendered) {
+      splitTenderedInput.value = nextVal;
+    } else {
+      splitCashInput.value = nextVal;
+    }
   }
 
-  void splitKeypadClear() => splitCashInput.value = '';
+  void splitKeypadClear() {
+    if (splitActiveField.value == 'tendered') {
+      splitTenderedInput.value = '';
+    } else {
+      splitCashInput.value = '';
+      splitTenderedInput.value = '';
+    }
+  }
 
   late final ScrollController panelScrollController;
 
@@ -155,6 +265,9 @@ class CheckoutController extends GetxController {
     customOnlineAmount.value = 0.0;
     customCashAmount.value = 0.0;
     splitCashInput.value = '';
+    splitTenderedInput.value = '';
+    splitActiveField.value = 'portion';
+    cashTenderedInput.value = '';
     manualDiscount.value = null;
   }
 
@@ -656,6 +769,37 @@ class CheckoutController extends GetxController {
     final customer = homeController.selectedCartCustomer.value;
     if (customer == null) return;
 
+    final grandTotal = payableAmount;
+    if (method == 'cash' &&
+        cashTenderedInput.value.isNotEmpty &&
+        cashCollect < grandTotal) {
+      customSnackBar(
+        'Insufficient Cash',
+        'Cash collected (${CurrencyUtils.format(cashCollect)}) is less than total payable (${CurrencyUtils.format(grandTotal)})',
+        snackBarType: SnackBarType.warning,
+      );
+      return;
+    }
+
+    if (isSplitPayment) {
+      if (splitCash <= 0 || splitCash >= grandTotal) {
+        customSnackBar(
+          'Invalid Split Amount',
+          'Cash portion must be more than 0 and less than total payable (${CurrencyUtils.format(grandTotal)})',
+          snackBarType: SnackBarType.warning,
+        );
+        return;
+      }
+      if (splitTenderedInput.value.isNotEmpty && splitCashCollect < splitCash) {
+        customSnackBar(
+          'Insufficient Cash Handed',
+          'Cash handed (${CurrencyUtils.format(splitCashCollect)}) is less than the cash portion (${CurrencyUtils.format(splitCash)})',
+          snackBarType: SnackBarType.warning,
+        );
+        return;
+      }
+    }
+
     isLoading.value = true;
     try {
       final clientReference = await ClientReferenceGenerator.generate('order');
@@ -665,6 +809,17 @@ class CheckoutController extends GetxController {
 
       final customerHasEmail =
           customer.email != null && customer.email!.isNotEmpty;
+
+      final cashCollectVal = method == 'cash'
+          ? double.parse(cashCollect.toStringAsFixed(2))
+          : (isSplitPayment
+              ? double.parse(splitCashCollect.toStringAsFixed(2))
+              : null);
+      final cashReturnVal = method == 'cash'
+          ? double.parse(cashReturn.toStringAsFixed(2))
+          : (isSplitPayment
+              ? double.parse(splitCashReturn.toStringAsFixed(2))
+              : null);
 
       final syncPayload = <String, dynamic>{
         if (customerHasEmail) ...{
@@ -695,9 +850,10 @@ class CheckoutController extends GetxController {
               : null,
         if (manualDiscount.value != null)
           'manual_discount': manualDiscount.value,
+        if (cashCollectVal != null) 'cash_collect': cashCollectVal,
+        if (cashReturnVal != null) 'cash_return': cashReturnVal,
       };
 
-      final grandTotal = payableAmount;
       final localPayload = <String, dynamic>{
         'grand_total': grandTotal,
         'subtotal': createdOrder.value!.subtotal,
@@ -707,6 +863,8 @@ class CheckoutController extends GetxController {
         'customer_phone': customer.phone,
         'customer_email': customer.email,
         'notes': notesController.text.trim(),
+        if (cashCollectVal != null) 'cash_collect': cashCollectVal,
+        if (cashReturnVal != null) 'cash_return': cashReturnVal,
       };
 
       await PendingOrderRepository.add(
@@ -874,18 +1032,43 @@ class CheckoutController extends GetxController {
       double? cashAmount;
       double? bankAmount;
       double? terminalAmount;
+      double? cashCollectVal;
+      double? cashReturnVal;
 
-      if (splitCashAmount != null) {
-        cashAmount = double.parse(splitCashAmount.toStringAsFixed(2));
-        if (cashAmount <= 0 || cashAmount >= realTotal) {
+      if (method == 'cash') {
+        if (cashTenderedInput.value.isNotEmpty && cashCollect < realTotal) {
           customSnackBar(
-            'Invalid Split Amount',
-            'Cash must be more than 0 and less than the order total '
-                '(${realTotal.toStringAsFixed(2)})',
+            'Insufficient Cash',
+            'Cash collected (${CurrencyUtils.format(cashCollect)}) is less than total payable (${CurrencyUtils.format(realTotal)})',
             snackBarType: SnackBarType.warning,
           );
           return;
         }
+        cashAmount = realTotal;
+        cashCollectVal = double.parse(cashCollect.toStringAsFixed(2));
+        cashReturnVal = double.parse(cashReturn.toStringAsFixed(2));
+      } else if (splitCashAmount != null) {
+        cashAmount = double.parse(splitCashAmount.toStringAsFixed(2));
+        if (cashAmount <= 0 || cashAmount >= realTotal) {
+          customSnackBar(
+            'Invalid Split Amount',
+            'Cash portion must be more than 0 and less than the order total '
+                '(${CurrencyUtils.format(realTotal)})',
+            snackBarType: SnackBarType.warning,
+          );
+          return;
+        }
+        if (splitTenderedInput.value.isNotEmpty && splitCashCollect < cashAmount) {
+          customSnackBar(
+            'Insufficient Cash Handed',
+            'Cash handed (${CurrencyUtils.format(splitCashCollect)}) is less than the cash portion (${CurrencyUtils.format(cashAmount)})',
+            snackBarType: SnackBarType.warning,
+          );
+          return;
+        }
+        cashCollectVal = double.parse(splitCashCollect.toStringAsFixed(2));
+        cashReturnVal = double.parse(splitCashReturn.toStringAsFixed(2));
+
         // Computed as the remainder so the two parts always sum to exactly
         // realTotal, even with floating-point rounding.
         final otherPart = double.parse(
@@ -915,6 +1098,8 @@ class CheckoutController extends GetxController {
         bankAmount: bankAmount,
         terminalAmount: terminalAmount,
         readerId: readerId,
+        cashCollect: cashCollectVal,
+        cashReturn: cashReturnVal,
       );
 
       if (_isTerminalCancelled) return;

@@ -182,6 +182,8 @@ class CheckoutService {
     String? bankReference,
     double? terminalAmount,
     int? readerId,
+    double? cashCollect,
+    double? cashReturn,
   }) async {
     try {
       final body = <String, dynamic>{
@@ -193,6 +195,8 @@ class CheckoutService {
           'bank_reference': bankReference,
         if (terminalAmount != null) 'terminal_amount': terminalAmount,
         if (readerId != null) 'reader_id': readerId,
+        if (cashCollect != null) 'cash_collect': cashCollect,
+        if (cashReturn != null) 'cash_return': cashReturn,
       };
 
       final response = await _client.post(

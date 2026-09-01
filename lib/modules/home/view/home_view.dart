@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
+import 'package:modfirstpos/modules/home/widgets/checkout_flow_panel.dart';
 import 'package:modfirstpos/modules/home/widgets/home_widget.dart';
 import 'package:modfirstpos/modules/shift/controller/shift_controller.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
@@ -65,18 +66,26 @@ class HomeView extends GetView<HomeController> {
   }
 
   Widget _buildTabletLayout(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(flex: 5, child: _buildCartPanel(context)),
-        SizedBox(width: context.responsiveWidth(0.015)),
-        Expanded(flex: 4, child: ProductListPanel(controller: controller)),
-      ],
-    );
+    return Obx(() {
+      if (controller.showCheckoutPanel.value) {
+        return CheckoutFlowPanel(homeController: controller);
+      }
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(flex: 5, child: _buildCartPanel(context)),
+          SizedBox(width: context.responsiveWidth(0.015)),
+          Expanded(flex: 4, child: ProductListPanel(controller: controller)),
+        ],
+      );
+    });
   }
 
   Widget _buildMobileLayout(BuildContext context) {
     return Obx(() {
+      if (controller.showCheckoutPanel.value) {
+        return CheckoutFlowPanel(homeController: controller);
+      }
       final hasCategory = controller.selectedCategory.value != null;
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),

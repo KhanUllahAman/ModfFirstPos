@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
@@ -10,7 +11,6 @@ import 'package:modfirstpos/modules/checkout/widgets/manual_discount_dialog.dart
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/app_button.dart';
 import 'package:modfirstpos/shared/widgets/Buttons/sync_button_widget.dart';
-import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 import 'package:modfirstpos/shared/widgets/TextFormFeild/custom_text_form_field.dart';
 import 'package:modfirstpos/shared/widgets/numpad/pos_numeric_keypad.dart';
@@ -24,6 +24,9 @@ class CheckoutFlowPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Get.find<AppThemeService>();
+    final isTabletLandscape =
+        MediaQuery.of(context).size.width >= 600 ||
+        MediaQuery.of(context).orientation == Orientation.landscape;
 
     return Obx(() {
       final currentType = checkoutController.deliveryType.value;
@@ -33,58 +36,96 @@ class CheckoutFlowPanel extends StatelessWidget {
       String title;
 
       if (isOrderCreated) {
-        title = 'COMPLETE CHECKOUT';
+        title = 'COMPLETE CHECKOUT & PAYMENT';
         body = _buildPaymentStep(context, theme);
       } else if (currentType.isEmpty) {
-        title = 'DELIVERY OPTION';
+        title = 'SELECT DELIVERY OPTION';
         body = _buildDeliveryTypeStep(context, theme);
       } else if (currentType == 'home_delivery') {
         title = checkoutController.showNewAddressForm.value
-            ? 'NEW ADDRESS'
-            : 'SHIPPING ADDRESS';
+            ? 'NEW SHIPPING ADDRESS'
+            : 'CONFIRM SHIPPING ADDRESS';
         body = _buildAddressStep(context, theme);
       } else {
-        title = 'PICKUP LOCATION';
+        title = 'SELECT PICKUP LOCATION';
         body = _buildPickupLocationStep(context, theme);
       }
 
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        decoration: BoxDecoration(
+          color: ColorResources.backgroundColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Top Header Bar matching side panel layout
-            Row(
-              children: [
-                if (!isOrderCreated) ...[
-                  IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_rounded,
-                      color: ColorResources.blackColor,
-                    ),
+            // Top Navigation & Action Bar
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: ColorResources.cardBorderColor),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // Back to Products / Add More Items Button
+                  OutlinedButton.icon(
                     onPressed: () {
                       if (checkoutController.showNewAddressForm.value) {
                         checkoutController.showNewAddressForm.value = false;
-                      } else if (currentType.isNotEmpty) {
+                      } else if (currentType.isNotEmpty && !isOrderCreated) {
                         checkoutController.deliveryType.value = '';
                       } else {
                         homeController.showCheckoutPanel.value = false;
                       }
                     },
-                  ),
-                  const SizedBox(width: 4),
-                ],
-                Expanded(
-                  child: Text(
-                    title,
-                    style: AppFonts.geistMono(
-                      fontSize: context.fontSM,
-                      fontWeight: FontWeight.w700,
-                      color: ColorResources.labelColor,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: theme.secondaryColor.value,
+                      side: BorderSide(
+                        color: theme.secondaryColor.value.withOpacity(0.5),
+                        width: 1.3,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                    ),
+                    icon: const Icon(Icons.arrow_back_rounded, size: 16),
+                    label: Text(
+                      isOrderCreated || currentType.isEmpty
+                          ? 'Back to Products / Add Items'
+                          : 'Previous Step',
+                      style: AppFonts.geistMono(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                if (isOrderCreated)
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: AppFonts.geistMono(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: ColorResources.labelColor,
+                        letterSpacing: 0.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
                   OutlinedButton.icon(
                     onPressed: () {
                       homeController.clearCart();
@@ -107,9 +148,8 @@ class CheckoutFlowPanel extends StatelessWidget {
                       ),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
-                        vertical: 6,
+                        vertical: 8,
                       ),
-                      visualDensity: VisualDensity.compact,
                     ),
                     icon: const Icon(Icons.cancel_outlined, size: 15),
                     label: Text(
@@ -119,106 +159,417 @@ class CheckoutFlowPanel extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                  )
-                else
-                  IconButton(
-                    icon: const Icon(
-                      Icons.close_rounded,
-                      color: Colors.grey,
-                      size: 20,
-                    ),
-                    onPressed: () {
-                      homeController.showCheckoutPanel.value = false;
-                    },
                   ),
-              ],
-            ),
-            const Divider(height: 12, color: ColorResources.cardBorderColor),
-            const SizedBox(height: 8),
-            // Panel Body
-            if (checkoutController.isLoading.value)
-              Expanded(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const CircularProgressIndicator(
-                          color: ColorResources.blackColor,
-                          strokeWidth: 3.0,
-                        ),
-                        if (checkoutController
-                            .terminalStatusMessage.value.isNotEmpty) ...[
-                          const SizedBox(height: 16),
-                          Text(
-                            checkoutController.terminalStatusMessage.value,
-                            textAlign: TextAlign.center,
-                            style: AppFonts.geistMono(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: ColorResources.labelColor,
-                            ),
-                          ),
-                        ],
-                        if (checkoutController.isTerminalPayment ||
-                            checkoutController
-                                .terminalStatusMessage.value.isNotEmpty) ...[
-                          const SizedBox(height: 20),
-                          OutlinedButton.icon(
-                            onPressed: checkoutController.cancelTerminal,
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: ColorResources.gradientRed,
-                              side: const BorderSide(
-                                color: ColorResources.gradientRed,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 18,
-                                vertical: 10,
-                              ),
-                            ),
-                            icon: const Icon(Icons.cancel_outlined, size: 18),
-                            label: Text(
-                              'Cancel Terminal',
-                              style: AppFonts.geistMono(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              )
-            else
-              Expanded(
-                child: Scrollbar(
-                  controller: checkoutController.panelScrollController,
-                  child: SingleChildScrollView(
-                    controller: checkoutController.panelScrollController,
-                    primary: false,
-                    child: Padding(
-                      // Bottom inset keeps focused fields visible above the
-                      // on-screen keyboard (Scaffold uses
-                      // resizeToAvoidBottomInset: false).
-                      padding: EdgeInsets.only(
-                        right: 6.0,
-                        bottom: MediaQuery.of(context).viewInsets.bottom + 12,
-                      ),
-                      child: body,
-                    ),
-                  ),
-                ),
+                ],
               ),
+            ),
+            const SizedBox(height: 12),
+
+            // Main Checkout Body
+            Expanded(
+              child: checkoutController.isLoading.value
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const CircularProgressIndicator(
+                              color: ColorResources.blackColor,
+                              strokeWidth: 3.0,
+                            ),
+                            if (checkoutController
+                                .terminalStatusMessage.value.isNotEmpty) ...[
+                              const SizedBox(height: 16),
+                              Text(
+                                checkoutController.terminalStatusMessage.value,
+                                textAlign: TextAlign.center,
+                                style: AppFonts.geistMono(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: ColorResources.labelColor,
+                                ),
+                              ),
+                            ],
+                            if (checkoutController.isTerminalPayment ||
+                                checkoutController
+                                    .terminalStatusMessage.value.isNotEmpty) ...[
+                              const SizedBox(height: 20),
+                              OutlinedButton.icon(
+                                onPressed: checkoutController.cancelTerminal,
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: ColorResources.gradientRed,
+                                  side: const BorderSide(
+                                    color: ColorResources.gradientRed,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.close, size: 16),
+                                label: Text(
+                                  'Cancel Terminal Payment',
+                                  style: AppFonts.geistMono(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    )
+                  : (isTabletLandscape
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Left Column: Order Items & Summary
+                            Expanded(
+                              flex: 4,
+                              child: _buildOrderCartSummaryWidget(
+                                context,
+                                theme,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            // Right Column: Checkout Steps & Payment Flow
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: ColorResources.cardBorderColor,
+                                  ),
+                                ),
+                                child: SingleChildScrollView(
+                                  controller: checkoutController
+                                      .panelScrollController,
+                                  child: body,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: ColorResources.cardBorderColor,
+                            ),
+                          ),
+                          child: SingleChildScrollView(
+                            controller:
+                                checkoutController.panelScrollController,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _buildOrderCartSummaryWidget(context, theme),
+                                const SizedBox(height: 16),
+                                body,
+                              ],
+                            ),
+                          ),
+                        )),
+            ),
           ],
         ),
       );
     });
+  }
+
+  Widget _buildOrderCartSummaryWidget(
+    BuildContext context,
+    AppThemeService theme,
+  ) {
+    final customer = homeController.selectedCartCustomer.value;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ColorResources.cardBorderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Customer & Add More Items Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'ORDER ITEMS (${homeController.cartItems.length})',
+                    style: AppFonts.geistMono(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: ColorResources.labelColor,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  if (customer != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      'Customer: ${customer.fullName}',
+                      style: AppFonts.geistMono(
+                        fontSize: 9.5,
+                        color: theme.secondaryColor.value,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              InkWell(
+                onTap: () {
+                  homeController.showCheckoutPanel.value = false;
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.secondaryColor.value.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.add_shopping_cart_rounded,
+                        size: 13,
+                        color: theme.secondaryColor.value,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '+ Add Items',
+                        style: AppFonts.geistMono(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: theme.secondaryColor.value,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Divider(height: 1, color: ColorResources.cardBorderColor),
+          const SizedBox(height: 8),
+
+          // Scrollable Cart Items List
+          Expanded(
+            child: ListView.separated(
+              itemCount: homeController.cartItems.length,
+              separatorBuilder: (_, __) => const Divider(
+                height: 10,
+                color: ColorResources.cardBorderColor,
+              ),
+              itemBuilder: (context, index) {
+                final item = homeController.cartItems[index];
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Product Image Thumbnail
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: (item.product.imageUrl != null &&
+                              item.product.imageUrl!.isNotEmpty)
+                          ? CachedNetworkImage(
+                              imageUrl: item.product.imageUrl!,
+                              width: 44,
+                              height: 44,
+                              fit: BoxFit.cover,
+                              errorWidget: (_, __, ___) => Container(
+                                color: Colors.grey[200],
+                                width: 44,
+                                height: 44,
+                                child: const Icon(
+                                  Icons.image_not_supported_outlined,
+                                  size: 18,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            )
+                          : Container(
+                              color: Colors.grey[200],
+                              width: 44,
+                              height: 44,
+                              child: const Icon(
+                                Icons.shopping_bag_outlined,
+                                size: 18,
+                                color: Colors.grey,
+                              ),
+                            ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Quantity Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.secondaryColor.value.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '${item.quantity}x',
+                        style: AppFonts.geistMono(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.bold,
+                          color: theme.secondaryColor.value,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Product Name & SKU
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.product.name,
+                            style: AppFonts.geistMono(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: ColorResources.labelColor,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (item.product.skuCode.isNotEmpty)
+                            Text(
+                              'SKU: ${item.product.skuCode}',
+                              style: AppFonts.geistMono(
+                                fontSize: 9,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Line Total
+                    Text(
+                      CurrencyUtils.format(item.total, decimals: 2),
+                      style: AppFonts.geistMono(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: ColorResources.labelColor,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Divider(height: 1, color: ColorResources.cardBorderColor),
+          const SizedBox(height: 8),
+
+          // Totals summary
+          _buildSummaryRow(
+            'Subtotal',
+            CurrencyUtils.format(
+              checkoutController.createdOrder.value != null
+                  ? checkoutController.createdOrder.value!.subtotal
+                  : homeController.productTotal,
+              decimals: 2,
+            ),
+          ),
+          if (checkoutController.totalDiscount > 0 || homeController.discount > 0)
+            _buildSummaryRow(
+              'Discount',
+              '- ${CurrencyUtils.format(checkoutController.totalDiscount > 0 ? checkoutController.totalDiscount : homeController.discount, decimals: 2)}',
+              valueColor: ColorResources.gradientRed,
+            ),
+          if (checkoutController.createdOrder.value != null &&
+              checkoutController.createdOrder.value!.taxAmount > 0)
+            _buildSummaryRow(
+              'Tax',
+              CurrencyUtils.format(
+                checkoutController.createdOrder.value!.taxAmount,
+                decimals: 2,
+              ),
+            ),
+          const SizedBox(height: 4),
+          const Divider(height: 1, color: ColorResources.cardBorderColor),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'TOTAL DUE',
+                style: AppFonts.geistMono(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                  color: ColorResources.labelColor,
+                ),
+              ),
+              Text(
+                CurrencyUtils.format(
+                  checkoutController.createdOrder.value != null
+                      ? checkoutController.payableAmount
+                      : homeController.balance,
+                  decimals: 2,
+                ),
+                style: AppFonts.geistMono(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: theme.secondaryColor.value,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow(String label, String value, {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: AppFonts.geistMono(
+              fontSize: 10,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          Text(
+            value,
+            style: AppFonts.geistMono(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: valueColor ?? ColorResources.labelColor,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // --- Step 1: Delivery Option Selection ---
@@ -1072,82 +1423,701 @@ class CheckoutFlowPanel extends StatelessWidget {
                 onTap: () {
                   checkoutController.paymentMethod.value = m.value;
                   checkoutController.splitKeypadClear();
+                  checkoutController.cashKeypadClear();
                 },
                 theme: theme,
               ),
           ],
         ),
         const SizedBox(height: 12),
-
-        // Split payment: cash entered on the POS keypad, online auto-fills.
-        if (checkoutController.isSplitPayment) ...[
+        // ----------------- CASH PAYMENT SECTION -----------------
+        if (checkoutController.isCashPayment) ...[
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: theme.secondaryColor.value.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: ColorResources.cardBorderColor),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: theme.secondaryColor.value.withOpacity(0.35),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  'SPLIT PAYMENT — ENTER CASH PORTION',
-                  style: AppFonts.geistMono(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                    color: Colors.grey[700],
+                // Top Summary Row: Total Bill vs Cash Tendered
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'TOTAL BILL',
+                          style: AppFonts.geistMono(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.grey[600],
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          CurrencyUtils.format(
+                            checkoutController.payableAmount,
+                            decimals: 2,
+                          ),
+                          style: AppFonts.geistMono(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: ColorResources.labelColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    InkWell(
+                      onTap: checkoutController.setCashExact,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.secondaryColor.value.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: theme.secondaryColor.value.withOpacity(0.4),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.check_circle_outline,
+                              size: 14,
+                              color: theme.secondaryColor.value,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              'Exact Cash',
+                              style: AppFonts.geistMono(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: theme.secondaryColor.value,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Cash Received Box
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.secondaryColor.value.withOpacity(0.06),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: theme.secondaryColor.value,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'CASH GIVEN BY CUSTOMER',
+                            style: AppFonts.geistMono(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: theme.secondaryColor.value,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            checkoutController.cashTenderedInput.value.isEmpty
+                                ? 'Type cash note on keypad...'
+                                : 'Cash entered',
+                            style: AppFonts.geistMono(
+                              fontSize: 9,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        checkoutController.cashTenderedInput.value.isEmpty
+                            ? CurrencyUtils.format(
+                                checkoutController.payableAmount,
+                                decimals: 2,
+                              )
+                            : CurrencyUtils.format(
+                                checkoutController.cashCollect,
+                                decimals: 2,
+                              ),
+                        style: AppFonts.geistMono(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: theme.secondaryColor.value,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 10),
+
+                // Change to Return Banner
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: checkoutController.cashReturn > 0
+                        ? ColorResources.successGreen.withOpacity(0.12)
+                        : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: checkoutController.cashReturn > 0
+                          ? ColorResources.successGreen
+                          : ColorResources.cardBorderColor,
+                      width: checkoutController.cashReturn > 0 ? 1.5 : 1.0,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.currency_exchange_rounded,
+                            size: 18,
+                            color: checkoutController.cashReturn > 0
+                                ? ColorResources.successGreen
+                                : Colors.grey[600],
+                          ),
+                          const SizedBox(width: 8),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'CHANGE TO RETURN',
+                                style: AppFonts.geistMono(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: checkoutController.cashReturn > 0
+                                      ? ColorResources.successGreen
+                                      : Colors.grey[700],
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              Text(
+                                checkoutController.cashReturn > 0
+                                    ? 'Give this change to customer'
+                                    : 'Exact payment (no change)',
+                                style: AppFonts.geistMono(
+                                  fontSize: 8.5,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Text(
+                        CurrencyUtils.format(
+                          checkoutController.cashReturn,
+                          decimals: 2,
+                        ),
+                        style: AppFonts.geistMono(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: checkoutController.cashReturn > 0
+                              ? ColorResources.successGreen
+                              : ColorResources.labelColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                if (checkoutController.cashShortage > 0) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: ColorResources.gradientRed.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Cash is short by ${CurrencyUtils.format(checkoutController.cashShortage, decimals: 2)}',
+                      style: AppFonts.geistMono(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.bold,
+                        color: ColorResources.gradientRed,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 12),
+                PosNumericKeypad(
+                  onKeyTap: checkoutController.cashKeypadAppend,
+                  onBackspace: checkoutController.cashKeypadBackspace,
+                  onClear: checkoutController.cashKeypadClear,
+                  childAspectRatio: 2.6,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+
+        // ----------------- SPLIT PAYMENT SECTION -----------------
+        if (checkoutController.isSplitPayment) ...[
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: theme.secondaryColor.value.withOpacity(0.35),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Top Header: Total Bill and Split Type
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Cash',
-                      style: AppFonts.geistMono(
-                        fontSize: 10,
-                        color: Colors.grey[600],
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'TOTAL BILL',
+                          style: AppFonts.geistMono(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.grey[600],
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          CurrencyUtils.format(
+                            checkoutController.payableAmount,
+                            decimals: 2,
+                          ),
+                          style: AppFonts.geistMono(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: ColorResources.labelColor,
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      checkoutController.splitCashInput.value.isEmpty
-                          ? '0'
-                          : checkoutController.splitCashInput.value,
-                      style: AppFonts.geistMono(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: theme.secondaryColor.value,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.secondaryColor.value.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        checkoutController.paymentMethod.value ==
+                                'cash_bank_transfer'
+                            ? 'SPLIT: CASH + BANK'
+                            : 'SPLIT: CASH + CARD',
+                        style: AppFonts.geistMono(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: theme.secondaryColor.value,
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Other (auto)',
-                      style: AppFonts.geistMono(
-                        fontSize: 10,
-                        color: Colors.grey[600],
+                const SizedBox(height: 12),
+
+                // STEP 1: Cash on Bill
+                InkWell(
+                  onTap: () =>
+                      checkoutController.setSplitActiveField('portion'),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: checkoutController.splitActiveField.value ==
+                              'portion'
+                          ? theme.secondaryColor.value.withOpacity(0.08)
+                          : Colors.grey[50],
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color:
+                            checkoutController.splitActiveField.value ==
+                                    'portion'
+                                ? theme.secondaryColor.value
+                                : ColorResources.cardBorderColor,
+                        width: checkoutController.splitActiveField.value ==
+                                'portion'
+                            ? 1.8
+                            : 1.0,
                       ),
                     ),
-                    Text(
-                      CurrencyUtils.format(
-                        checkoutController.splitOnline,
-                        decimals: 2,
-                      ),
-                      style: AppFonts.geistMono(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: ColorResources.labelColor,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        checkoutController
+                                                    .splitActiveField
+                                                    .value ==
+                                                'portion'
+                                            ? theme.secondaryColor.value
+                                            : Colors.grey[400],
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    'STEP 1',
+                                    style: AppFonts.geistMono(
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'CASH AMOUNT ON BILL',
+                                  style: AppFonts.geistMono(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: ColorResources.labelColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Text(
+                              checkoutController.splitCashInput.value.isEmpty
+                                  ? '\$0.00'
+                                  : '\$${checkoutController.splitCashInput.value}',
+                              style: AppFonts.geistMono(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                color:
+                                    checkoutController.splitActiveField.value ==
+                                            'portion'
+                                        ? theme.secondaryColor.value
+                                        : ColorResources.labelColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        // Prominent Bank/Card Portion Display
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: Colors.blue.withOpacity(0.3),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${checkoutController.paymentMethod.value == 'cash_bank_transfer' ? '🏦 BANK' : '💳 CARD'} PORTION (AUTO):',
+                                style: AppFonts.geistMono(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.blue[900],
+                                ),
+                              ),
+                              Text(
+                                CurrencyUtils.format(
+                                  checkoutController.splitOnline,
+                                  decimals: 2,
+                                ),
+                                style: AppFonts.geistMono(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.blue[900],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // STEP 2: Customer Handed Cash Note
+                InkWell(
+                  onTap: () =>
+                      checkoutController.setSplitActiveField('tendered'),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: checkoutController.splitActiveField.value ==
+                              'tendered'
+                          ? theme.secondaryColor.value.withOpacity(0.08)
+                          : Colors.grey[50],
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color:
+                            checkoutController.splitActiveField.value ==
+                                    'tendered'
+                                ? theme.secondaryColor.value
+                                : ColorResources.cardBorderColor,
+                        width: checkoutController.splitActiveField.value ==
+                                'tendered'
+                            ? 1.8
+                            : 1.0,
                       ),
                     ),
-                  ],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          checkoutController
+                                                      .splitActiveField
+                                                      .value ==
+                                                  'tendered'
+                                              ? theme.secondaryColor.value
+                                              : Colors.grey[400],
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      'STEP 2',
+                                      style: AppFonts.geistMono(
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'CASH NOTE GIVEN BY CUSTOMER',
+                                    style: AppFonts.geistMono(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: ColorResources.labelColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                checkoutController
+                                        .splitTenderedInput
+                                        .value
+                                        .isEmpty
+                                    ? 'Optional (tap if customer gave larger note)'
+                                    : 'Note entered: ${CurrencyUtils.format(checkoutController.splitCashCollect, decimals: 2)}',
+                                style: AppFonts.geistMono(
+                                  fontSize: 8.5,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          checkoutController.splitTenderedInput.value.isEmpty
+                              ? '—'
+                              : CurrencyUtils.format(
+                                  checkoutController.splitCashCollect,
+                                  decimals: 2,
+                                ),
+                          style: AppFonts.geistMono(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: checkoutController.splitActiveField.value ==
+                                    'tendered'
+                                ? theme.secondaryColor.value
+                                : (checkoutController
+                                        .splitTenderedInput
+                                        .value
+                                        .isEmpty
+                                    ? Colors.grey[400]
+                                    : ColorResources.labelColor),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 10),
+
+                // Change Due Result Banner
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: checkoutController.splitCashReturn > 0
+                        ? ColorResources.successGreen.withOpacity(0.12)
+                        : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: checkoutController.splitCashReturn > 0
+                          ? ColorResources.successGreen
+                          : ColorResources.cardBorderColor,
+                      width: checkoutController.splitCashReturn > 0 ? 1.5 : 1.0,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.currency_exchange_rounded,
+                            size: 18,
+                            color: checkoutController.splitCashReturn > 0
+                                ? ColorResources.successGreen
+                                : Colors.grey[600],
+                          ),
+                          const SizedBox(width: 8),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'CHANGE TO RETURN',
+                                style: AppFonts.geistMono(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: checkoutController.splitCashReturn > 0
+                                      ? ColorResources.successGreen
+                                      : Colors.grey[700],
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              Text(
+                                checkoutController.splitCashReturn > 0
+                                    ? 'Give this change to customer'
+                                    : 'Exact cash given (no change)',
+                                style: AppFonts.geistMono(
+                                  fontSize: 8.5,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Text(
+                        CurrencyUtils.format(
+                          checkoutController.splitCashReturn,
+                          decimals: 2,
+                        ),
+                        style: AppFonts.geistMono(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: checkoutController.splitCashReturn > 0
+                              ? ColorResources.successGreen
+                              : ColorResources.labelColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                if (checkoutController.splitCashShortage > 0) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: ColorResources.gradientRed.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Cash note is short by ${CurrencyUtils.format(checkoutController.splitCashShortage, decimals: 2)}',
+                      style: AppFonts.geistMono(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.bold,
+                        color: ColorResources.gradientRed,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 12),
                 PosNumericKeypad(
                   onKeyTap: checkoutController.splitKeypadAppend,
                   onBackspace: checkoutController.splitKeypadBackspace,
