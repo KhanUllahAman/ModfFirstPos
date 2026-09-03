@@ -10,6 +10,7 @@ import 'package:modfirstpos/core/storage/customer_display_settings_storage.dart'
 import 'package:modfirstpos/modules/setting/storage/pos_device_cache_storage.dart';
 import 'package:modfirstpos/modules/category/model/category_model.dart';
 import 'package:modfirstpos/modules/product/model/product_model.dart';
+import 'package:modfirstpos/modules/draft_orders/model/draft_order_model.dart';
 import 'package:modfirstpos/modules/home/model/cart_item_model.dart';
 import 'package:modfirstpos/modules/home/model/product_item.dart';
 import 'package:modfirstpos/modules/customer/model/customer_model.dart';
@@ -32,6 +33,8 @@ class HomeController extends GetxController {
   final Rxn<CustomerModel> selectedCartCustomer = Rxn<CustomerModel>();
   final RxBool showCustomerPanel = false.obs;
   final RxBool showCheckoutPanel = false.obs;
+  final RxBool showDraftOrdersPanel = false.obs;
+  final Rxn<DraftOrderModel> activeDraftOrder = Rxn<DraftOrderModel>();
 
   final TextEditingController scanController = TextEditingController();
   final TextEditingController searchController = TextEditingController();
@@ -75,6 +78,9 @@ class HomeController extends GetxController {
     _loadPinnedProducts();
     _connectCustomerDisplay();
     ever(cartItems, (_) {
+      if (cartItems.isEmpty) {
+        activeDraftOrder.value = null;
+      }
       _pushCustomerDisplay();
       if (Get.isRegistered<CheckoutController>()) {
         Get.find<CheckoutController>().syncCartWithCreatedOrder(this);
@@ -458,7 +464,17 @@ class HomeController extends GetxController {
     int? productId,
     int? variantId,
   }) {
-    final existingIndex = cartItems.indexWhere((c) => c.product.skuCode == sku);
+    final existingIndex = cartItems.indexWhere((c) {
+      if (productId != null &&
+          c.product.productId == productId &&
+          c.product.variantId == variantId) {
+        return true;
+      }
+      if (sku != '--' && sku.isNotEmpty && c.product.skuCode == sku) {
+        return true;
+      }
+      return false;
+    });
 
     if (existingIndex == -1 &&
         Get.isRegistered<CheckoutController>() &&
@@ -526,6 +542,34 @@ class HomeController extends GetxController {
       '$displayName added successfully',
       snackBarType: SnackBarType.success,
     );
+  }
+
+  /// Adds a CartItemModel to cart, or increments quantity if item already exists.
+  void addCartItem(CartItemModel item) {
+    final existingIndex = cartItems.indexWhere((c) {
+      if (item.product.productId != null &&
+          c.product.productId == item.product.productId &&
+          c.product.variantId == item.product.variantId) {
+        return true;
+      }
+      if (item.product.skuCode != '--' &&
+          item.product.skuCode.isNotEmpty &&
+          c.product.skuCode == item.product.skuCode) {
+        return true;
+      }
+      if (item.product.customText != null &&
+          c.product.customText == item.product.customText &&
+          c.product.unitPrice == item.product.unitPrice) {
+        return true;
+      }
+      return false;
+    });
+
+    if (existingIndex != -1) {
+      cartItems[existingIndex].quantity += item.quantity;
+    } else {
+      cartItems.add(item);
+    }
   }
 
   void incrementQty(CartItemModel item) {
@@ -666,6 +710,10 @@ class HomeController extends GetxController {
 
   void closePinnedPanel() => showPinnedPanel.value = false;
 
+  void openDraftOrdersPanel() => showDraftOrdersPanel.value = true;
+
+  void closeDraftOrdersPanel() => showDraftOrdersPanel.value = false;
+
   double get productTotal =>
       cartItems.fold(0.0, (sum, item) => sum + item.total);
 
@@ -681,6 +729,7 @@ class HomeController extends GetxController {
   void clearCart() {
     cartItems.clear();
     selectedCartCustomer.value = null;
+    activeDraftOrder.value = null;
   }
 
   // ------------------------------------------------------------------------

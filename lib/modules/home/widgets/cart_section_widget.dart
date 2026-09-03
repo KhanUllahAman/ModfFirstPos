@@ -184,6 +184,63 @@ class CartSection extends StatelessWidget {
                 ),
             ],
           ),
+          Obx(() {
+            final draft = controller.activeDraftOrder.value;
+            if (draft == null || controller.cartItems.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            return Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0284C7).withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color(0xFF0284C7).withOpacity(0.25),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.receipt_long_rounded,
+                      size: 16,
+                      color: Color(0xFF0284C7),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Draft Order #${draft.draftNumber} linked',
+                        style: AppFonts.geistMono(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF0284C7),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Unlink draft order',
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        size: 16,
+                        color: Color(0xFF0284C7),
+                      ),
+                      onPressed: () {
+                        controller.activeDraftOrder.value = null;
+                      },
+                      constraints: const BoxConstraints(),
+                      padding: EdgeInsets.zero,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
           const SizedBox(height: 12),
           Expanded(
             child: controller.cartItems.isEmpty

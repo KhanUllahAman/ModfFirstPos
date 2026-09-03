@@ -850,6 +850,8 @@ class CheckoutController extends GetxController {
               : null,
         if (manualDiscount.value != null)
           'manual_discount': manualDiscount.value,
+        if (homeController.activeDraftOrder.value?.id != null)
+          'draft_order_id': homeController.activeDraftOrder.value!.id,
         if (cashCollectVal != null) 'cash_collect': cashCollectVal,
         if (cashReturnVal != null) 'cash_return': cashReturnVal,
       };
@@ -863,6 +865,8 @@ class CheckoutController extends GetxController {
         'customer_phone': customer.phone,
         'customer_email': customer.email,
         'notes': notesController.text.trim(),
+        if (homeController.activeDraftOrder.value?.id != null)
+          'draft_order_id': homeController.activeDraftOrder.value!.id,
         if (cashCollectVal != null) 'cash_collect': cashCollectVal,
         if (cashReturnVal != null) 'cash_return': cashReturnVal,
       };
@@ -1003,6 +1007,7 @@ class CheckoutController extends GetxController {
         items: _pendingItemsPayload,
         notes: notes.isEmpty ? 'POS Checkout order' : notes,
         manualDiscount: manualDiscount.value,
+        draftOrderId: homeController.activeDraftOrder.value?.id,
       );
 
       if (!createResponse.isSuccess || createResponse.order == null) {

@@ -11,6 +11,7 @@ import 'package:modfirstpos/modules/product/model/product_model.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
 import 'package:modfirstpos/modules/customer/model/customer_model.dart';
 import 'package:modfirstpos/modules/customer/controller/customer_controller.dart';
+import 'package:modfirstpos/modules/draft_orders/widgets/draft_orders_panel.dart';
 import 'package:modfirstpos/modules/home/widgets/cash_payment_panel.dart';
 import 'package:modfirstpos/shared/widgets/AppWidgets/product_pin_button.dart';
 import 'package:modfirstpos/shared/widgets/AppWidgets/variant_selector.dart';
@@ -30,6 +31,11 @@ class ProductListPanel extends StatelessWidget {
         panel = KeyedSubtree(
           key: const ValueKey('cash'),
           child: CashPaymentPanel(controller: controller),
+        );
+      } else if (controller.showDraftOrdersPanel.value) {
+        panel = KeyedSubtree(
+          key: const ValueKey('draft_orders'),
+          child: DraftOrdersPanel(homeController: controller),
         );
       } else if (controller.showPinnedPanel.value) {
         panel = KeyedSubtree(
@@ -80,6 +86,8 @@ class ProductListPanel extends StatelessWidget {
         Row(
           children: [
             Expanded(child: _CategorySearchField(controller: controller)),
+            const SizedBox(width: 8),
+            _DraftOrdersPanelButton(controller: controller),
             const SizedBox(width: 8),
             _PinnedPanelButton(controller: controller),
           ],
@@ -576,6 +584,8 @@ class ProductListPanel extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            _DraftOrdersPanelButton(controller: controller),
+            const SizedBox(width: 8),
             _PinnedPanelButton(controller: controller),
             const SizedBox(width: 8),
             Obx(
@@ -1212,6 +1222,35 @@ class _PinnedPanelButton extends StatelessWidget {
             color: theme.secondaryColor.value,
           ),
           onPressed: controller.openPinnedPanel,
+        ),
+      ),
+    );
+  }
+}
+
+/// Opens the draft orders panel.
+class _DraftOrdersPanelButton extends StatelessWidget {
+  final HomeController controller;
+  const _DraftOrdersPanelButton({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
+    return Obx(
+      () => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: IconButton(
+          tooltip: 'Draft orders',
+          icon: Icon(
+            Icons.receipt_long_rounded,
+            size: 20,
+            color: theme.secondaryColor.value,
+          ),
+          onPressed: controller.openDraftOrdersPanel,
         ),
       ),
     );

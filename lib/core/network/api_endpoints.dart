@@ -27,6 +27,7 @@ class ApiConstants {
   static final String discountTierListEndpoint = '${baseUrl}discount-tiers/list';
   static final String discountTierCreateEndpoint = '${baseUrl}discount-tiers';
   static final String orderCreateEndpoint = '${baseUrl}orders/pos';
+  static final String draftOrderListEndpoint = '${baseUrl}draft-orders/list';
   static final String addressListEndpoint = '${baseUrl}addresses/admin/list';
   static final String pickupLocationListEndpoint =
       '${baseUrl}pickup-locations/list';
