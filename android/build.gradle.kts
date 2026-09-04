@@ -3,6 +3,16 @@ allprojects {
         google()
         mavenCentral()
     }
+    configurations.all {
+        resolutionStrategy {
+            eachDependency {
+                if (requested.group == "com.stripe" && requested.name.startsWith("stripeterminal")) {
+                    useVersion("5.7.0")
+                    because("Fixes offline database migration issue in 5.6.0 flagged by Google Play Console")
+                }
+            }
+        }
+    }
 }
 
 val newBuildDir: Directory =
