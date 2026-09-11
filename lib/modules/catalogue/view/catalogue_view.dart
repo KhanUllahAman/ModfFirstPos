@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/modules/catalogue/controller/catalogue_controller.dart';
 import 'package:modfirstpos/modules/catalogue/widgets/catalogue_widget.dart';
+import 'package:modfirstpos/modules/home/controller/home_controller.dart';
 import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 import 'package:modfirstpos/shared/widgets/appBarWidget/app_bar_widget.dart';
 import 'package:modfirstpos/shared/widgets/backButtonWidgt/back_button_widget.dart';
@@ -31,10 +32,21 @@ class CatalogueView extends GetView<CatalogueController> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    BackBar(title: "Catalogue"),
+                    BackBar(title: "Category"),
                     SizedBox(height: context.spacingSM),
-                    SearchBarCatalogue(controller: controller),
+                    CatalogueTabsHeader(controller: controller),
                     SizedBox(height: context.spacingSM),
+                    Obx(() {
+                      if (controller.activeTab.value ==
+                              PosScreenTab.categories &&
+                          controller.selectedCategory.value == null) {
+                        return Padding(
+                          padding: EdgeInsets.only(bottom: context.spacingSM),
+                          child: SearchBarCatalogue(controller: controller),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    }),
                     Expanded(child: ProductGrid(controller: controller)),
                   ],
                 ),

@@ -29,10 +29,17 @@ class BootstrapController extends GetxController {
 
   List<CategoryModel> get categories => data.value?.categories ?? const [];
 
-  List<ProductModel> get allProducts => data.value?.products ?? const [];
+  List<ProductModel> get allProducts {
+    final list = List<ProductModel>.from(data.value?.products ?? const []);
+    list.sort((a, b) => (a.id ?? 0).compareTo(b.id ?? 0));
+    return list;
+  }
 
-  List<ProductModel> productsForCategory(int categoryId) =>
-      allProducts.where((p) => p.categoryId == categoryId).toList();
+  List<ProductModel> productsForCategory(int categoryId) {
+    final list = allProducts.where((p) => p.categoryId == categoryId).toList();
+    list.sort((a, b) => (a.id ?? 0).compareTo(b.id ?? 0));
+    return list;
+  }
 
   List<PickupLocationModel> get pickupLocations =>
       data.value?.pickupLocations ?? const [];

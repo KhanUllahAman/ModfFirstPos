@@ -24,6 +24,8 @@ import 'package:modfirstpos/core/utils/json_utils.dart';
 import 'package:modfirstpos/modules/checkout/controller/checkout_controller.dart';
 import 'package:modfirstpos/shared/widgets/Snackbar/custom_snackbar.dart';
 
+enum PosScreenTab { categories, products }
+
 class HomeController extends GetxController {
   final BootstrapController _bootstrapController =
       Get.find<BootstrapController>();
@@ -36,12 +38,22 @@ class HomeController extends GetxController {
   final RxBool showDraftOrdersPanel = false.obs;
   final Rxn<DraftOrderModel> activeDraftOrder = Rxn<DraftOrderModel>();
 
+  // POS Two-Tab state
+  final Rx<PosScreenTab> activePosTab = PosScreenTab.categories.obs;
+  final RxBool showMobileCatalogue = false.obs;
+
   final TextEditingController scanController = TextEditingController();
   final TextEditingController searchController = TextEditingController();
   final TextEditingController productSearchController = TextEditingController();
+  final TextEditingController allProductsSearchController =
+      TextEditingController();
+  final RxString allProductsSearchQuery = ''.obs;
 
   late ScrollController cartScrollController;
   late ScrollController productScrollController;
+  late ScrollController categoryScrollController;
+  late ScrollController categoryDetailProductsScrollController;
+  late ScrollController allProductsScrollController;
   late ScrollController customerListScrollController;
   late ScrollController variantPanelScrollController;
 
@@ -54,8 +66,9 @@ class HomeController extends GetxController {
   final RxBool isCategoriesLoading = false.obs;
   final RxString categorySearchQuery = ''.obs;
 
-  // New Category-Product flow inline states
+  // New Category-Product hierarchy states
   final Rxn<CategoryModel> selectedCategory = Rxn<CategoryModel>();
+  final RxList<CategoryModel> categoryHierarchyStack = <CategoryModel>[].obs;
   final RxList<ProductModel> categoryProducts = <ProductModel>[].obs;
   final RxBool isProductsLoading = false.obs;
   final RxString productSearchQuery = ''.obs;
@@ -69,6 +82,9 @@ class HomeController extends GetxController {
     super.onInit();
     cartScrollController = ScrollController();
     productScrollController = ScrollController();
+    categoryScrollController = ScrollController();
+    categoryDetailProductsScrollController = ScrollController();
+    allProductsScrollController = ScrollController();
     customerListScrollController = ScrollController();
     variantPanelScrollController = ScrollController();
     _bootstrapController.hydrateFromCache().then(
@@ -128,12 +144,7 @@ class HomeController extends GetxController {
   /// snapshot (synced on shift-open) — no network call, always instant.
   void _refreshFromBootstrap() {
     categories.assignAll(_bootstrapController.categories);
-    final categoryId = selectedCategory.value?.id;
-    if (categoryId != null) {
-      categoryProducts.assignAll(
-        _bootstrapController.productsForCategory(categoryId),
-      );
-    }
+    _refreshCategoryProducts();
 
     // Keeps an already-open variant-selection panel live too — otherwise a
     // stock/price push patching the catalogue in the background wouldn't
@@ -160,11 +171,20 @@ class HomeController extends GetxController {
     scanController.dispose();
     searchController.dispose();
     productSearchController.dispose();
+    allProductsSearchController.dispose();
     cartScrollController.dispose();
     productScrollController.dispose();
+    categoryScrollController.dispose();
+    categoryDetailProductsScrollController.dispose();
+    allProductsScrollController.dispose();
     customerListScrollController.dispose();
     variantPanelScrollController.dispose();
     super.onClose();
+  }
+
+  void switchPosTab(PosScreenTab tab) {
+    activePosTab.value = tab;
+    selectedProduct.value = null;
   }
 
   /// Full re-sync of the offline bootstrap snapshot (categories, products,
@@ -175,21 +195,89 @@ class HomeController extends GetxController {
 
   Future<void> syncCategoryProducts() => _bootstrapController.syncBootstrap();
 
+  /// Top-level categories where parent_id == null or 0.
+  List<CategoryModel> get topLevelCategories {
+    return categories.where((c) => c.parentId == null || c.parentId == 0).toList();
+  }
+
+  /// Child categories belonging directly to [parentId].
+  List<CategoryModel> childCategoriesFor(int parentId) {
+    return categories.where((c) => c.parentId == parentId).toList();
+  }
+
+  /// Recursively collects rootId and all child/descendant category IDs.
+  Set<int> getDescendantCategoryIds(int rootCategoryId) {
+    final ids = <int>{rootCategoryId};
+    void collect(int parentId) {
+      for (final cat in categories) {
+        if (cat.parentId == parentId && cat.id != null) {
+          if (ids.add(cat.id!)) {
+            collect(cat.id!);
+          }
+        }
+      }
+    }
+    collect(rootCategoryId);
+    return ids;
+  }
+
+  /// Refreshes products for the currently selected category and its descendant hierarchy.
+  void _refreshCategoryProducts() {
+    final cat = selectedCategory.value;
+    if (cat?.id == null) {
+      categoryProducts.clear();
+      return;
+    }
+    final descendantIds = getDescendantCategoryIds(cat!.id!);
+    final all = _bootstrapController.allProducts;
+    final matched = all
+        .where((p) => p.categoryId != null && descendantIds.contains(p.categoryId))
+        .toList();
+    matched.sort((a, b) => (a.id ?? 0).compareTo(b.id ?? 0));
+    categoryProducts.assignAll(matched);
+  }
+
+  /// Filters categories for the initial root view.
+  /// If search query is non-empty, searches across all categories; otherwise returns only top-level categories.
   List<CategoryModel> get filteredCategories {
     final query = categorySearchQuery.value.trim().toLowerCase();
-    if (query.isEmpty) return categories;
+    if (query.isEmpty) return topLevelCategories;
     return categories
         .where((c) => c.displayName.toLowerCase().contains(query))
         .toList();
   }
 
+  /// Filters category products by in-category search query (by name or SKU).
   List<ProductModel> get filteredProducts {
     final query = productSearchQuery.value.trim().toLowerCase();
-    if (query.isEmpty) return categoryProducts;
-    return categoryProducts
-        .where((p) => p.displayName.toLowerCase().contains(query))
+    final list = (query.isEmpty
+            ? categoryProducts
+            : categoryProducts
+                .where((p) =>
+                    p.displayName.toLowerCase().contains(query) ||
+                    (p.sku != null && p.sku!.toLowerCase().contains(query))))
         .toList();
+    list.sort((a, b) => (a.id ?? 0).compareTo(b.id ?? 0));
+    return list;
   }
+
+  /// Filters ALL products in the store for the Products tab (by name or SKU).
+  List<ProductModel> get filteredAllProducts {
+    final all = _bootstrapController.allProducts;
+    final query = allProductsSearchQuery.value.trim().toLowerCase();
+    final list = (query.isEmpty
+            ? all
+            : all
+                .where((p) =>
+                    p.displayName.toLowerCase().contains(query) ||
+                    (p.sku != null && p.sku!.toLowerCase().contains(query))))
+        .toList();
+    list.sort((a, b) => (a.id ?? 0).compareTo(b.id ?? 0));
+    return list;
+  }
+
+  void onAllProductsSearchChanged(String val) =>
+      allProductsSearchQuery.value = val;
 
   /// Handles the "Scan Product" field — a barcode-gun input or manual
   /// search that resolves across categories, products, and variants, and
@@ -304,15 +392,38 @@ class HomeController extends GetxController {
   void onProductSearchChanged(String val) => productSearchQuery.value = val;
 
   void onCategoryTap(CategoryModel category) {
+    if (!categoryHierarchyStack.contains(category)) {
+      categoryHierarchyStack.add(category);
+    }
     selectedCategory.value = category;
     selectedProduct.value = null;
     productSearchController.clear();
     productSearchQuery.value = '';
-    categoryProducts.assignAll(
-      category.id != null
-          ? _bootstrapController.productsForCategory(category.id!)
-          : const [],
-    );
+    _refreshCategoryProducts();
+  }
+
+  void onCategoryBack() {
+    if (categoryHierarchyStack.isNotEmpty) {
+      categoryHierarchyStack.removeLast();
+      selectedCategory.value =
+          categoryHierarchyStack.isNotEmpty ? categoryHierarchyStack.last : null;
+      selectedProduct.value = null;
+      productSearchController.clear();
+      productSearchQuery.value = '';
+      _refreshCategoryProducts();
+    } else {
+      selectedCategory.value = null;
+      categoryProducts.clear();
+    }
+  }
+
+  void resetCategoryNavigation() {
+    categoryHierarchyStack.clear();
+    selectedCategory.value = null;
+    selectedProduct.value = null;
+    productSearchController.clear();
+    productSearchQuery.value = '';
+    categoryProducts.clear();
   }
 
   void onProductTap(ProductModel product) {
@@ -374,7 +485,7 @@ class HomeController extends GetxController {
       name: displayName,
       displayName: displayName,
       sku: sku,
-      imageUrl: variant?.imageUrl ?? product.primaryImageUrl,
+      imageUrl: product.primaryImageUrl,
       unitPrice: price,
       quantity: quantity,
       productId: product.id,
@@ -698,7 +809,7 @@ class HomeController extends GetxController {
             : (product.id?.toString() ?? name),
         name: name,
         skuCode: sku,
-        imageUrl: variant?.imageUrl ?? product.primaryImageUrl,
+        imageUrl: product.primaryImageUrl,
         productPrice: price,
         productId: product.id,
         variantId: variant?.id,

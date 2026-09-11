@@ -33,7 +33,7 @@ class UpdateProfileController extends GetxController {
     if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
     // Matches ProfileModel.fullImageUrl — no `/uploads` segment, the API
     // already returns a path rooted at the domain.
-    return 'https://command.modfirst.com$raw';
+    return 'https://storage.modfirst.com$raw';
   }
 
   void _prefillFromExistingProfile() {

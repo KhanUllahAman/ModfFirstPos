@@ -274,6 +274,22 @@ class ProductModel {
     );
     return primary.imageUrl;
   }
+
+  /// All unique resolved image URLs for the product, prioritizing primary image.
+  List<String> get allImageUrls {
+    final urls = <String>[];
+    final primary = primaryImageUrl;
+    if (primary != null && primary.isNotEmpty) {
+      urls.add(primary);
+    }
+    for (final img in images) {
+      final u = img.imageUrl;
+      if (u != null && u.isNotEmpty && !urls.contains(u)) {
+        urls.add(u);
+      }
+    }
+    return urls;
+  }
 }
 
 class ProductListResponse {

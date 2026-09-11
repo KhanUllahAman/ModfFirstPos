@@ -47,25 +47,30 @@ class ProductListPanel extends StatelessWidget {
           key: const ValueKey('customers'),
           child: _buildCustomersView(context),
         );
-      } else if (controller.selectedCategory.value == null) {
-        panel = KeyedSubtree(
-          key: const ValueKey('categories'),
-          child: _buildCategoriesView(context),
-        );
-      } else if (controller.selectedProduct.value == null) {
-        panel = KeyedSubtree(
-          key: ValueKey('products-${controller.selectedCategory.value?.id}'),
-          child: _buildProductsView(
-            context,
-            controller.selectedCategory.value!,
-          ),
-        );
-      } else {
+      } else if (controller.selectedProduct.value != null) {
         panel = KeyedSubtree(
           key: ValueKey('variants-${controller.selectedProduct.value?.id}'),
           child: _buildVariantsSelectionView(
             context,
             controller.selectedProduct.value!,
+          ),
+        );
+      } else if (controller.activePosTab.value == PosScreenTab.products) {
+        panel = KeyedSubtree(
+          key: const ValueKey('all_products_tab'),
+          child: _buildAllProductsView(context),
+        );
+      } else if (controller.selectedCategory.value == null) {
+        panel = KeyedSubtree(
+          key: const ValueKey('categories_root'),
+          child: _buildCategoriesView(context),
+        );
+      } else {
+        panel = KeyedSubtree(
+          key: ValueKey('products-${controller.selectedCategory.value?.id}'),
+          child: _buildProductsView(
+            context,
+            controller.selectedCategory.value!,
           ),
         );
       }
@@ -79,35 +84,112 @@ class ProductListPanel extends StatelessWidget {
     });
   }
 
+  Widget _buildPosTopHeader(BuildContext context) {
+    return Row(
+      children: [
+        Obx(() {
+          if (!controller.showMobileCatalogue.value) {
+            return const SizedBox.shrink();
+          }
+          return Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: IconButton(
+              tooltip: 'Back to Cart',
+              icon: const Icon(Icons.shopping_cart_outlined, size: 20),
+              onPressed: () => controller.showMobileCatalogue.value = false,
+            ),
+          );
+        }),
+        Expanded(child: _buildPosTabs(context)),
+        const SizedBox(width: 8),
+        _DraftOrdersPanelButton(controller: controller),
+        const SizedBox(width: 8),
+        _PinnedPanelButton(controller: controller),
+        const SizedBox(width: 8),
+        Obx(
+          () => AppSyncButton(
+            onPressed: controller.syncCategories,
+            isLoading: controller.isCategoriesLoading.value ||
+                controller.isProductsLoading.value,
+            label: 'Sync',
+            variant: SyncButtonVariant.iconOnly,
+            borderRadius: 8,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPosTabs(BuildContext context) {
+    return Obx(() {
+      final activeTab = controller.activePosTab.value;
+      return Container(
+        height: 38,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        padding: const EdgeInsets.all(3),
+        child: Row(
+          children: [
+            Expanded(
+              child: _TabButton(
+                title: 'Categories',
+                icon: Icons.category_outlined,
+                isSelected: activeTab == PosScreenTab.categories,
+                onTap: () => controller.switchPosTab(PosScreenTab.categories),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: _TabButton(
+                title: 'Products',
+                icon: Icons.inventory_2_outlined,
+                isSelected: activeTab == PosScreenTab.products,
+                onTap: () => controller.switchPosTab(PosScreenTab.products),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
   Widget _buildCategoriesView(BuildContext context) {
     final theme = Get.find<AppThemeService>();
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(child: _CategorySearchField(controller: controller)),
-            const SizedBox(width: 8),
-            _DraftOrdersPanelButton(controller: controller),
-            const SizedBox(width: 8),
-            _PinnedPanelButton(controller: controller),
-          ],
-        ),
-        SizedBox(height: context.responsiveHeight(0.015)),
+        _buildPosTopHeader(context),
+        SizedBox(height: context.responsiveHeight(0.012)),
+        _CategorySearchField(controller: controller),
+        SizedBox(height: context.responsiveHeight(0.012)),
         Padding(
           padding: EdgeInsets.symmetric(
             horizontal: context.responsiveWidth(0.008),
           ),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'CATEGORIES',
-              style: AppFonts.geistMono(
-                fontSize: context.fontXS,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.6,
-                color: const Color(0xFF9AA1B0),
+          child: Row(
+            children: [
+              Text(
+                'TOP-LEVEL CATEGORIES',
+                style: AppFonts.geistMono(
+                  fontSize: context.fontXS,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.6,
+                  color: const Color(0xFF9AA1B0),
+                ),
               ),
-            ),
+              const Spacer(),
+              Obx(
+                () => Text(
+                  '${controller.filteredCategories.length} categories',
+                  style: AppFonts.geistMono(
+                    fontSize: context.fontXS * 0.9,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         SizedBox(height: context.responsiveHeight(0.008)),
@@ -146,10 +228,10 @@ class ProductListPanel extends StatelessWidget {
               );
             }
             return Scrollbar(
-              controller: controller.productScrollController,
+              controller: controller.categoryScrollController,
               thumbVisibility: true,
               child: GridView.builder(
-                controller: controller.productScrollController,
+                controller: controller.categoryScrollController,
                 itemCount: categories.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
@@ -162,6 +244,135 @@ class ProductListPanel extends StatelessWidget {
                   onTap: () => controller.onCategoryTap(categories[index]),
                 ),
               ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAllProductsView(BuildContext context) {
+    return Column(
+      children: [
+        _buildPosTopHeader(context),
+        SizedBox(height: context.responsiveHeight(0.012)),
+        TextField(
+          controller: controller.allProductsSearchController,
+          onChanged: controller.onAllProductsSearchChanged,
+          style: AppFonts.geistMono(fontSize: context.fontSM),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: ColorResources.whiteColor,
+            hintText: 'Search all products by name or SKU...',
+            hintStyle: AppFonts.geistMono(
+              color: ColorResources.blackColor.withOpacity(0.5),
+              fontSize: context.fontSM,
+            ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: context.responsiveWidth(0.015),
+              vertical: context.responsiveHeight(0.012),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Colors.transparent),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide:
+                  const BorderSide(color: ColorResources.cardBorderColor),
+            ),
+            prefixIcon: const Icon(
+              Icons.search,
+              color: ColorResources.blackColor,
+            ),
+            suffixIcon: Obx(() {
+              if (controller.allProductsSearchQuery.value.isNotEmpty) {
+                return IconButton(
+                  icon: const Icon(Icons.clear, size: 18),
+                  onPressed: () {
+                    controller.allProductsSearchController.clear();
+                    controller.onAllProductsSearchChanged('');
+                  },
+                );
+              }
+              return const SizedBox.shrink();
+            }),
+          ),
+        ),
+        SizedBox(height: context.responsiveHeight(0.012)),
+        Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: context.responsiveWidth(0.008),
+          ),
+          child: Row(
+            children: [
+              Text(
+                'ALL PRODUCTS',
+                style: AppFonts.geistMono(
+                  fontSize: context.fontXS,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.6,
+                  color: const Color(0xFF9AA1B0),
+                ),
+              ),
+              const Spacer(),
+              Obx(
+                () => Text(
+                  '${controller.filteredAllProducts.length} items',
+                  style: AppFonts.geistMono(
+                    fontSize: context.fontXS * 0.9,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: context.responsiveHeight(0.008)),
+        Expanded(
+          child: Obx(() {
+            final products = controller.filteredAllProducts;
+            if (products.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.inventory_2_outlined,
+                      size: 40,
+                      color: ColorResources.blackColor.withOpacity(0.3),
+                    ),
+                    SizedBox(height: context.spacingSM),
+                    Text(
+                      'No products found',
+                      style: AppFonts.geistMono(
+                        fontSize: context.fontXS,
+                        color: ColorResources.blackColor.withOpacity(0.4),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final crossAxisCount = constraints.maxWidth < 300 ? 2 : 3;
+                return GridView.builder(
+                  controller: controller.categoryDetailProductsScrollController,
+                  primary: false,
+                  itemCount: products.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    childAspectRatio: 0.72,
+                  ),
+                  itemBuilder: (_, i) => _InlineProductCard(
+                    product: products[i],
+                    onTap: () => controller.onProductTap(products[i]),
+                  ),
+                );
+              },
             );
           }),
         ),
@@ -560,42 +771,98 @@ class ProductListPanel extends StatelessWidget {
     final theme = Get.find<AppThemeService>();
     return Column(
       children: [
+        _buildPosTopHeader(context),
+        SizedBox(height: context.responsiveHeight(0.01)),
         Row(
           children: [
-            IconButton(
-              icon: const Icon(
-                Icons.arrow_back_rounded,
-                color: ColorResources.blackColor,
-              ),
-              onPressed: () {
-                controller.selectedCategory.value = null;
-              },
-            ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: Text(
-                category.displayName.toUpperCase(),
-                style: AppFonts.geistMono(
-                  fontSize: context.fontSM,
-                  fontWeight: FontWeight.w700,
-                  color: ColorResources.labelColor,
+            InkWell(
+              onTap: controller.onCategoryBack,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: ColorResources.whiteColor,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: ColorResources.cardBorderColor),
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.arrow_back_rounded,
+                      size: 16,
+                      color: ColorResources.blackColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Back',
+                      style: AppFonts.geistMono(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: ColorResources.blackColor,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            _DraftOrdersPanelButton(controller: controller),
             const SizedBox(width: 8),
-            _PinnedPanelButton(controller: controller),
-            const SizedBox(width: 8),
-            Obx(
-              () => AppSyncButton(
-                onPressed: controller.syncCategoryProducts,
-                isLoading: controller.isProductsLoading.value,
-                label: 'Sync Products',
-                variant: SyncButtonVariant.iconOnly,
-                borderRadius: 8,
-              ),
+            Expanded(
+              child: Obx(() {
+                final stack = controller.categoryHierarchyStack;
+                if (stack.length > 1) {
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        for (int i = 0; i < stack.length; i++) ...[
+                          if (i > 0)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 4),
+                              child: Icon(
+                                Icons.chevron_right_rounded,
+                                size: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          InkWell(
+                            onTap: () {
+                              while (controller.categoryHierarchyStack.isNotEmpty &&
+                                  controller.categoryHierarchyStack.last.id !=
+                                      stack[i].id) {
+                                controller.onCategoryBack();
+                              }
+                            },
+                            child: Text(
+                              stack[i].displayName,
+                              style: AppFonts.geistMono(
+                                fontSize: context.fontSM * 0.95,
+                                fontWeight: i == stack.length - 1
+                                    ? FontWeight.w800
+                                    : FontWeight.w500,
+                                color: i == stack.length - 1
+                                    ? theme.secondaryColor.value
+                                    : ColorResources.labelColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                }
+                return Text(
+                  category.displayName.toUpperCase(),
+                  style: AppFonts.geistMono(
+                    fontSize: context.fontSM,
+                    fontWeight: FontWeight.w800,
+                    color: ColorResources.labelColor,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                );
+              }),
             ),
           ],
         ),
@@ -622,7 +889,8 @@ class ProductListPanel extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: ColorResources.cardBorderColor),
+              borderSide:
+                  const BorderSide(color: ColorResources.cardBorderColor),
             ),
             suffixIcon: const Icon(
               Icons.search,
@@ -630,7 +898,45 @@ class ProductListPanel extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(height: context.responsiveHeight(0.015)),
+        Obx(() {
+          final childCategories =
+              controller.childCategoriesFor(category.id ?? 0);
+          if (childCategories.isEmpty) return const SizedBox.shrink();
+          return Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: _buildChildCategoriesRow(context, childCategories),
+          );
+        }),
+        SizedBox(height: context.responsiveHeight(0.01)),
+        Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: context.responsiveWidth(0.008),
+          ),
+          child: Row(
+            children: [
+              Text(
+                'PRODUCTS',
+                style: AppFonts.geistMono(
+                  fontSize: context.fontXS,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.6,
+                  color: const Color(0xFF9AA1B0),
+                ),
+              ),
+              const Spacer(),
+              Obx(
+                () => Text(
+                  '${controller.filteredProducts.length} items',
+                  style: AppFonts.geistMono(
+                    fontSize: context.fontXS * 0.9,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: context.responsiveHeight(0.008)),
         Expanded(
           child: Obx(() {
             if (controller.isProductsLoading.value) {
@@ -668,6 +974,7 @@ class ProductListPanel extends StatelessWidget {
               builder: (context, constraints) {
                 final crossAxisCount = constraints.maxWidth < 300 ? 2 : 3;
                 return GridView.builder(
+                  controller: controller.allProductsScrollController,
                   primary: false,
                   itemCount: products.length,
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -684,6 +991,101 @@ class ProductListPanel extends StatelessWidget {
               },
             );
           }),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChildCategoriesRow(
+    BuildContext context,
+    List<CategoryModel> childCategories,
+  ) {
+    final theme = Get.find<AppThemeService>();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 2, bottom: 6),
+          child: Text(
+            'SUB-CATEGORIES',
+            style: AppFonts.geistMono(
+              fontSize: context.fontXS * 0.95,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.6,
+              color: const Color(0xFF9AA1B0),
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 38,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: childCategories.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final child = childCategories[index];
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => controller.onCategoryTap(child),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: ColorResources.whiteColor,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: ColorResources.cardBorderColor),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (child.imageUrl != null &&
+                            child.imageUrl!.isNotEmpty) ...[
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: CachedNetworkImage(
+                              imageUrl: child.imageUrl!,
+                              width: 20,
+                              height: 20,
+                              fit: BoxFit.cover,
+                              errorWidget: (_, __, ___) => Icon(
+                                Icons.folder_outlined,
+                                size: 16,
+                                color: theme.secondaryColor.value,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ] else ...[
+                          Icon(
+                            Icons.subdirectory_arrow_right_rounded,
+                            size: 16,
+                            color: theme.secondaryColor.value,
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        Text(
+                          child.displayName,
+                          style: AppFonts.geistMono(
+                            fontSize: context.fontSM * 0.95,
+                            fontWeight: FontWeight.w600,
+                            color: ColorResources.labelColor,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 16,
+                          color: Colors.grey[400],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ],
     );
@@ -751,15 +1153,8 @@ class ProductListPanel extends StatelessWidget {
                   children: [
                     // Product images; swaps to the selected variant's own
                     // image when it has one.
-                    Obx(
-                      () => ProductImageCarousel(
-                        imageUrls: [
-                          for (final img in product.images)
-                            if (img.imageUrl != null) img.imageUrl!,
-                        ],
-                        overrideImageUrl:
-                            controller.selectedInlineVariant.value?.imageUrl,
-                      ),
+                    ProductImageCarousel(
+                      imageUrls: product.allImageUrls,
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -1301,31 +1696,10 @@ class _InlineProductCard extends StatelessWidget {
       children: [
         Expanded(
           flex: 5,
-          child: ClipRRect(
+          child: ProductCardImageSlider(
+            imageUrls: product.allImageUrls,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-            child: product.primaryImageUrl != null
-                ? CachedNetworkImage(
-                    imageUrl: product.primaryImageUrl!,
-                    fit: BoxFit.contain,
-                    width: double.infinity,
-                    height: double.infinity,
-                    errorWidget: (_, __, ___) => Container(
-                      color: const Color(0xFFE5E7EB),
-                      child: const Icon(
-                        Icons.image_not_supported_outlined,
-                        color: Colors.grey,
-                        size: 20,
-                      ),
-                    ),
-                  )
-                : Container(
-                    color: const Color(0xFFE5E7EB),
-                    child: const Icon(
-                      Icons.image_outlined,
-                      color: Colors.grey,
-                      size: 20,
-                    ),
-                  ),
+            onTap: onTap,
           ),
         ),
         Expanded(
@@ -1423,6 +1797,68 @@ class _CategorySearchField extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _TabButton extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _TabButton({
+    required this.title,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        decoration: BoxDecoration(
+          color: isSelected ? theme.secondaryColor.value : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: theme.secondaryColor.value.withOpacity(0.25),
+                    blurRadius: 3,
+                    offset: const Offset(0, 1),
+                  ),
+                ]
+              : null,
+        ),
+        alignment: Alignment.center,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 15,
+              color: isSelected
+                  ? theme.onSecondaryColor
+                  : const Color(0xFF64748B),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              title,
+              style: AppFonts.geistMono(
+                fontSize: 11.5,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                color: isSelected
+                    ? theme.onSecondaryColor
+                    : const Color(0xFF64748B),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -1,5 +1,4 @@
 import 'package:modfirstpos/core/utils/currency_utils.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -13,6 +12,7 @@ import 'package:modfirstpos/shared/widgets/ScreenSize/screen_size_utils.dart';
 import 'package:modfirstpos/shared/widgets/appBarWidget/app_bar_widget.dart';
 import 'package:modfirstpos/shared/widgets/backButtonWidgt/back_button_widget.dart';
 import 'package:modfirstpos/shared/widgets/AppWidgets/product_pin_button.dart';
+import 'package:modfirstpos/shared/widgets/DynamicImage/product_image_carousel.dart';
 import 'package:modfirstpos/shared/widgets/noKeyboard/no_keyboard_extension.dart';
 
 class CategoryProductsView extends GetView<CategoryProductsController> {
@@ -247,31 +247,11 @@ class _ProductCard extends StatelessWidget {
           child: Stack(
             children: [
               Positioned.fill(
-                child: ClipRRect(
+                child: ProductCardImageSlider(
+                  imageUrls: product.allImageUrls,
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(16),
                   ),
-                  child: product.primaryImageUrl != null
-                      ? CachedNetworkImage(
-                          imageUrl: product.primaryImageUrl!,
-                          fit: BoxFit.contain,
-                          width: double.infinity,
-                          height: double.infinity,
-                          errorWidget: (_, __, ___) => Container(
-                            color: const Color(0xFFF3F4F6),
-                            child: const Icon(
-                              Icons.image_not_supported_outlined,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        )
-                      : Container(
-                          color: const Color(0xFFF3F4F6),
-                          child: const Icon(
-                            Icons.image_outlined,
-                            color: Colors.grey,
-                          ),
-                        ),
                 ),
               ),
               if (product.hasVariants)

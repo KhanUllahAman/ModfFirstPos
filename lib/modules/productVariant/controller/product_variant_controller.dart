@@ -83,7 +83,7 @@ class ProductVariantController extends GetxController {
       name: product.displayName,
       skuCode: displaySku,
       oldSkuCode: null,
-      imageUrl: variant?.imageUrl ?? product.primaryImageUrl,
+      imageUrl: product.primaryImageUrl,
       productPrice: displayPrice,
       productId: product.id,
       variantId: variant?.id,

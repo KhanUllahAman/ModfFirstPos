@@ -86,10 +86,12 @@ class HomeView extends GetView<HomeController> {
       if (controller.showCheckoutPanel.value) {
         return CheckoutFlowPanel(homeController: controller);
       }
-      final hasCategory = controller.selectedCategory.value != null;
+      final isBrowsing = controller.showMobileCatalogue.value ||
+          controller.selectedCategory.value != null ||
+          controller.selectedProduct.value != null;
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
-        child: hasCategory
+        child: isBrowsing
             ? ProductListPanel(
                 key: const ValueKey('products'),
                 controller: controller,
@@ -102,7 +104,8 @@ class HomeView extends GetView<HomeController> {
                   SizedBox(
                     height: 48,
                     child: ElevatedButton.icon(
-                      onPressed: () => controller.selectedCategory.value = null,
+                      onPressed: () =>
+                          controller.showMobileCatalogue.value = true,
                       icon: const Icon(Icons.grid_view_rounded),
                       label: const Text('Browse Products'),
                       style: ElevatedButton.styleFrom(

@@ -326,22 +326,15 @@ class ProductVariantView extends GetView<ProductVariantController> {
   }
 }
 
-/// Image carousel that swaps to the selected variant's own image.
 class _ProductImage extends StatelessWidget {
   final ProductVariantController controller;
   const _ProductImage({required this.controller});
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => ProductImageCarousel(
-        height: context.responsiveHeight(0.3),
-        imageUrls: [
-          for (final img in controller.product.images)
-            if (img.imageUrl != null) img.imageUrl!,
-        ],
-        overrideImageUrl: controller.selectedVariant.value?.imageUrl,
-      ),
+    return ProductImageCarousel(
+      height: context.responsiveHeight(0.3),
+      imageUrls: controller.product.allImageUrls,
     );
   }
 }
