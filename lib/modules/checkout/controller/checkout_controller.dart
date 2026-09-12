@@ -8,6 +8,7 @@ import 'package:modfirstpos/core/services/print_receipt_helper.dart';
 import 'package:modfirstpos/core/services/stripe_terminal_service.dart';
 import 'package:modfirstpos/core/services/sync_service.dart';
 import 'package:modfirstpos/core/services/thermal_printer_service.dart';
+import 'package:modfirstpos/core/services/website_settings_storage_service.dart';
 import 'package:modfirstpos/core/storage/stripe_terminal_settings_storage.dart';
 import 'package:modfirstpos/core/utils/client_reference_generator.dart';
 import 'package:modfirstpos/core/utils/currency_utils.dart';
@@ -57,7 +58,7 @@ class CheckoutController extends GetxController {
       Rxn<CouponValidationResponse>();
   final RxString couponError = ''.obs;
   final Rxn<CreatedOrder> createdOrder = Rxn<CreatedOrder>();
-  final RxString paymentMethod = 'without_payment'.obs;
+  final RxString paymentMethod = 'cash'.obs;
   final RxDouble customOnlineAmount = 0.0.obs;
   final RxDouble customCashAmount = 0.0.obs;
   final Rxn<Map<String, dynamic>> manualDiscount = Rxn<Map<String, dynamic>>();
@@ -261,7 +262,7 @@ class CheckoutController extends GetxController {
     couponValidation.value = null;
     couponError.value = '';
     createdOrder.value = null;
-    paymentMethod.value = 'without_payment';
+    paymentMethod.value = 'cash';
     customOnlineAmount.value = 0.0;
     customCashAmount.value = 0.0;
     splitCashInput.value = '';
@@ -329,6 +330,12 @@ class CheckoutController extends GetxController {
         phoneController.text = customer.phone ?? '';
       }
       _applyPickupLocations(_bootstrapController.pickupLocations);
+      if (homeController.activeDraftOrder.value != null) {
+        final draft = homeController.activeDraftOrder.value!;
+        if (draft.deliveryType.isNotEmpty) {
+          deliveryType.value = draft.deliveryType;
+        }
+      }
       final hadCache = await _hydrateAddressesFromCache(userId);
       if (hadCache) {
         isLoading.value = false;
@@ -640,18 +647,65 @@ class CheckoutController extends GetxController {
         .where((item) => item.product.isAppliedTax != false)
         .fold<double>(0, (sum, item) => sum + item.total);
     final tax = taxableSubtotal * taxPercent / 100;
+    final shipping = await calculateShippingFee(
+      homeController: homeController,
+      subtotal: subtotal,
+    );
+
     createdOrder.value = CreatedOrder(
       id: 0,
-      totalAmount: subtotal + tax,
+      totalAmount: subtotal + tax + shipping,
       subtotal: subtotal,
       taxAmount: tax,
-      shippingFee: 0,
+      shippingFee: shipping,
       discountAmount: 0,
     );
     if (customCashAmount.value == 0.0 || customOnlineAmount.value > 0) {
       customOnlineAmount.value = payableAmount;
     }
     return true;
+  }
+
+  Future<double> calculateShippingFee({
+    required HomeController homeController,
+    required double subtotal,
+  }) async {
+    // 1. If active draft order has an explicit shipping fee, use it
+    final draftFee = homeController.activeDraftOrder.value?.shippingFee;
+    if (draftFee != null && draftFee > 0) {
+      return draftFee;
+    }
+
+    // 2. Store pickup has no shipping fee
+    if (deliveryType.value == 'store_pickup') {
+      return 0.0;
+    }
+
+    // 3. For home delivery (or unspecified):
+    String? defaultFeeStr =
+        _bootstrapController.data.value?.store.defaultShippingFee;
+    if (defaultFeeStr == null || defaultFeeStr.trim().isEmpty) {
+      defaultFeeStr =
+          await WebsiteSettingsStorageService.getDefaultShippingFee();
+    }
+
+    String? freeThresholdStr =
+        _bootstrapController.data.value?.store.freeShippingThreshold;
+    if (freeThresholdStr == null || freeThresholdStr.trim().isEmpty) {
+      freeThresholdStr =
+          await WebsiteSettingsStorageService.getFreeShippingThreshold();
+    }
+
+    final defaultFee = double.tryParse(defaultFeeStr ?? '') ?? 0.0;
+    final freeThreshold = double.tryParse(freeThresholdStr ?? '');
+
+    if (freeThreshold != null &&
+        freeThreshold > 0 &&
+        subtotal >= freeThreshold) {
+      return 0.0;
+    }
+
+    return defaultFee;
   }
 
   void syncCartWithCreatedOrder(HomeController homeController) {
@@ -689,7 +743,30 @@ class CheckoutController extends GetxController {
         .where((item) => item.product.isAppliedTax != false)
         .fold<double>(0, (sum, item) => sum + item.total);
     final tax = taxableSubtotal * taxPercent / 100;
-    final shipping = createdOrder.value?.shippingFee ?? 0.0;
+
+    double shipping = createdOrder.value?.shippingFee ?? 0.0;
+    if (homeController.activeDraftOrder.value?.shippingFee != null &&
+        homeController.activeDraftOrder.value!.shippingFee > 0) {
+      shipping = homeController.activeDraftOrder.value!.shippingFee;
+    } else if (deliveryType.value == 'home_delivery') {
+      final defaultFeeStr =
+          _bootstrapController.data.value?.store.defaultShippingFee;
+      final freeThresholdStr =
+          _bootstrapController.data.value?.store.freeShippingThreshold;
+      final defaultFee = double.tryParse(defaultFeeStr ?? '') ??
+          (createdOrder.value?.shippingFee ?? 0.0);
+      final freeThreshold = double.tryParse(freeThresholdStr ?? '');
+      if (freeThreshold != null &&
+          freeThreshold > 0 &&
+          subtotal >= freeThreshold) {
+        shipping = 0.0;
+      } else {
+        shipping = defaultFee;
+      }
+    } else if (deliveryType.value == 'store_pickup') {
+      shipping = 0.0;
+    }
+
     final discount = createdOrder.value?.discountAmount ?? 0.0;
 
     createdOrder.value = CreatedOrder(
@@ -832,7 +909,7 @@ class CheckoutController extends GetxController {
           'user_id': customer.id,
         'client_reference': clientReference,
         'offline_created_at': DateTime.now().toUtc().toIso8601String(),
-        'payment_method': method,
+        'payment_method': method == 'bank_transfer' ? 'bank_transfer' : 'cash',
         'delivery_type': deliveryType.value,
         if (deliveryType.value == 'store_pickup' &&
             _pendingPickupLocationId != null)
@@ -860,6 +937,7 @@ class CheckoutController extends GetxController {
         'grand_total': grandTotal,
         'subtotal': createdOrder.value!.subtotal,
         'tax': createdOrder.value!.taxAmount,
+        'shipping': createdOrder.value!.shippingFee,
         'discount': totalDiscount,
         'customer_name': customer.fullName,
         'customer_phone': customer.phone,
@@ -943,6 +1021,7 @@ class CheckoutController extends GetxController {
         subtotal: createdOrder.value?.subtotal ?? 0,
         discount: totalDiscount,
         tax: createdOrder.value?.taxAmount ?? 0,
+        shipping: createdOrder.value?.shippingFee ?? 0,
         grandTotal: grandTotal,
         deliveryInfo: deliveryType.value == 'store_pickup'
             ? selectedPickupLocation.value?.displayName

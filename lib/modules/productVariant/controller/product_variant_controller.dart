@@ -78,12 +78,16 @@ class ProductVariantController extends GetxController {
       return;
     }
     final variant = selectedVariant.value;
+    final variantLabel = variant?.displayName;
+    final displayName = (variantLabel != null && variantLabel.isNotEmpty)
+        ? '${product.displayName} ($variantLabel)'
+        : product.displayName;
     final item = ProductItem(
       id: product.id?.toString() ?? '',
-      name: product.displayName,
+      name: displayName,
       skuCode: displaySku,
       oldSkuCode: null,
-      imageUrl: product.primaryImageUrl,
+      imageUrl: variant?.imageUrl ?? product.primaryImageUrl,
       productPrice: displayPrice,
       productId: product.id,
       variantId: variant?.id,

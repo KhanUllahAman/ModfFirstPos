@@ -6,6 +6,7 @@ import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/app_fonts.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 import 'package:modfirstpos/core/utils/currency_utils.dart';
+import 'package:modfirstpos/modules/bootstrap/controller/bootstrap_controller.dart';
 import 'package:modfirstpos/modules/checkout/controller/checkout_controller.dart';
 import 'package:modfirstpos/modules/checkout/widgets/manual_discount_dialog.dart';
 import 'package:modfirstpos/modules/home/controller/home_controller.dart';
@@ -574,13 +575,34 @@ class CheckoutFlowPanel extends StatelessWidget {
 
   // --- Step 1: Delivery Option Selection ---
   Widget _buildDeliveryTypeStep(BuildContext context, AppThemeService theme) {
+    final bootstrap = Get.isRegistered<BootstrapController>()
+        ? Get.find<BootstrapController>()
+        : null;
+    final defaultShippingFee = double.tryParse(
+      bootstrap?.data.value?.store.defaultShippingFee ?? '',
+    );
+    final freeThreshold = double.tryParse(
+      bootstrap?.data.value?.store.freeShippingThreshold ?? '',
+    );
+
+    String homeDeliveryDesc = 'Ship order directly to customer home address.';
+    if (defaultShippingFee != null && defaultShippingFee > 0) {
+      if (freeThreshold != null && freeThreshold > 0) {
+        homeDeliveryDesc =
+            'Ship to address (${CurrencyUtils.format(defaultShippingFee)} shipping, Free over ${CurrencyUtils.format(freeThreshold)}).';
+      } else {
+        homeDeliveryDesc =
+            'Ship to address (${CurrencyUtils.format(defaultShippingFee)} shipping fee).';
+      }
+    }
+
     return Column(
       children: [
         const SizedBox(height: 16),
         _buildChoiceCard(
           icon: Iconsax.truck_fast,
           title: 'Home Delivery',
-          description: 'Ship order directly to customer home address.',
+          description: homeDeliveryDesc,
           isSelected: false,
           onTap: () {
             checkoutController.deliveryType.value = 'home_delivery';
@@ -591,7 +613,7 @@ class CheckoutFlowPanel extends StatelessWidget {
         _buildChoiceCard(
           icon: Iconsax.shop,
           title: 'Store Pickup',
-          description: 'Hold order for pickup at retail branch.',
+          description: 'Hold order for pickup at retail branch (Free pickup).',
           isSelected: false,
           onTap: () {
             checkoutController.deliveryType.value = 'store_pickup';

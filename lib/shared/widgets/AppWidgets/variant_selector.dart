@@ -131,8 +131,11 @@ class VariantSelector extends StatelessWidget {
       runSpacing: 8,
       children: product.variants.map((variant) {
         final isSelected = selectedVariant?.id == variant.id;
+        final label = variant.displayName.isNotEmpty
+            ? variant.displayName
+            : (variant.sku ?? '--');
         return _VariantChip(
-          label: variant.sku ?? '--',
+          label: label,
           isSelected: isSelected,
           isAvailable: variant.inStock,
           accent: theme.secondaryColor.value,

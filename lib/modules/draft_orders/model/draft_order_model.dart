@@ -309,7 +309,11 @@ class DraftOrderItemModel {
   }
 
   CartItemModel toCartItem() {
-    final name = product?.name ?? customText ?? 'Item #$id';
+    final baseName = product?.name ?? customText ?? 'Item #$id';
+    final variantLabel = variant?.displayName;
+    final name = (variantLabel != null && variantLabel.isNotEmpty)
+        ? '$baseName ($variantLabel)'
+        : baseName;
     final sku = variant?.sku ?? product?.sku ?? 'CUSTOM';
     final resolvedImageUrl = imageUrl;
 

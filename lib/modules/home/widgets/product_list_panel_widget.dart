@@ -110,8 +110,9 @@ class ProductListPanel extends StatelessWidget {
           () => AppSyncButton(
             onPressed: controller.syncCategories,
             isLoading: controller.isCategoriesLoading.value ||
-                controller.isProductsLoading.value,
-            label: 'Sync',
+                controller.isProductsLoading.value ||
+                controller.isBootstrapSyncing.value,
+            label: 'Sync Store Data',
             variant: SyncButtonVariant.iconOnly,
             borderRadius: 8,
           ),
@@ -196,7 +197,8 @@ class ProductListPanel extends StatelessWidget {
         Expanded(
           child: Obx(() {
             final _ = controller.categorySearchQuery.value;
-            if (controller.isCategoriesLoading.value) {
+            if (controller.isCategoriesLoading.value ||
+                controller.isBootstrapSyncing.value) {
               return Center(
                 child: CircularProgressIndicator(
                   color: theme.secondaryColor.value,
@@ -252,6 +254,7 @@ class ProductListPanel extends StatelessWidget {
   }
 
   Widget _buildAllProductsView(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return Column(
       children: [
         _buildPosTopHeader(context),
@@ -331,6 +334,15 @@ class ProductListPanel extends StatelessWidget {
         SizedBox(height: context.responsiveHeight(0.008)),
         Expanded(
           child: Obx(() {
+            if (controller.isProductsLoading.value ||
+                controller.isBootstrapSyncing.value) {
+              return Center(
+                child: CircularProgressIndicator(
+                  color: theme.secondaryColor.value,
+                  strokeWidth: 3.0,
+                ),
+              );
+            }
             final products = controller.filteredAllProducts;
             if (products.isEmpty) {
               return Center(
@@ -939,7 +951,8 @@ class ProductListPanel extends StatelessWidget {
         SizedBox(height: context.responsiveHeight(0.008)),
         Expanded(
           child: Obx(() {
-            if (controller.isProductsLoading.value) {
+            if (controller.isProductsLoading.value ||
+                controller.isBootstrapSyncing.value) {
               return Center(
                 child: CircularProgressIndicator(
                   color: theme.secondaryColor.value,
@@ -1790,7 +1803,8 @@ class _CategorySearchField extends StatelessWidget {
         Obx(
           () => AppSyncButton(
             onPressed: controller.syncCategories,
-            isLoading: controller.isCategoriesLoading.value,
+            isLoading: controller.isCategoriesLoading.value ||
+                controller.isBootstrapSyncing.value,
             label: 'Sync Categories',
             variant: SyncButtonVariant.iconOnly,
             borderRadius: 8,

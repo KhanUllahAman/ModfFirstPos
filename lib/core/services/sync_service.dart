@@ -267,6 +267,13 @@ class SyncService extends GetxService {
       if (name is String && name.isNotEmpty) sync['full_name'] = name;
     }
 
+    // Backend endpoint /orders/pos/sync strictly requires payment_method to be 'cash' | 'bank_transfer'.
+    // If an offline order was saved with 'without_payment' or any invalid enum, map to 'cash'.
+    final paymentMethod = sync['payment_method'];
+    if (paymentMethod != 'cash' && paymentMethod != 'bank_transfer') {
+      sync['payment_method'] = 'cash';
+    }
+
     return sync;
   }
 
@@ -331,8 +338,61 @@ class SyncService extends GetxService {
       await refreshPendingCount();
       return SyncSummary(synced: synced, duplicates: duplicates, failed: failed);
     } catch (e) {
-      log('SyncService pushPendingOrders error: $e');
-      return const SyncSummary();
+      log('SyncService pushPendingOrders batch error: $e. Falling back to individual pushes...');
+      var synced = 0;
+      var duplicates = 0;
+      var failed = 0;
+
+      for (final row in rows) {
+        final localId = JsonUtils.asInt(row['local_id']);
+        final clientRef = row['client_reference'] as String?;
+        try {
+          final singlePayload = _resolveOrderSyncPayload(row);
+          final response = await _client.post(
+            endpoint: ApiConstants.orderPosSyncEndpoint,
+            body: {'orders': [singlePayload]},
+            showErrorSnackbar: false,
+          );
+          final body = JsonUtils.asMap(response.data);
+          final payload = JsonUtils.asMap(body['payload']);
+          final syncedList = JsonUtils.asMap(payload)['synced'] as List? ?? [];
+          final dupList = JsonUtils.asMap(payload)['duplicates'] as List? ?? [];
+          final failList = JsonUtils.asMap(payload)['failed'] as List? ?? [];
+
+          if (syncedList.isNotEmpty) {
+            final first = JsonUtils.asMap(syncedList.first);
+            await PendingOrderRepository.markSynced(
+              localId,
+              serverOrderCode: JsonUtils.asStringOrNull(first['order_code']),
+            );
+            synced++;
+          } else if (dupList.isNotEmpty) {
+            final first = JsonUtils.asMap(dupList.first);
+            await PendingOrderRepository.markSynced(
+              localId,
+              serverOrderCode: JsonUtils.asStringOrNull(first['order_code']),
+            );
+            duplicates++;
+          } else if (failList.isNotEmpty) {
+            final first = JsonUtils.asMap(failList.first);
+            await PendingOrderRepository.markFailed(
+              localId,
+              JsonUtils.asString(first['error'] ?? first['message'] ?? 'Sync failed'),
+            );
+            failed++;
+          }
+        } catch (singleError) {
+          log('SyncService single order push error ($clientRef): $singleError');
+          await PendingOrderRepository.markFailed(
+            localId,
+            singleError.toString(),
+          );
+          failed++;
+        }
+      }
+
+      await refreshPendingCount();
+      return SyncSummary(synced: synced, duplicates: duplicates, failed: failed);
     }
   }
 }

@@ -187,13 +187,33 @@ class HomeController extends GetxController {
     selectedProduct.value = null;
   }
 
+  RxBool get isBootstrapSyncing => _bootstrapController.isSyncing;
+
   /// Full re-sync of the offline bootstrap snapshot (categories, products,
   /// variants, inventory, pickup locations, etc — one call refreshes all of
   /// it). Kept under both names since existing UI wires "Sync Categories"
   /// and "Sync Products" buttons to whichever one is in scope.
-  Future<void> syncCategories() => _bootstrapController.syncBootstrap();
+  Future<void> syncCategories() async {
+    isCategoriesLoading.value = true;
+    isProductsLoading.value = true;
+    try {
+      await _bootstrapController.syncBootstrap();
+    } finally {
+      isCategoriesLoading.value = false;
+      isProductsLoading.value = false;
+    }
+  }
 
-  Future<void> syncCategoryProducts() => _bootstrapController.syncBootstrap();
+  Future<void> syncCategoryProducts() async {
+    isProductsLoading.value = true;
+    isCategoriesLoading.value = true;
+    try {
+      await _bootstrapController.syncBootstrap();
+    } finally {
+      isProductsLoading.value = false;
+      isCategoriesLoading.value = false;
+    }
+  }
 
   /// Top-level categories where parent_id == null or 0.
   List<CategoryModel> get topLevelCategories {
@@ -478,14 +498,15 @@ class HomeController extends GetxController {
   }) {
     final sku = variant?.sku ?? product.sku ?? '--';
     final price = variant?.effectivePrice ?? product.effectivePrice;
-    final displayName = variant != null
-        ? '${product.displayName} (${variant.sku})'
+    final variantLabel = variant?.displayName;
+    final displayName = (variantLabel != null && variantLabel.isNotEmpty)
+        ? '${product.displayName} ($variantLabel)'
         : product.displayName;
     _addOrIncrementCartItem(
       name: displayName,
       displayName: displayName,
       sku: sku,
-      imageUrl: product.primaryImageUrl,
+      imageUrl: variant?.imageUrl ?? product.primaryImageUrl,
       unitPrice: price,
       quantity: quantity,
       productId: product.id,
@@ -799,8 +820,9 @@ class HomeController extends GetxController {
   void pinProduct(ProductModel product, {ProductVariantModel? variant}) {
     final sku = variant?.sku ?? product.sku;
     final price = variant?.effectivePrice ?? product.effectivePrice;
-    final name = variant != null
-        ? '${product.displayName} (${variant.sku})'
+    final variantLabel = variant?.displayName;
+    final name = (variantLabel != null && variantLabel.isNotEmpty)
+        ? '${product.displayName} ($variantLabel)'
         : product.displayName;
     addPinnedProduct(
       ProductItem(
@@ -809,7 +831,7 @@ class HomeController extends GetxController {
             : (product.id?.toString() ?? name),
         name: name,
         skuCode: sku,
-        imageUrl: product.primaryImageUrl,
+        imageUrl: variant?.imageUrl ?? product.primaryImageUrl,
         productPrice: price,
         productId: product.id,
         variantId: variant?.id,

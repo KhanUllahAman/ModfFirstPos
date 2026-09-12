@@ -21,6 +21,9 @@ class BootstrapStoreModel {
   final String? currency;
   final String? currencySymbol;
   final String? taxPercentage;
+  final String? defaultShippingFee;
+  final String? freeShippingThreshold;
+  final String? minOrderAmount;
 
   BootstrapStoreModel({
     this.id,
@@ -37,6 +40,9 @@ class BootstrapStoreModel {
     this.currency,
     this.currencySymbol,
     this.taxPercentage,
+    this.defaultShippingFee,
+    this.freeShippingThreshold,
+    this.minOrderAmount,
   });
 
   factory BootstrapStoreModel.fromJson(Map<String, dynamic> json) {
@@ -55,6 +61,10 @@ class BootstrapStoreModel {
       currency: JsonUtils.asStringOrNull(json['currency']),
       currencySymbol: JsonUtils.asStringOrNull(json['currency_symbol']),
       taxPercentage: JsonUtils.asStringOrNull(json['tax_percentage']),
+      defaultShippingFee: JsonUtils.asStringOrNull(json['default_shipping_fee']),
+      freeShippingThreshold:
+          JsonUtils.asStringOrNull(json['free_shipping_threshold']),
+      minOrderAmount: JsonUtils.asStringOrNull(json['min_order_amount']),
     );
   }
 }

@@ -21,6 +21,7 @@ class ShiftView extends GetView<ShiftController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: ColorResources.backgroundColor,
@@ -43,10 +44,13 @@ class ShiftView extends GetView<ShiftController> {
                           : () =>
                                 Get.find<BootstrapController>().syncBootstrap(),
                       icon: Get.find<BootstrapController>().isSyncing.value
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: theme.secondaryColor.value,
+                              ),
                             )
                           : const Icon(Icons.sync_rounded),
                       tooltip: 'Sync store data',
@@ -57,7 +61,16 @@ class ShiftView extends GetView<ShiftController> {
                       onPressed: controller.isLoading.value
                           ? null
                           : controller.checkCurrentShift,
-                      icon: const Icon(Icons.refresh_rounded),
+                      icon: controller.isLoading.value
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: theme.secondaryColor.value,
+                              ),
+                            )
+                          : const Icon(Icons.refresh_rounded),
                       tooltip: 'Refresh shift',
                     ),
                   ),

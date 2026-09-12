@@ -16,6 +16,7 @@ import 'package:modfirstpos/shared/widgets/helperFunction/get_device_id_function
 import 'package:modfirstpos/shared/widgets/helperFunction/logout_helper.dart';
 import 'package:modfirstpos/shared/widgets/noKeyboard/no_keyboard_extension.dart';
 
+import 'package:modfirstpos/shared/widgets/CircularProgressIndicator/circular_progress_indicator.dart';
 import 'package:modfirstpos/shared/widgets/sideNav/app_nav_drawer.dart';
 
 class MenuView extends StatelessWidget {
@@ -80,31 +81,34 @@ class _MainTab extends StatelessWidget {
       );
       return;
     }
+    CustomLoadingDialog.show(message: 'Refreshing website settings...');
+    String? message;
+    SnackBarType type = SnackBarType.success;
     try {
       final response = await WebsiteSettingsService()
           .fetchAndSaveWebsiteSettings(storeSlug);
       if (response.isSuccess) {
         // Apply theme, colors, branding and configuration immediately.
         await Get.find<AppThemeService>().refreshFromStorage();
-        customSnackBar(
-          'Settings Refreshed',
-          'Latest website settings applied',
-          snackBarType: SnackBarType.success,
-        );
+        message = 'Latest website settings applied';
+        type = SnackBarType.success;
       } else {
-        customSnackBar(
-          'Refresh Failed',
-          response.message.isNotEmpty
-              ? response.message
-              : 'Could not refresh website settings',
-          snackBarType: SnackBarType.error,
-        );
+        message = response.message.isNotEmpty
+            ? response.message
+            : 'Could not refresh website settings';
+        type = SnackBarType.error;
       }
     } catch (e) {
+      message = 'Could not reach the server. Cached settings remain active.';
+      type = SnackBarType.error;
+    } finally {
+      CustomLoadingDialog.hide();
+    }
+    if (message != null) {
       customSnackBar(
-        'Refresh Failed',
-        'Could not reach the server. Cached settings remain active.',
-        snackBarType: SnackBarType.error,
+        type == SnackBarType.success ? 'Settings Refreshed' : 'Refresh Failed',
+        message,
+        snackBarType: type,
       );
     }
   }
@@ -113,22 +117,34 @@ class _MainTab extends StatelessWidget {
     required String label,
     required Future<SyncSummary> Function() run,
   }) async {
-    final summary = await run();
-    if (summary.total == 0) {
+    CustomLoadingDialog.show(message: 'Syncing $label...');
+    String? message;
+    SnackBarType type = SnackBarType.success;
+    try {
+      final summary = await run();
+      if (summary.total == 0) {
+        message = 'Nothing to sync — everything is already up to date.';
+        type = SnackBarType.info;
+      } else {
+        message =
+            '${summary.synced} synced, ${summary.duplicates} duplicate, ${summary.failed} failed.';
+        type = summary.failed > 0
+            ? SnackBarType.warning
+            : SnackBarType.success;
+      }
+    } catch (e) {
+      message = 'Failed to sync $label: $e';
+      type = SnackBarType.error;
+    } finally {
+      CustomLoadingDialog.hide();
+    }
+    if (message != null) {
       customSnackBar(
         '$label Sync',
-        'Nothing to sync — everything is already up to date.',
-        snackBarType: SnackBarType.info,
+        message,
+        snackBarType: type,
       );
-      return;
     }
-    customSnackBar(
-      '$label Sync',
-      '${summary.synced} synced, ${summary.duplicates} duplicate, ${summary.failed} failed.',
-      snackBarType: summary.failed > 0
-          ? SnackBarType.warning
-          : SnackBarType.success,
-    );
   }
 
   @override
@@ -183,20 +199,32 @@ class _MainTab extends StatelessWidget {
                 menuTitle: 'Sync Pending Items',
                 badgeCount: Get.find<SyncService>().pendingCount.value,
                 menuTap: () async {
-                  final sync = Get.find<SyncService>();
-                  await sync.syncNow();
-                  await sync.refreshPendingCount();
-                  if (sync.pendingCount.value == 0) {
+                  CustomLoadingDialog.show(message: 'Syncing pending items...');
+                  String? message;
+                  SnackBarType type = SnackBarType.success;
+                  try {
+                    final sync = Get.find<SyncService>();
+                    await sync.syncNow();
+                    await sync.refreshPendingCount();
+                    if (sync.pendingCount.value == 0) {
+                      message = 'Everything is synced — nothing pending.';
+                      type = SnackBarType.success;
+                    } else {
+                      message =
+                          '${sync.pendingCount.value} item(s) still pending — will retry automatically.';
+                      type = SnackBarType.warning;
+                    }
+                  } catch (e) {
+                    message = 'Sync error: $e';
+                    type = SnackBarType.error;
+                  } finally {
+                    CustomLoadingDialog.hide();
+                  }
+                  if (message != null) {
                     customSnackBar(
                       'Sync',
-                      'Everything is synced — nothing pending.',
-                      snackBarType: SnackBarType.success,
-                    );
-                  } else {
-                    customSnackBar(
-                      'Sync',
-                      '${sync.pendingCount.value} item(s) still pending — will retry automatically.',
-                      snackBarType: SnackBarType.warning,
+                      message,
+                      snackBarType: type,
                     );
                   }
                 },

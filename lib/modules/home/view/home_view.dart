@@ -130,8 +130,8 @@ class HomeView extends GetView<HomeController> {
       ),
       child: Column(
         children: [
-          ScanField(controller: controller),
-          SizedBox(height: context.spacingSM),
+          // ScanField(controller: controller),
+          // SizedBox(height: context.spacingSM),
           Expanded(child: CartSection(controller: controller)),
           SizedBox(height: context.spacingSM),
           const Divider(height: 1, color: ColorResources.cardBorderColor),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:modfirstpos/core/services/app_theme_service.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
 
 class CircularLoaderWidget extends StatelessWidget {
@@ -52,11 +53,10 @@ class CustomLoadingDialog {
   }
 
   static void hide() {
-    if (!_isShowing) return;
-    if (Get.isDialogOpen ?? false) {
+    _isShowing = false;
+    while (Get.isDialogOpen ?? false) {
       Get.back();
     }
-    _isShowing = false;
   }
 
   static void forceHide() {
@@ -74,6 +74,9 @@ class _LoadingDialogContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.isRegistered<AppThemeService>() ? Get.find<AppThemeService>() : null;
+    final animColor = theme?.secondaryColor.value ?? ColorResources.blackColor;
+
     return Center(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
@@ -92,7 +95,7 @@ class _LoadingDialogContent extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             LoadingAnimationWidget.halfTriangleDot(
-              color: ColorResources.blackColor,
+              color: animColor,
               size: 30,
             ),
             if (message != null) ...[

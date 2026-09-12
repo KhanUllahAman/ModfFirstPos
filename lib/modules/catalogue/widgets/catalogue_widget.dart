@@ -182,7 +182,16 @@ class ProductGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Get.find<AppThemeService>();
     return Obx(() {
+      if (controller.isLoading.value) {
+        return Center(
+          child: CircularProgressIndicator(
+            color: theme.secondaryColor.value,
+            strokeWidth: 3.0,
+          ),
+        );
+      }
       if (controller.activeTab.value == PosScreenTab.products) {
         return _buildAllProductsView(context);
       }
@@ -211,6 +220,7 @@ class ProductGrid extends StatelessWidget {
             const SizedBox(height: 12),
             AppSyncButton(
               onPressed: () => controller.syncCategories(),
+              isLoading: controller.isLoading.value,
               label: 'Reload Categories',
               icon: Icons.refresh_rounded,
             ),

@@ -18,7 +18,11 @@ class VariantColorModel {
     );
   }
 
-  String get displayName => name ?? 'Color #$id';
+  String get displayName {
+    if (name != null && name!.trim().isNotEmpty) return name!.trim();
+    if (id != null) return 'Color #$id';
+    return '';
+  }
 }
 
 class VariantSizeModel {
@@ -36,7 +40,12 @@ class VariantSizeModel {
     );
   }
 
-  String get label => name ?? displayName ?? 'Size #$id';
+  String get label {
+    if (name != null && name!.trim().isNotEmpty) return name!.trim();
+    if (displayName != null && displayName!.trim().isNotEmpty) return displayName!.trim();
+    if (id != null) return 'Size #$id';
+    return '';
+  }
 }
 
 class ProductVariantModel {
@@ -104,6 +113,30 @@ class ProductVariantModel {
 
   /// True when the API provided color/size dimensions for this variant.
   bool get hasDimensions => color != null || size != null;
+
+  /// Human-readable label for this variant combining color and size dimensions,
+  /// falling back to SKU, or 'Variant #id'. Never produces '(null)'.
+  String get displayName {
+    final parts = <String>[];
+    final colorName = color?.displayName;
+    if (colorName != null && colorName.trim().isNotEmpty) {
+      parts.add(colorName.trim());
+    }
+    final sizeName = size?.label;
+    if (sizeName != null && sizeName.trim().isNotEmpty) {
+      parts.add(sizeName.trim());
+    }
+    if (parts.isNotEmpty) {
+      return parts.join(' / ');
+    }
+    if (sku != null && sku!.trim().isNotEmpty && sku!.trim() != '--') {
+      return sku!.trim();
+    }
+    if (id != null) {
+      return 'Variant #$id';
+    }
+    return '';
+  }
 }
 
 class ProductImageModel {

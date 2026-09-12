@@ -1,5 +1,7 @@
 import 'dart:developer';
 import 'package:get/get.dart';
+import 'package:modfirstpos/core/contants/storage_keys.dart';
+import 'package:modfirstpos/core/database/key_value_store.dart';
 import 'package:modfirstpos/core/storage/stripe_terminal_settings_storage.dart';
 import 'package:modfirstpos/core/utils/json_utils.dart';
 import 'package:modfirstpos/modules/bootstrap/model/bootstrap_model.dart';
@@ -60,6 +62,18 @@ class BootstrapController extends GetxController {
       data.value = payload;
       syncedAt.value = _parseSyncedAt(payload.syncedAt);
       await _autoSyncDeviceAndTerminal(payload);
+      if (payload.store.defaultShippingFee != null) {
+        await KeyValueStore.setString(
+          StorageKeys.keyDefaultShippingFee,
+          payload.store.defaultShippingFee!,
+        );
+      }
+      if (payload.store.freeShippingThreshold != null) {
+        await KeyValueStore.setString(
+          StorageKeys.keyFreeShippingThreshold,
+          payload.store.freeShippingThreshold!,
+        );
+      }
     } catch (e) {
       log("BootstrapController hydrateFromCache error: $e");
     }
@@ -76,6 +90,18 @@ class BootstrapController extends GetxController {
         syncedAt.value = _parseSyncedAt(response.payload!.syncedAt);
         await BootstrapCacheStorage.saveBootstrap(rawPayload);
         await _autoSyncDeviceAndTerminal(response.payload!);
+        if (response.payload!.store.defaultShippingFee != null) {
+          await KeyValueStore.setString(
+            StorageKeys.keyDefaultShippingFee,
+            response.payload!.store.defaultShippingFee!,
+          );
+        }
+        if (response.payload!.store.freeShippingThreshold != null) {
+          await KeyValueStore.setString(
+            StorageKeys.keyFreeShippingThreshold,
+            response.payload!.store.freeShippingThreshold!,
+          );
+        }
 
         if (showSnackbar) {
           customSnackBar(

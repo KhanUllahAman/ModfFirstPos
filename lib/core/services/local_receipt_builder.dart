@@ -20,6 +20,7 @@ class LocalReceiptBuilder {
     required double subtotal,
     required double discount,
     required double tax,
+    double shipping = 0,
     required double grandTotal,
     String? deliveryInfo,
     String? notes,
@@ -66,6 +67,7 @@ class LocalReceiptBuilder {
       summary: ReceiptSummaryModel(
         subtotal: subtotal.toStringAsFixed(2),
         discount: discount.toStringAsFixed(2),
+        shipping: shipping > 0 ? shipping.toStringAsFixed(2) : null,
         tax: tax.toStringAsFixed(2),
         grandTotal: grandTotal.toStringAsFixed(2),
         paid: grandTotal.toStringAsFixed(2),

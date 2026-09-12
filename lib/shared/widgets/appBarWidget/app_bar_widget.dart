@@ -83,18 +83,61 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 if (Get.isRegistered<BootstrapController>())
                   Obx(() {
-                    final syncedAt =
-                        Get.find<BootstrapController>().syncedAt.value;
+                    final bootstrap = Get.find<BootstrapController>();
+                    final isSyncing = bootstrap.isSyncing.value;
+                    final syncedAt = bootstrap.syncedAt.value;
+                    if (isSyncing) {
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          right: context.responsiveWidth(0.02),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: iconColor.withOpacity(0.85),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Syncing...',
+                              style: AppFonts.geistMono(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: iconColor.withOpacity(0.85),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
                     if (syncedAt == null) return const SizedBox.shrink();
                     return Padding(
                       padding: EdgeInsets.only(
                         right: context.responsiveWidth(0.02),
                       ),
-                      child: Text(
-                        'Synced ${DateFormat('h:mm a').format(syncedAt)}',
-                        style: AppFonts.geistMono(
-                          fontSize: 12,
-                          color: iconColor.withOpacity(0.7),
+                      child: Tooltip(
+                        message: 'Tap to sync store data',
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(6),
+                          onTap: () => bootstrap.syncBootstrap(),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 2,
+                            ),
+                            child: Text(
+                              'Synced ${DateFormat('h:mm a').format(syncedAt)}',
+                              style: AppFonts.geistMono(
+                                fontSize: 12,
+                                color: iconColor.withOpacity(0.7),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     );
