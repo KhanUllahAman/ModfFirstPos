@@ -21,12 +21,11 @@ import 'package:flutter/foundation.dart';
 ///   openssl s_client -connect command.modfirst.com:443 -servername command.modfirst.com -showcerts
 /// and hash each cert's SPKI with sha256/base64 to get fresh values.
 const List<String> _pinnedSpkiSha256 = [
-  'NCVtqKX814K+n4d8OctCcc9MXDTPSrknTiLrC8MV+jw=', // leaf: command.modfirst.com
-  'brzvtCELCIZUo4sD/qPX0ccRtPsd3DY6RfmxpOU9oB4=', // issuer: Let's Encrypt intermediate (YE1)
+  'fT/d8rbbVPgXBKlYt3OUIwca2QujzsF2vgxO/i6dv+Q=', // leaf: command.modfirst.com
+  's/tdAOmUzd8syaTuqfgGvFcn6DzA5Cmb+Vby1ST+U3Y=', // intermediate (unreachable via this callback, kept for reference)
 ];
 
-const String _pinnedHost = 'command.modfirst.com';
-
+const String _pinnedHost = 'command.modfirst.com'; // unchanged
 /// Validates [cert]'s SPKI hash against [_pinnedSpkiSha256] for
 /// [_pinnedHost]. Wired into Dio's [IOHttpClientAdapter.validateCertificate],
 /// which — unlike [HttpClient.badCertificateCallback] — runs for every
