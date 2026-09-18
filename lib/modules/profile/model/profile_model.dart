@@ -1,4 +1,5 @@
 import 'package:modfirstpos/core/utils/json_utils.dart';
+import 'package:modfirstpos/core/utils/url_utils.dart';
 import 'dart:developer';
 
 class ProfileModel {
@@ -72,7 +73,9 @@ class ProfilePayload {
       fullName: json['full_name']?.toString(),
       email: json['email']?.toString(),
       phone: json['phone']?.toString(),
-      imageUrl: json['image']?.toString(),
+      imageUrl: UrlUtils.resolveImageUrl(
+        json['image']?.toString() ?? json['image_url']?.toString(),
+      ),
       role: json['role']?.toString(),
       isAdmin: JsonUtils.asBoolOrNull(json['is_admin']),
       isActive: JsonUtils.asBoolOrNull(json['is_active']),
@@ -109,13 +112,7 @@ class ProfilePayload {
     return ProfilePayload.fromJson(merged);
   }
 
-  String? get fullImageUrl {
-    if (imageUrl == null || imageUrl!.isEmpty) return null;
-    if (imageUrl!.startsWith('http://') || imageUrl!.startsWith('https://')) {
-      return imageUrl;
-    }
-    return 'https://command.modfirst.com$imageUrl';
-  }
+  String? get fullImageUrl => UrlUtils.resolveImageUrl(imageUrl);
 }
 
 class ImageUploadModel {

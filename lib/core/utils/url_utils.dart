@@ -14,13 +14,28 @@ class UrlUtils {
     String baseHost = mediaBaseHost,
     Set<String> passthrough = const {'default-user.png'},
   }) {
-    if (raw == null || raw.trim().isEmpty) return raw;
+    if (raw == null) return null;
     var url = raw.trim();
+    if (url.isEmpty || url.toLowerCase() == 'null') return null;
     if (passthrough.contains(url)) return url;
 
-    // If it's already an absolute URL, strip any /uploads/ segment if present
+    // Protocol-relative URLs (e.g. //storage.modfirst.com/...)
+    if (url.startsWith('//')) {
+      return 'https:$url';
+    }
+
+    final cleanBaseHost = baseHost.endsWith('/')
+        ? baseHost.substring(0, baseHost.length - 1)
+        : baseHost;
+
+    // Full absolute URLs (http:// or https://)
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url.replaceAll('/uploads/', '/');
+    }
+
+    // Host without protocol scheme
+    if (url.startsWith('storage.modfirst.com') || url.startsWith('www.')) {
+      return 'https://${url.replaceAll('/uploads/', '/')}';
     }
 
     // Strip leading /uploads/ or uploads/
@@ -33,6 +48,6 @@ class UrlUtils {
     }
 
     final normalized = url.startsWith('/') ? url : '/$url';
-    return '$baseHost$normalized';
+    return '$cleanBaseHost$normalized';
   }
 }

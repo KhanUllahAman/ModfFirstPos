@@ -32,38 +32,95 @@ class CircularLoaderWidget extends StatelessWidget {
 }
 
 class CustomLoadingDialog {
+  static OverlayEntry? _overlayEntry;
+  static final ValueNotifier<String?> _messageNotifier =
+      ValueNotifier<String?>(null);
   static bool _isShowing = false;
 
-  static void show({String? message, bool barrierDismissible = false}) {
-    if (_isShowing) return;
-    _isShowing = true;
+  static bool get isShowing => _isShowing;
 
-    Get.dialog(
-      PopScope(
-        canPop: barrierDismissible,
-        child: Dialog(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          child: _LoadingDialogContent(message: message),
+  static void show({String? message, bool barrierDismissible = false}) {
+    if (_isShowing && _overlayEntry != null) {
+      _messageNotifier.value = message;
+      return;
+    }
+    _isShowing = true;
+    _messageNotifier.value = message;
+
+    void insertOverlay() {
+      if (!_isShowing) return;
+      if (_overlayEntry != null) return;
+
+      final context = Get.overlayContext ?? Get.key.currentContext;
+      if (context == null) return;
+
+      final overlay =
+          Overlay.maybeOf(context) ?? Get.key.currentState?.overlay;
+      if (overlay == null) return;
+
+      _overlayEntry = OverlayEntry(
+        builder: (context) => PopScope(
+          canPop: barrierDismissible,
+          onPopInvokedWithResult: (didPop, _) {
+            if (didPop && barrierDismissible) {
+              hide();
+            }
+          },
+          child: Material(
+            color: Colors.black.withValues(alpha: 0.5),
+            type: MaterialType.canvas,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: barrierDismissible ? hide : null,
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+                Center(
+                  child: ValueListenableBuilder<String?>(
+                    valueListenable: _messageNotifier,
+                    builder: (context, msg, _) =>
+                        _LoadingDialogContent(message: msg),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
-      barrierDismissible: barrierDismissible,
-      barrierColor: Colors.black.withOpacity(0.5),
-    );
+      );
+
+      overlay.insert(_overlayEntry!);
+    }
+
+    final context = Get.overlayContext ?? Get.key.currentContext;
+    if (context != null) {
+      insertOverlay();
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) => insertOverlay());
+    }
   }
 
   static void hide() {
     _isShowing = false;
-    while (Get.isDialogOpen ?? false) {
-      Get.back();
+    _messageNotifier.value = null;
+    if (_overlayEntry != null) {
+      try {
+        _overlayEntry?.remove();
+      } catch (_) {}
+      _overlayEntry = null;
+    }
+    // Also dismiss any dialog if one was opened via Get.dialog
+    if (Get.isDialogOpen ?? false) {
+      try {
+        Get.key.currentState?.pop();
+      } catch (_) {}
     }
   }
 
   static void forceHide() {
-    if (Get.isDialogOpen ?? false) {
-      Navigator.of(Get.overlayContext!).pop();
-    }
-    _isShowing = false;
+    hide();
   }
 }
 
@@ -74,8 +131,11 @@ class _LoadingDialogContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Get.isRegistered<AppThemeService>() ? Get.find<AppThemeService>() : null;
-    final animColor = theme?.secondaryColor.value ?? ColorResources.blackColor;
+    final theme = Get.isRegistered<AppThemeService>()
+        ? Get.find<AppThemeService>()
+        : null;
+    final animColor =
+        theme?.secondaryColor.value ?? ColorResources.blackColor;
 
     return Center(
       child: Container(
@@ -85,7 +145,7 @@ class _LoadingDialogContent extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, 4),
             ),
@@ -102,7 +162,7 @@ class _LoadingDialogContent extends StatelessWidget {
               const SizedBox(height: 20),
               Text(
                 message!,
-                style: TextStyle(
+                style: const TextStyle(
                   color: ColorResources.blackColor,
                   fontSize: 15,
                   fontWeight: FontWeight.w500,

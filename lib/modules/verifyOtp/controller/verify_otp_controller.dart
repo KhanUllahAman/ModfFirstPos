@@ -90,7 +90,6 @@ class VerifyOtpController extends GetxController {
         otp: otp,
         fcmToken: fcmToken,
       );
-      CustomLoadingDialog.hide();
 
       if (!response.isSuccess) {
         customSnackBar(
@@ -130,7 +129,6 @@ class VerifyOtpController extends GetxController {
       Get.offAllNamed(Routes.home);
     } catch (e) {
       log("Verify OTP error: $e");
-      CustomLoadingDialog.hide();
       customSnackBar(
         'Error',
         e is AppException
@@ -139,7 +137,7 @@ class VerifyOtpController extends GetxController {
         snackBarType: SnackBarType.error,
       );
     } finally {
-      CustomLoadingDialog.forceHide();
+      CustomLoadingDialog.hide();
     }
   }
 
@@ -149,7 +147,6 @@ class VerifyOtpController extends GetxController {
     CustomLoadingDialog.show();
     try {
       final response = await _sendOtpService.sendOtp(email: email.value);
-      CustomLoadingDialog.hide();
 
       if (!response.isSuccess) {
         customSnackBar(
@@ -172,14 +169,13 @@ class VerifyOtpController extends GetxController {
       );
     } catch (e) {
       log("Resend OTP error: $e");
-      CustomLoadingDialog.hide();
       customSnackBar(
         'Error',
         'Something went wrong. Please try again.',
         snackBarType: SnackBarType.error,
       );
     } finally {
-      CustomLoadingDialog.forceHide();
+      CustomLoadingDialog.hide();
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:modfirstpos/core/utils/json_utils.dart';
+import 'package:modfirstpos/core/utils/url_utils.dart';
 
 class ProductItem {
   final String id;
@@ -39,7 +40,9 @@ class ProductItem {
         name: JsonUtils.asString(json['name']),
         skuCode: JsonUtils.asStringOrNull(json['sku_code']),
         oldSkuCode: JsonUtils.asStringOrNull(json['old_sku_code']),
-        imageUrl: JsonUtils.asStringOrNull(json['image_url']),
+        imageUrl: UrlUtils.resolveImageUrl(
+          JsonUtils.asStringOrNull(json['image_url'] ?? json['image']),
+        ),
         productPrice: JsonUtils.asDoubleOrNull(json['product_price']),
         productId: JsonUtils.asIntOrNull(json['product_id']),
         variantId: JsonUtils.asIntOrNull(json['variant_id']),

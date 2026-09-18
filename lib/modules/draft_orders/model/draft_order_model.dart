@@ -1,4 +1,5 @@
 import 'package:modfirstpos/core/utils/json_utils.dart';
+import 'package:modfirstpos/core/utils/url_utils.dart';
 import 'package:modfirstpos/modules/home/model/cart_item_model.dart';
 import 'package:modfirstpos/modules/product/model/product_model.dart';
 
@@ -280,7 +281,9 @@ class DraftOrderItemModel {
       isTaxApplied: JsonUtils.asBool(json['is_tax_applied'], fallback: false),
       isCustomPrice: JsonUtils.asBool(json['is_custom_price'], fallback: false),
       designUploadIds: json['design_upload_ids'],
-      itemImageUrl: JsonUtils.asStringOrNull(json['image_url'] ?? json['image'] ?? json['thumbnail']),
+      itemImageUrl: UrlUtils.resolveImageUrl(
+        JsonUtils.asStringOrNull(json['image_url'] ?? json['image'] ?? json['thumbnail']),
+      ),
       product: json['product'] != null
           ? ProductModel.fromJson(JsonUtils.asMap(json['product']))
           : null,

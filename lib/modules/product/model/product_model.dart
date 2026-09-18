@@ -94,7 +94,7 @@ class ProductVariantModel {
       status: JsonUtils.asStringOrNull(json['status']),
       isActive: JsonUtils.asBoolOrNull(json['is_active']),
       imageUrl: UrlUtils.resolveImageUrl(
-        JsonUtils.asStringOrNull(json['image_url']),
+        JsonUtils.asStringOrNull(json['image_url'] ?? json['image']),
       ),
       color: colorMap != null ? VariantColorModel.fromJson(colorMap) : null,
       size: sizeMap != null ? VariantSizeModel.fromJson(sizeMap) : null,
@@ -151,7 +151,9 @@ class ProductImageModel {
     return ProductImageModel(
       id: JsonUtils.asIntOrNull(json['id']),
       imageUrl: UrlUtils.resolveImageUrl(
-        JsonUtils.asStringOrNull(json['image_url']),
+        JsonUtils.asStringOrNull(
+          json['image_url'] ?? json['image'] ?? json['url'],
+        ),
       ),
       isPrimary: JsonUtils.asBoolOrNull(json['is_primary']),
       sortOrder: JsonUtils.asIntOrNull(json['sort_order']),
@@ -246,10 +248,25 @@ class ProductModel {
         json['descriptions'],
         ProductDescriptionModel.fromJson,
       ),
-      images: JsonUtils.asModelList(
-        json['images'],
-        ProductImageModel.fromJson,
-      ),
+      images: () {
+        final parsedImages = JsonUtils.asModelList(
+          json['images'],
+          ProductImageModel.fromJson,
+        );
+        final directImageUrl = UrlUtils.resolveImageUrl(
+          JsonUtils.asStringOrNull(
+            json['image_url'] ?? json['image'] ?? json['featured_image'],
+          ),
+        );
+        if (parsedImages.isEmpty &&
+            directImageUrl != null &&
+            directImageUrl.isNotEmpty) {
+          parsedImages.add(
+            ProductImageModel(imageUrl: directImageUrl, isPrimary: true),
+          );
+        }
+        return parsedImages;
+      }(),
       category: categoryMap != null ? CategoryModel.fromJson(categoryMap) : null,
       stock: JsonUtils.asIntOrNull(json['stock']),
     );

@@ -6,6 +6,7 @@ import 'dart:math' hide log;
 import 'package:get/get.dart';
 import 'package:modfirstpos/core/database/key_value_store.dart';
 import 'package:modfirstpos/core/utils/json_utils.dart';
+import 'package:modfirstpos/core/utils/url_utils.dart';
 
 /// Shared config between the cashier tab (client) and the customer-facing
 /// tab (server) — both must agree on the port the pairing happens over.
@@ -42,7 +43,9 @@ class CustomerDisplayItem {
         quantity: JsonUtils.asInt(json['quantity']),
         unitPrice: JsonUtils.asDouble(json['unit_price']),
         total: JsonUtils.asDouble(json['total']),
-        imageUrl: JsonUtils.asStringOrNull(json['image_url']),
+        imageUrl: UrlUtils.resolveImageUrl(
+          JsonUtils.asStringOrNull(json['image_url'] ?? json['image']),
+        ),
       );
 }
 

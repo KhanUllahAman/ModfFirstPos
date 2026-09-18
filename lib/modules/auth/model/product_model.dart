@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:modfirstpos/core/utils/url_utils.dart';
 
 class ProductResponseModel {
   final int status;
@@ -123,7 +124,9 @@ class ProductItem {
       oldProductCode: json['old_product_code']?.toString(),
       qty: parsedQty,
       lastUpdateTimestamp: json['last_update_timestamp']?.toString(),
-      imageUrl: json['image_url']?.toString(),
+      imageUrl: UrlUtils.resolveImageUrl(
+        json['image_url']?.toString() ?? json['image']?.toString(),
+      ),
     );
   }
 

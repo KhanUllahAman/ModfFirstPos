@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:modfirstpos/core/utils/url_utils.dart';
 import 'package:modfirstpos/core/storage/secure_storage_service.dart';
 import 'package:modfirstpos/modules/profile/controller/get_profile_controller.dart';
 import 'package:modfirstpos/modules/profile/model/profile_model.dart';
@@ -30,10 +31,7 @@ class UpdateProfileController extends GetxController {
   String get displayImageUrl {
     final raw = existingImageUrl.value;
     if (raw.isEmpty) return raw;
-    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
-    // Matches ProfileModel.fullImageUrl — no `/uploads` segment, the API
-    // already returns a path rooted at the domain.
-    return 'https://storage.modfirst.com$raw';
+    return UrlUtils.resolveImageUrl(raw) ?? raw;
   }
 
   void _prefillFromExistingProfile() {

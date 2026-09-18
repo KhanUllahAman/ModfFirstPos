@@ -2,6 +2,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:modfirstpos/core/utils/json_utils.dart';
+import 'package:modfirstpos/core/utils/url_utils.dart';
 import 'package:modfirstpos/modules/customer/model/customer_model.dart';
 import 'package:modfirstpos/modules/home/model/cart_item_model.dart';
 import 'package:modfirstpos/modules/home/model/suspended_order_model.dart';
@@ -110,6 +111,43 @@ void main() {
       expect(restored.discountInput, '50');
       expect(restored.total, 700);
       expect(restored.itemCount, 3);
+    });
+  });
+
+  group('UrlUtils.resolveImageUrl', () {
+    test('keeps full URLs intact', () {
+      expect(
+        UrlUtils.resolveImageUrl('https://storage.modfirst.com/variants/variant-1617.png'),
+        'https://storage.modfirst.com/variants/variant-1617.png',
+      );
+    });
+
+    test('concatenates relative half URLs with base host', () {
+      expect(
+        UrlUtils.resolveImageUrl('/variants/variant-1617.png'),
+        'https://storage.modfirst.com/variants/variant-1617.png',
+      );
+      expect(
+        UrlUtils.resolveImageUrl('variants/variant-1617.png'),
+        'https://storage.modfirst.com/variants/variant-1617.png',
+      );
+      expect(
+        UrlUtils.resolveImageUrl('/products/30-1788907696559-291994354.jpg'),
+        'https://storage.modfirst.com/products/30-1788907696559-291994354.jpg',
+      );
+    });
+
+    test('normalizes uploads prefix', () {
+      expect(
+        UrlUtils.resolveImageUrl('/uploads/user/scaled_100.jpg'),
+        'https://storage.modfirst.com/user/scaled_100.jpg',
+      );
+    });
+
+    test('handles null and empty', () {
+      expect(UrlUtils.resolveImageUrl(null), isNull);
+      expect(UrlUtils.resolveImageUrl(''), isNull);
+      expect(UrlUtils.resolveImageUrl('null'), isNull);
     });
   });
 }

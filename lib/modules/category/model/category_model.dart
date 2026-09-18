@@ -42,7 +42,7 @@ class CategoryModel {
       description: JsonUtils.asStringOrNull(json['description']),
       parentId: JsonUtils.asIntOrNull(json['parent_id']),
       imageUrl: UrlUtils.resolveImageUrl(
-        JsonUtils.asStringOrNull(json['image_url']),
+        JsonUtils.asStringOrNull(json['image_url'] ?? json['image']),
       ),
       isActive: JsonUtils.asBoolOrNull(json['is_active']),
       isDeleted: JsonUtils.asBoolOrNull(json['is_deleted']),

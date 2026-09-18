@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:modfirstpos/core/database/key_value_store.dart';
 import 'package:modfirstpos/core/services/local_receipt_builder.dart';
 import 'package:modfirstpos/core/services/print_receipt_helper.dart';
-import 'package:modfirstpos/core/services/stripe_terminal_service.dart';
 import 'package:modfirstpos/core/services/sync_service.dart';
 import 'package:modfirstpos/core/services/thermal_printer_service.dart';
 import 'package:modfirstpos/core/services/website_settings_storage_service.dart';
@@ -71,7 +70,7 @@ class CheckoutController extends GetxController {
   int? _pendingPickupLocationId;
   final RxString splitCashInput = ''.obs;
   final RxString splitTenderedInput = ''.obs;
-  final RxString splitActiveField = 'portion'.obs; // 'portion' or 'tendered'
+  final RxString splitActiveField = 'portion'.obs;
   final RxString cashTenderedInput = ''.obs;
 
   double get splitCash => double.tryParse(splitCashInput.value) ?? 0.0;
@@ -1228,24 +1227,11 @@ class CheckoutController extends GetxController {
   }
 
   Future<int?> _ensureTerminalReady() async {
-    final readerId = 1;
-
-    if (!Get.isRegistered<StripeTerminalService>()) return readerId;
-    final terminal = Get.find<StripeTerminalService>();
-    if (terminal.isConnected.value) return readerId;
-
-    terminalStatusMessage.value = 'Connecting to card reader...';
-    final connected = await terminal.connect();
-    if (!connected) {
-      customSnackBar(
-        'Reader Not Connected',
-        terminal.lastError.value.isNotEmpty
-            ? terminal.lastError.value
-            : 'Card reader is offline or unreachable. Please make sure the reader is powered on and connected to Wi-Fi.',
-        snackBarType: SnackBarType.error,
-      );
-      return null;
-    }
+    // Cloud reader (WisePOS E / S700): backend pushes payment directly to the
+    // reader via Stripe Cloud API. Reader ID is fixed to 1.
+    // Bypass local SDK discovery so payPos is called immediately without timing out.
+    const readerId = 1;
+    terminalStatusMessage.value = 'Sending payment to card reader...';
     return readerId;
   }
 
@@ -1320,7 +1306,6 @@ class CheckoutController extends GetxController {
       'Order paid successfully.',
       snackBarType: SnackBarType.success,
     );
-    // Fire-and-forget: printing must never block clearing the cart.
     unawaited(PrintReceiptHelper.printOrderReceipt(orderId));
     homeController.clearCart();
     homeController.showCheckoutPanel.value = false;

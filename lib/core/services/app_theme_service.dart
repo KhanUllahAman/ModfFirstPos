@@ -4,6 +4,7 @@ import 'package:modfirstpos/core/services/website_settings_storage_service.dart'
 import 'package:modfirstpos/core/utils/currency_utils.dart';
 import 'package:modfirstpos/core/utils/hex_color_extension.dart';
 import 'package:modfirstpos/core/utils/colors.dart';
+import 'package:modfirstpos/core/utils/url_utils.dart';
 
 class AppThemeService extends GetxService {
   final Rx<Color> primaryColor = ColorResources.blackColor.obs;
@@ -58,9 +59,15 @@ class AppThemeService extends GetxService {
     final secondaryHex =
         await WebsiteSettingsStorageService.getSecondaryColor();
     final font = await WebsiteSettingsStorageService.getFontPrimary();
-    final blackLogo = await WebsiteSettingsStorageService.getLogoBlackUrl();
-    final whiteLogo = await WebsiteSettingsStorageService.getLogoWhiteUrl();
-    final genericLogo = await WebsiteSettingsStorageService.getLogoUrl();
+    final blackLogo = UrlUtils.resolveImageUrl(
+      await WebsiteSettingsStorageService.getLogoBlackUrl(),
+    );
+    final whiteLogo = UrlUtils.resolveImageUrl(
+      await WebsiteSettingsStorageService.getLogoWhiteUrl(),
+    );
+    final genericLogo = UrlUtils.resolveImageUrl(
+      await WebsiteSettingsStorageService.getLogoUrl(),
+    );
     // Prefer the white logo (home/drawer background reads dark) — fall
     // back to the generic logo_url for stores that only sent that field.
     final logo = whiteLogo ?? genericLogo;

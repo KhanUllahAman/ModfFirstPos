@@ -1,4 +1,5 @@
 import 'package:modfirstpos/core/utils/json_utils.dart';
+import 'package:modfirstpos/core/utils/url_utils.dart';
 import 'package:modfirstpos/modules/category/model/category_model.dart';
 import 'package:modfirstpos/modules/checkout/model/checkout_models.dart';
 import 'package:modfirstpos/modules/customer/model/customer_model.dart';
@@ -50,9 +51,15 @@ class BootstrapStoreModel {
       id: JsonUtils.asIntOrNull(json['id']),
       siteName: JsonUtils.asStringOrNull(json['site_name']),
       siteTagline: JsonUtils.asStringOrNull(json['site_tagline']),
-      logoUrl: JsonUtils.asStringOrNull(json['logo_url']),
-      logoWhiteUrl: JsonUtils.asStringOrNull(json['logo_white_url']),
-      logoBlackUrl: JsonUtils.asStringOrNull(json['logo_black_url']),
+      logoUrl: UrlUtils.resolveImageUrl(
+        JsonUtils.asStringOrNull(json['logo_url']),
+      ),
+      logoWhiteUrl: UrlUtils.resolveImageUrl(
+        JsonUtils.asStringOrNull(json['logo_white_url']),
+      ),
+      logoBlackUrl: UrlUtils.resolveImageUrl(
+        JsonUtils.asStringOrNull(json['logo_black_url']),
+      ),
       primaryColor: JsonUtils.asStringOrNull(json['primary_color']),
       secondaryColor: JsonUtils.asStringOrNull(json['secondary_color']),
       contactEmail: JsonUtils.asStringOrNull(json['contact_email']),
@@ -95,7 +102,9 @@ class BootstrapCashierModel {
       email: JsonUtils.asStringOrNull(json['email']),
       phone: JsonUtils.asStringOrNull(json['phone']),
       role: JsonUtils.asStringOrNull(json['role']),
-      image: JsonUtils.asStringOrNull(json['image']),
+      image: UrlUtils.resolveImageUrl(
+        JsonUtils.asStringOrNull(json['image'] ?? json['image_url']),
+      ),
       branchId: JsonUtils.asIntOrNull(json['branch_id']),
     );
   }

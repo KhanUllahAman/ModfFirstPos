@@ -14,6 +14,7 @@ class SendOtpService {
         endpoint: ApiConstants.sendOtpEndpoint,
         isLoginRequest: true,
         body: body,
+        showErrorSnackbar: false,
       );
       log("send otp response: ${response.data}");
       log("body send otp: ${body.toString()}");

@@ -165,10 +165,7 @@ class CheckoutService {
     }
   }
 
-  // --------------------------------------------------------------------
-  // POS payments — one endpoint for cash / bank transfer / Stripe Terminal
-  // (card-present) + splits. See docs/POS_PAYMENT_FLUTTER.md.
-  // --------------------------------------------------------------------
+
 
   Map<String, dynamic> _asMap(Response response) {
     return response.data is Map<String, dynamic>

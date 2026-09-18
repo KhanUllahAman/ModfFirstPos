@@ -24,6 +24,7 @@ class VerifyOtpService {
         endpoint: ApiConstants.verifyOtpEndpoint,
         isLoginRequest: true,
         body: body,
+        showErrorSnackbar: false,
       );
       log("verify otp response: ${response.data}");
       log("body verify otp: ${body.toString()}");

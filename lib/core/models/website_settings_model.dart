@@ -1,4 +1,5 @@
 import 'package:modfirstpos/core/utils/json_utils.dart';
+import 'package:modfirstpos/core/utils/url_utils.dart';
 
 class WebsiteSettingsModel {
   final int? id;
@@ -121,11 +122,21 @@ class WebsiteSettingsModel {
       siteName: JsonUtils.asStringOrNull(json['site_name']),
       siteTagline: JsonUtils.asStringOrNull(json['site_tagline']),
       siteDescription: JsonUtils.asStringOrNull(json['site_description']),
-      logoUrl: JsonUtils.asStringOrNull(json['logo_url']),
-      logoWhiteUrl: JsonUtils.asStringOrNull(json['logo_white_url']),
-      logoBlackUrl: JsonUtils.asStringOrNull(json['logo_black_url']),
-      faviconUrl: JsonUtils.asStringOrNull(json['favicon_url']),
-      footerLogoUrl: JsonUtils.asStringOrNull(json['footer_logo_url']),
+      logoUrl: UrlUtils.resolveImageUrl(
+        JsonUtils.asStringOrNull(json['logo_url']),
+      ),
+      logoWhiteUrl: UrlUtils.resolveImageUrl(
+        JsonUtils.asStringOrNull(json['logo_white_url']),
+      ),
+      logoBlackUrl: UrlUtils.resolveImageUrl(
+        JsonUtils.asStringOrNull(json['logo_black_url']),
+      ),
+      faviconUrl: UrlUtils.resolveImageUrl(
+        JsonUtils.asStringOrNull(json['favicon_url']),
+      ),
+      footerLogoUrl: UrlUtils.resolveImageUrl(
+        JsonUtils.asStringOrNull(json['footer_logo_url']),
+      ),
       primaryColor: JsonUtils.asStringOrNull(json['primary_color']),
       secondaryColor: JsonUtils.asStringOrNull(json['secondary_color']),
       accentColor: JsonUtils.asStringOrNull(json['accent_color']),
@@ -163,7 +174,9 @@ class WebsiteSettingsModel {
       metaTitle: JsonUtils.asStringOrNull(json['meta_title']),
       metaDescription: JsonUtils.asStringOrNull(json['meta_description']),
       metaKeywords: JsonUtils.asStringOrNull(json['meta_keywords']),
-      ogImageUrl: JsonUtils.asStringOrNull(json['og_image_url']),
+      ogImageUrl: UrlUtils.resolveImageUrl(
+        JsonUtils.asStringOrNull(json['og_image_url']),
+      ),
       isActive: JsonUtils.asBoolOrNull(json['is_active']),
       isDeleted: JsonUtils.asBoolOrNull(json['is_deleted']),
       createdBy: JsonUtils.asIntOrNull(json['created_by']),
